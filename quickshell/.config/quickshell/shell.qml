@@ -1,24 +1,42 @@
 import QtQuick
+import Quickshell.Io
 import Quickshell
-import Quickshell.Hyprland // The secret sauce
 
-ShellRoot {
-	Variants {
-		// This creates a window on every connected monitor
-		model: Quickshell.screens
+PanelWindow {
+	anchors{
+		top: true
+		left: true
+		right: true
+	}
 
-		PanelWindow {
-			anchors.top: true
-			anchors.left: true
-			anchors.right: true
-			height: 40
-			color: "#1a1b26" // Tokyo Night Background
+	implicitHeight: 30
 
-			Text {
-				anchors.centerIn: parent
-				text: "Welcome to my new arch build"
-				color: "white"
+	Text {
+		id: clock
+		anchors.centerIn: parent
+
+		Process {
+			// give the process object an id so we can talk abuot it from the timer
+			id: dateProc
+
+			command: ["date"]
+			running: true
+
+			stdout: StdioCollector {
+				onStreamFinished: clock.text = this.text
 			}
 		}
+
+		Timer {
+			// 1000 milliseconds = 1 second
+			interval: 1000
+			running: true
+			repeat: true
+
+			//when the timer is triggered, set the running property of the process to true, which returns if it stopped.
+			
+			onTriggered: dateProc.running = true
+		}
 	}
+
 }
