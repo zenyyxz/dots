@@ -1,0 +1,10 @@
+module components
+Clock 1.0 Clock.qml
+Media 1.0 Media.qml
+Network 1.0 Network.qml
+ProgressCircle 1.0 ProgressCircle.qml
+SysInfo 1.0 SysInfo.qml
+SysTray 1.0 SysTray.qml
+Target 1.0 Target.qml
+Title 1.0 Title.qml
+Workspaces 1.0 Workspaces.qml

@@ -12,16 +12,15 @@ Rectangle {
     border.color: Theme.borderColor
     border.width: Theme.borderWidth
     
-    implicitWidth: layout.implicitWidth + 24
-    implicitHeight: 32
+    // Explicitly bind width to content plus padding
+    width: row.width + 24
+    height: 32
 
     property int activeWorkspace: 1
 
     Socket {
         path: `${Quickshell.env("XDG_RUNTIME_DIR")}/hypr/${Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")}/.socket2.sock`
         connected: true
-
-        Component.onCompleted: console.log("Workspaces connecting to socket: " + path)
 
         parser: SplitParser {
             onRead: msg => {
@@ -36,8 +35,8 @@ Rectangle {
         }
     }
 
-    RowLayout {
-        id: layout
+    Row {
+        id: row
         anchors.centerIn: parent
         spacing: 8
 

@@ -29,6 +29,12 @@ QtObject {
     readonly property color flamingo: "#f2ce00"
     readonly property color rosewater: "#f2d5cf"
 
+    // Functional Aliases
+    readonly property color primary: mauve
+    readonly property color secondary: yellow
+    readonly property color alert: red
+    readonly property color info: blue
+
     // UI Globals
     readonly property int radius: 12
     readonly property int borderWidth: 1

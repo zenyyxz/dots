@@ -7,7 +7,7 @@ import "../theme"
 Rectangle {
     id: root
     
-    color: Theme.base
+    color: mouseArea.containsMouse ? Theme.surface0 : Theme.base
     radius: Theme.radius
     border.color: Theme.borderColor
     border.width: Theme.borderWidth
@@ -15,24 +15,24 @@ Rectangle {
     implicitWidth: layout.implicitWidth + 32
     implicitHeight: 32
 
-    property string cpuUsage: "--%"
-    property string memUsage: "--%"
-    property string batUsage: "--%"
+    property real cpuVal: 0.0
+    property real memVal: 0.0
+    property real batVal: 0.0
     property bool isCharging: false
 
     // Update system info using shell commands
     Process {
         id: sysInfoProc
-        command: ["bash", "-c", "printf '%s|%s|%s|%s\\n' \"$(top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | tr ',' '.')\" \"$(free -m | awk 'NR==2{printf \"%.0f%%\", $3*100/$2 }')\" \"$(upower -i /org/freedesktop/UPower/devices/DisplayDevice | grep percentage | awk '{print $2}' | tr -d '%')\" \"$(upower -i /org/freedesktop/UPower/devices/DisplayDevice | grep state | awk '{print $2}')\""]
+        command: ["bash", "-c", "printf '%s|%s|%s|%s\\n' \"$(top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | tr ',' '.')\" \"$(free -m | awk 'NR==2{printf \"%.2f\", $3/$2 }')\" \"$(upower -i /org/freedesktop/UPower/devices/DisplayDevice | grep percentage | awk '{print $2}' | tr -d '%')\" \"$(upower -i /org/freedesktop/UPower/devices/DisplayDevice | grep state | awk '{print $2}')\""]
         running: true
         
         stdout: SplitParser {
             onRead: msg => {
                 const parts = msg.split("|");
                 if (parts.length >= 4) {
-                    root.cpuUsage = Math.round(parseFloat(parts[0])) + "%";
-                    root.memUsage = parts[1];
-                    root.batUsage = (parts[2] || "0") + "%";
+                    root.cpuVal = parseFloat(parts[0]) / 100.0;
+                    root.memVal = parseFloat(parts[1]);
+                    root.batVal = parseFloat(parts[2] || "0") / 100.0;
                     const state = parts[3].trim().toLowerCase();
                     root.isCharging = (state === "charging" || state === "pending-charge" || state === "fully-charged");
                 }
@@ -47,50 +47,77 @@ Rectangle {
         onTriggered: sysInfoProc.running = true
     }
 
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+    }
+
+    Behavior on color { ColorAnimation { duration: 200 } }
+
     RowLayout {
         id: layout
         anchors.centerIn: parent
         spacing: 12
 
-        // CPU
+        // CPU Module
         RowLayout {
-            spacing: 6
-            Text { text: ""; font.pixelSize: 14; color: Theme.blue; font.family: "JetBrainsMono Nerd Font" }
+            spacing: 8
+            ProgressCircle {
+                value: root.cpuVal
+                color: Theme.blue
+            }
             Text {
-                text: root.cpuUsage
+                text: Math.round(root.cpuVal * 100) + "%"
                 color: Theme.text
                 font.family: Theme.fontName
                 font.pixelSize: Theme.fontSize
             }
         }
 
-        Rectangle { width: 1; height: 16; color: Theme.surface1 }
+        Rectangle { width: 1; height: 14; color: Theme.surface1 }
 
-        // RAM
+        // RAM Module
         RowLayout {
-            spacing: 6
-            Text { text: ""; font.pixelSize: 14; color: Theme.green; font.family: "JetBrainsMono Nerd Font" }
+            spacing: 8
+            ProgressCircle {
+                value: root.memVal
+                color: Theme.green
+            }
             Text {
-                text: root.memUsage
+                text: Math.round(root.memVal * 100) + "%"
                 color: Theme.text
                 font.family: Theme.fontName
                 font.pixelSize: Theme.fontSize
             }
         }
 
-        Rectangle { width: 1; height: 16; color: Theme.surface1 }
+        Rectangle { width: 1; height: 14; color: Theme.surface1 }
 
-        // Battery
+        // Battery Module
         RowLayout {
-            spacing: 6
-            Text { 
-                text: root.isCharging ? "󱐋" : ""; 
-                font.pixelSize: 14; 
-                color: root.isCharging ? Theme.yellow : Theme.teal; 
-                font.family: "JetBrainsMono Nerd Font" 
+            spacing: 8
+            ProgressCircle {
+                value: root.batVal
+                color: root.isCharging ? Theme.yellow : Theme.teal
+                
+                // Extra visual indicator for charging
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 4; height: 4; radius: 2
+                    color: Theme.yellow
+                    visible: root.isCharging
+                    
+                    SequentialAnimation on opacity {
+                        running: root.isCharging
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 1.0; to: 0.0; duration: 800 }
+                        NumberAnimation { from: 0.0; to: 1.0; duration: 800 }
+                    }
+                }
             }
             Text {
-                text: root.batUsage
+                text: Math.round(root.batVal * 100) + "%"
                 color: Theme.text
                 font.family: Theme.fontName
                 font.pixelSize: Theme.fontSize
