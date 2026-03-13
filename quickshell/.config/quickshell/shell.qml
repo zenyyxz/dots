@@ -1,42 +1,55 @@
 import QtQuick
-import Quickshell.Io
+import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 
-PanelWindow {
-	anchors{
-		top: true
-		left: true
-		right: true
-	}
+ShellRoot {
+	Variants {
+		// Create the panel once on each monitor
+		model: Quickshell.screens
 
-	implicitHeight: 30
+		PanelWindow {
+			id: w
 
-	Text {
-		id: clock
-		anchors.centerIn: parent
+			property var modelData
+			screen: modelData
 
-		Process {
-			// give the process object an id so we can talk abuot it from the timer
-			id: dateProc
+			anchors {
+				right: true
+				bottom: true
+			}
 
-			command: ["date"]
-			running: true
+			margins {
+				right: 50
+				bottom: 50
+			}
 
-			stdout: StdioCollector {
-				onStreamFinished: clock.text = this.text
+			implicitWidth: content.width
+			implicitHeight: content.height
+
+			color: "transparent"
+
+			// Give the window an empty click mask so all clicks pass through it
+			mask: Region {}
+
+			// Use the wlroots specific layer propety to ensure it displays over fullscreen windows
+			WlrLayershell.layer: WlrLayer.Overlay
+
+			ColumnLayout {
+				id: content
+
+				Text {
+					text: "Activate Linux"
+					color: "#50ffffff"
+					font.pointSize: 22
+				}
+
+				Text {
+					text: "Go to Settings to activate Linux"
+					color: "#50ffffff"
+					font.pointSize: 14
+				}
 			}
 		}
-
-		Timer {
-			// 1000 milliseconds = 1 second
-			interval: 1000
-			running: true
-			repeat: true
-
-			//when the timer is triggered, set the running property of the process to true, which returns if it stopped.
-			
-			onTriggered: dateProc.running = true
-		}
 	}
-
 }
