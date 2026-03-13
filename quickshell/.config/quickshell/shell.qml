@@ -6,6 +6,8 @@ import "theme"
 import "components"
 
 ShellRoot {
+    id: root
+
 	Socket {
 		path: `${Quickshell.env("XDG_RUNTIME_DIR")}/hypr/${Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")}/.socket2.sock`
 		connected: true
@@ -56,7 +58,7 @@ ShellRoot {
 				Title { }
 			}
 
-			// MEDIA CARD: Fixed width and fixed position relative to the left
+			// MEDIA CARD
 			Media {
 				anchors.left: parent.left
 				anchors.leftMargin: 380 
@@ -83,61 +85,58 @@ ShellRoot {
 		}
 	}
 
-    // On-Screen Display
-    OSD {
-        id: globalOSD
-    }
+    // Global Floating Elements
+    Tooltip { }
+    MediaPopup { }
+    OSD { id: globalOSD }
 
-    // Volume Listener
+    // Listeners
+    property string lastVolState: ""
     Process {
-        command: ["bash", "-c", "pactl subscribe | grep --line-buffered \"change\""]
+        id: volWatcher
+        command: ["bash", "-c", "while true; do wpctl get-volume @DEFAULT_AUDIO_SINK@; sleep 0.1; done"]
         running: true
         stdout: SplitParser {
-            onRead: {
-                volumeUpdateProc.running = true
-            }
-        }
-    }
-
-    Process {
-        id: volumeUpdateProc
-        command: ["bash", "-c", "pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\\d+(?=%)' | head -n 1"]
-        stdout: SplitParser {
             onRead: msg => {
-                const vol = parseInt(msg.trim()) / 100.0;
-                if (!isNaN(vol)) {
-                    globalOSD.show("volume", vol, "󰕾");
+                const trimmedMsg = msg.trim();
+                if (trimmedMsg !== root.lastVolState && trimmedMsg.startsWith("Volume:")) {
+                    const muted = trimmedMsg.indexOf("[MUTED]") !== -1;
+                    const vol = parseFloat(trimmedMsg.split(/\s+/)[1]);
+                    if (!isNaN(vol)) {
+                        let icon = "󰕾";
+                        if (vol < 0.33) icon = "󰕿";
+                        else if (vol < 0.66) icon = "󰖀";
+                        globalOSD.show("volume", vol, icon, muted);
+                    }
+                    root.lastVolState = trimmedMsg;
                 }
             }
         }
     }
 
-    // Brightness Listener
-    property real lastBrightness: 0
+    property real lastBrightness: -1.0
     Process {
         id: brightPercentProc
-        command: ["bash", "-c", "brightnessctl m && brightnessctl g"]
+        command: ["bash", "-c", "while true; do printf '%s|%s\\n' \"$(brightnessctl m)\" \"$(brightnessctl g)\"; sleep 0.2; done"]
+        running: true
         stdout: SplitParser {
-            property int max: 0
-            onRead: (msg, index) => {
-                if (index == 0) {
-                    max = parseInt(msg);
-                } else if (index == 1) {
-                    const cur = parseInt(msg);
+            onRead: msg => {
+                const parts = msg.split("|");
+                if (parts.length >= 2) {
+                    const max = parseInt(parts[0]);
+                    const cur = parseInt(parts[1]);
                     const percent = cur / max;
-                    if (Math.abs(percent - lastBrightness) > 0.005) {
-                        globalOSD.show("brightness", percent, "󰃠");
-                        lastBrightness = percent;
+                    if (root.lastBrightness === -1.0) {
+                        root.lastBrightness = percent;
+                    } else if (Math.abs(percent - root.lastBrightness) > 0.001) {
+                        let icon = "󰃠";
+                        if (percent < 0.33) icon = "󰃞";
+                        else if (percent < 0.66) icon = "󰃟";
+                        globalOSD.show("brightness", percent, icon);
+                        root.lastBrightness = percent;
                     }
                 }
             }
         }
-    }
-
-    Timer {
-        interval: 500
-        repeat: true
-        running: true
-        onTriggered: brightPercentProc.running = true
     }
 }

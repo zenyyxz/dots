@@ -1,10 +1,15 @@
 module components
+Brightness 1.0 Brightness.qml
 Clock 1.0 Clock.qml
 Media 1.0 Media.qml
+MediaButton 1.0 MediaButton.qml
+MediaPopup 1.0 MediaPopup.qml
 Network 1.0 Network.qml
 ProgressCircle 1.0 ProgressCircle.qml
 SysInfo 1.0 SysInfo.qml
 SysTray 1.0 SysTray.qml
 Target 1.0 Target.qml
 Title 1.0 Title.qml
+Tooltip 1.0 Tooltip.qml
+Volume 1.0 Volume.qml
 Workspaces 1.0 Workspaces.qml

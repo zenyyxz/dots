@@ -1,2 +1,4 @@
 module theme
 singleton Theme 1.0 Theme.qml
+singleton TooltipController 1.0 TooltipController.qml
+singleton MediaController 1.0 MediaController.qml
