@@ -109,6 +109,30 @@ PanelWindow {
             Rectangle { width: 10; height: 10; color: Theme.mauve; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: -2 }
             Rectangle { width: 10; height: 10; color: Theme.mauve; anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: -2 }
             Rectangle { width: 10; height: 10; color: Theme.mauve; anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: -2 }
+
+            // Pixel Dimensions (end4 style)
+            Rectangle {
+                anchors.bottom: parent.top
+                anchors.left: parent.left
+                anchors.bottomMargin: 8
+                width: dimensionsText.implicitWidth + 16
+                height: dimensionsText.implicitHeight + 8
+                color: Theme.base
+                radius: 8
+                border.color: Theme.surface0
+                border.width: 1
+                visible: parent.width > 50
+
+                Text {
+                    id: dimensionsText
+                    anchors.centerIn: parent
+                    text: Math.round(parent.parent.width) + " x " + Math.round(parent.parent.height)
+                    color: Theme.mauve
+                    font.family: Theme.fontName
+                    font.pixelSize: 12
+                    font.bold: true
+                }
+            }
         }
     }
 
