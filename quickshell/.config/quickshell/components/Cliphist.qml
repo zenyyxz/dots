@@ -8,6 +8,10 @@ QtObject {
 
     property list<string> entries: []
 
+    function isImage(entry) {
+        return !!(entry.match(/\[\[.*binary data.*\d+x\d+.*\]\]/));
+    }
+
     function refresh() {
         if (!readProc.running) {
             readProc.running = true;

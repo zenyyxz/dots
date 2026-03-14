@@ -35,12 +35,12 @@ PanelWindow {
         }
     }
 
-    // Subtle background dimming
+    // Subtle background dimming with smooth fade
     Rectangle {
         anchors.fill: parent
         color: "#000000"
-        opacity: root.visible ? 0.3 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        opacity: root.visible ? 0.4 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 300 } }
         
         MouseArea {
             anchors.fill: parent
@@ -51,49 +51,58 @@ PanelWindow {
     // Centered Container
     Rectangle {
         id: container
-        width: 500
-        height: 600
+        width: 520
+        height: 650
         anchors.centerIn: parent
         color: Theme.base
-        radius: 24
-        border.color: Theme.borderColor
+        radius: 28
+        border.color: Theme.surface0
         border.width: 1
         clip: true
 
         opacity: root.visible ? 1.0 : 0.0
-        scale: root.visible ? 1.0 : 0.95
+        scale: root.visible ? 1.0 : 0.98
         Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 20
-            spacing: 15
+            anchors.margins: 24
+            spacing: 20
 
             // --- Header ---
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 12
+                spacing: 16
                 
                 Rectangle {
-                    width: 40; height: 40
-                    radius: 10
+                    width: 44; height: 44
+                    radius: 12
                     color: Theme.surface0
                     Text {
                         anchors.centerIn: parent
                         text: "󰅍"
                         font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 20
+                        font.pixelSize: 22
                         color: Theme.mauve
                     }
                 }
 
-                Text {
-                    text: "Clipboard"
-                    color: Theme.text
-                    font.family: Theme.fontName
-                    font.pixelSize: 22
-                    font.bold: true
+                ColumnLayout {
+                    spacing: -2
+                    Text {
+                        text: "Clipboard"
+                        color: Theme.text
+                        font.family: Theme.fontName
+                        font.pixelSize: 22
+                        font.bold: true
+                    }
+                    Text {
+                        text: Cliphist.entries.length + " items in history"
+                        color: Theme.surface2
+                        font.family: Theme.fontName
+                        font.pixelSize: 12
+                    }
                 }
 
                 Item { Layout.fillWidth: true }
@@ -109,19 +118,21 @@ PanelWindow {
                             text: "󰆴"
                             font.family: "JetBrainsMono Nerd Font"
                             font.pixelSize: 16
-                            color: wipeButton.hovered ? Theme.red : Theme.subtext0
+                            color: wipeButton.hovered ? Theme.red : Theme.surface2
                         }
                         Text {
-                            text: "Clear All"
-                            color: wipeButton.hovered ? Theme.red : Theme.subtext0
+                            text: "Clear"
+                            color: wipeButton.hovered ? Theme.red : Theme.surface2
                             font.family: Theme.fontName
                             font.pixelSize: 14
+                            font.bold: true
                         }
                     }
                     
                     background: Rectangle {
-                        radius: 8
+                        radius: 10
                         color: wipeButton.hovered ? Theme.surface1 : "transparent"
+                        Behavior on color { ColorAnimation { duration: 200 } }
                     }
                 }
             }
@@ -129,31 +140,32 @@ PanelWindow {
             // --- Search Bar ---
             Rectangle {
                 Layout.fillWidth: true
-                height: 54
-                color: Theme.surface0
-                radius: 14
-                border.color: searchField.activeFocus ? Theme.mauve : "transparent"
+                height: 56
+                color: Theme.mantle
+                radius: 16
+                border.color: searchField.activeFocus ? Theme.mauve : Theme.surface0
                 border.width: 1
                 
                 Behavior on border.color { ColorAnimation { duration: 200 } }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 15; anchors.rightMargin: 15
-                    spacing: 12
+                    anchors.leftMargin: 18; anchors.rightMargin: 18
+                    spacing: 14
 
                     Text {
                         text: "󰍉"
                         font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 20
                         color: Theme.mauve
+                        opacity: searchField.activeFocus ? 1.0 : 0.6
                     }
 
                     TextField {
                         id: searchField
                         Layout.fillWidth: true
                         placeholderText: "Search your history..."
-                        placeholderTextColor: Theme.surface2
+                        placeholderTextColor: Theme.surface1
                         color: Theme.text
                         font.family: Theme.fontName
                         font.pixelSize: 16
@@ -186,99 +198,153 @@ PanelWindow {
             }
 
             // --- History List ---
-            ListView {
-                id: listView
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 8
-                clip: true
-                currentIndex: root.selectedIndex
-                
-                model: {
-                    const q = root.query.trim().toLowerCase();
-                    if (q === "") return Cliphist.entries;
-                    return Cliphist.entries.filter(e => e.toLowerCase().includes(q));
-                }
 
-                delegate: Item {
-                    width: listView.width
-                    height: 64
+                ListView {
+                    id: listView
+                    anchors.fill: parent
+                    spacing: 10
+                    clip: true
+                    currentIndex: root.selectedIndex
                     
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 12
-                        color: root.selectedIndex === index ? Theme.surface1 : Theme.surface0
-                        border.color: root.selectedIndex === index ? Theme.mauve : "transparent"
-                        border.width: 1
-                        
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                    model: {
+                        const q = root.query.trim().toLowerCase();
+                        if (q === "") return Cliphist.entries;
+                        return Cliphist.entries.filter(e => e.toLowerCase().includes(q));
+                    }
 
-                        RowLayout {
+                    delegate: Item {
+                        width: listView.width
+                        height: Cliphist.isImage(modelData) ? 220 : 72
+                        
+                        Rectangle {
                             anchors.fill: parent
-                            anchors.leftMargin: 16; anchors.rightMargin: 12
-                            spacing: 15
+                            radius: 16
+                            color: root.selectedIndex === index ? Theme.surface1 : Theme.surface0
+                            border.color: root.selectedIndex === index ? Theme.mauve : "transparent"
+                            border.width: 1
                             
-                            Rectangle {
-                                width: 32; height: 32
-                                radius: 8
-                                color: Theme.base
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "󰅍"
-                                    font.family: "JetBrainsMono Nerd Font"
-                                    font.pixelSize: 14
-                                    color: root.selectedIndex === index ? Theme.mauve : Theme.subtext0
-                                }
-                            }
+                            Behavior on color { ColorAnimation { duration: 150 } }
 
                             ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 2
-                                Text {
+                                anchors.fill: parent
+                                anchors.margins: 12
+                                spacing: 8
+
+                                RowLayout {
                                     Layout.fillWidth: true
-                                    text: modelData.replace(/^\d+\s+/, "")
-                                    color: root.selectedIndex === index ? Theme.text : Theme.subtext1
-                                    font.family: Theme.fontName
-                                    font.pixelSize: 14
-                                    elide: Text.ElideRight
-                                    maximumLineCount: 1
+                                    spacing: 15
+                                    
+                                    Rectangle {
+                                        width: 32; height: 32
+                                        radius: 10
+                                        color: root.selectedIndex === index ? Theme.base : Theme.mantle
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: Cliphist.isImage(modelData) ? "󰋩" : "󰅍"
+                                            font.family: "JetBrainsMono Nerd Font"
+                                            font.pixelSize: 16
+                                            color: root.selectedIndex === index ? Theme.mauve : Theme.surface2
+                                        }
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: Cliphist.isImage(modelData) ? "Image Entry" : modelData.replace(/^\d+\s+/, "")
+                                            color: root.selectedIndex === index ? Theme.text : Theme.subtext1
+                                            font.family: Theme.fontName
+                                            font.pixelSize: 14
+                                            font.bold: root.selectedIndex === index
+                                            elide: Text.ElideRight
+                                            maximumLineCount: 1
+                                        }
+                                        Text {
+                                            text: "Entry #" + modelData.split(/\s+/)[0]
+                                            color: Theme.surface2
+                                            font.family: Theme.fontName
+                                            font.pixelSize: 11
+                                        }
+                                    }
+
+                                    ToolButton {
+                                        id: delBtn
+                                        flat: true
+                                        onClicked: Cliphist.deleteEntry(modelData)
+                                        contentItem: Text {
+                                            text: "󰆴"
+                                            font.family: "JetBrainsMono Nerd Font"
+                                            font.pixelSize: 20
+                                            color: delBtn.hovered ? Theme.red : Theme.surface2
+                                            opacity: delBtn.hovered ? 1.0 : 0.4
+                                        }
+                                        background: null
+                                    }
                                 }
-                                Text {
-                                    text: "Entry #" + modelData.split(/\s+/)[0]
-                                    color: Theme.surface2
-                                    font.family: Theme.fontName
-                                    font.pixelSize: 11
+
+                                CliphistImage {
+                                    visible: Cliphist.isImage(modelData)
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    entry: modelData
+                                    maxWidth: parent.width
+                                    maxHeight: 140
                                 }
                             }
+                        }
 
-                            ToolButton {
-                                id: delBtn
-                                flat: true
-                                onClicked: Cliphist.deleteEntry(modelData)
-                                contentItem: Text {
-                                    text: "󰆴"
-                                    font.family: "JetBrainsMono Nerd Font"
-                                    font.pixelSize: 18
-                                    color: delBtn.hovered ? Theme.red : Theme.surface2
-                                }
-                                background: null
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: root.selectedIndex = index
+                            onClicked: {
+                                Cliphist.copy(modelData);
+                                root.visible = false;
                             }
                         }
                     }
+                    
+                    onCurrentIndexChanged: {
+                        positionViewAtIndex(currentIndex, ListView.Contain);
+                    }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onEntered: root.selectedIndex = index
-                        onClicked: {
-                            Cliphist.copy(modelData);
-                            root.visible = false;
-                        }
+                    // Smooth list transitions
+                    add: Transition {
+                        NumberAnimation { properties: "opacity,scale"; from: 0; to: 1; duration: 200 }
+                    }
+                    remove: Transition {
+                        NumberAnimation { properties: "opacity,scale"; to: 0; duration: 200 }
+                    }
+                    displaced: Transition {
+                        NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.OutQuad }
                     }
                 }
-                
-                onCurrentIndexChanged: {
-                    positionViewAtIndex(currentIndex, ListView.Contain);
+
+                // Empty State
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    visible: listView.count === 0
+                    spacing: 12
+                    opacity: 0.5
+                    
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "󰅏"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.pixelSize: 64
+                        color: Theme.surface2
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: root.query === "" ? "History is empty" : "No results found"
+                        color: Theme.text
+                        font.family: Theme.fontName
+                        font.pixelSize: 16
+                    }
                 }
             }
         }
