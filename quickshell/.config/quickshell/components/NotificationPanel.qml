@@ -29,25 +29,25 @@ PanelWindow {
     property bool isOpen: false
     visible: isOpen || container.opacity > 0
 
-    // Notification List Model
-    property var notifications: []
+    // Manual Notification Model for persistent history
+    ListModel { id: notifModel }
 
     function addNotification(n) {
-        notifications.push(n);
-        notificationsChanged();
-    }
-
-    function removeNotification(index) {
-        const n = notifications[index];
-        if (n) n.dismiss();
-        notifications.splice(index, 1);
-        notificationsChanged();
+        // Insert at the top (newest first)
+        // Store strings explicitly because complex objects can lose properties in ListModel
+        notifModel.insert(0, { 
+            "notifObject": n,
+            "summaryText": n.summary || "Notification",
+            "bodyText": n.body || ""
+        });
     }
 
     function clearAll() {
-        while (notifications.length > 0) {
-            removeNotification(0);
+        for (let i = 0; i < notifModel.count; i++) {
+            const n = notifModel.get(i).notifObject;
+            if (n) n.dismiss();
         }
+        notifModel.clear();
     }
 
     Rectangle {
@@ -105,9 +105,9 @@ PanelWindow {
                 Layout.fillHeight: true
                 spacing: 10
                 clip: true
-                model: root.notifications
+                model: notifModel
                 delegate: Rectangle {
-                    width: parent.width
+                    width: ListView.view.width
                     height: 80; radius: 12
                     color: Theme.surface0
                     border.color: Theme.surface1
@@ -118,7 +118,7 @@ PanelWindow {
                         anchors.margins: 10
                         spacing: 12
 
-                        // Icon Placeholder (could be app icon)
+                        // Icon Placeholder
                         Rectangle {
                             width: 40; height: 40; radius: 8
                             color: Theme.surface1
@@ -134,14 +134,14 @@ PanelWindow {
                             Layout.fillWidth: true
                             spacing: 2
                             Text {
-                                text: modelData.summary || "Notification"
+                                text: model.summaryText
                                 color: Theme.text
                                 font.family: Theme.fontName
                                 font.pixelSize: 14; font.bold: true
                                 elide: Text.ElideRight; Layout.fillWidth: true
                             }
                             Text {
-                                text: modelData.body || ""
+                                text: model.bodyText
                                 color: Theme.subtext0
                                 font.family: Theme.fontName
                                 font.pixelSize: 12
@@ -156,7 +156,11 @@ PanelWindow {
                             color: Theme.surface2
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: root.removeNotification(index)
+                                onClicked: {
+                                    const n = notifModel.get(index).notifObject;
+                                    if (n) n.dismiss();
+                                    notifModel.remove(index);
+                                }
                             }
                         }
                     }
@@ -166,7 +170,7 @@ PanelWindow {
                     anchors.centerIn: parent
                     text: "No Notifications"
                     color: Theme.surface2
-                    visible: root.notifications.length === 0
+                    visible: notifModel.count === 0
                     font.family: Theme.fontName
                 }
             }

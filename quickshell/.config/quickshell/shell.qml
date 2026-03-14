@@ -81,7 +81,7 @@ ShellRoot {
     Tooltip { }
     MediaPopup { }
     OSD { id: globalOSD }
-    NotificationPanel { id: notifPanel }
+    SidePanel { id: sidePanel }
     NotificationPopup { id: notifPopup }
 
     // Click-away listener (Closes panel when clicking outside)
@@ -93,7 +93,7 @@ ShellRoot {
             left: true
             right: true
         }
-        visible: notifPanel.isOpen
+        visible: sidePanel.isOpen
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "click-away"
@@ -101,7 +101,7 @@ ShellRoot {
         
         MouseArea {
             anchors.fill: parent
-            onClicked: notifPanel.isOpen = false
+            onClicked: sidePanel.isOpen = false
         }
     }
 
@@ -122,7 +122,7 @@ ShellRoot {
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
-            onEntered: notifPanel.isOpen = true
+            onEntered: sidePanel.isOpen = true
         }
     }
 
@@ -130,9 +130,9 @@ ShellRoot {
     NotificationServer {
         id: notifServer
         onNotification: (n) => {
-            notifPanel.addNotification(n);
-            // Only show popup if history panel is closed
-            if (!notifPanel.isOpen) {
+            sidePanel.addNotification(n);
+            // Only show popup if side panel is closed
+            if (!sidePanel.isOpen) {
                 notifPopup.show(n);
             }
         }
