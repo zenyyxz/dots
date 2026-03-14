@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.GraphicalEffects
 import Quickshell
 import Quickshell.Io
 import "../theme"
@@ -13,7 +12,7 @@ Rectangle {
     border.color: Theme.borderColor
     border.width: 1
     
-    implicitWidth: 40
+    implicitWidth: 32
     implicitHeight: 32
 
     property string ssid: ""
@@ -52,14 +51,14 @@ Rectangle {
         onTriggered: netProc.running = true
     }
 
-    function getWifiIconName() {
-        if (!root.wifiEnabled) return "network-wireless-disabled-symbolic";
-        if (!root.connected) return "network-wireless-offline-symbolic";
-
-        if (root.signal >= 0.8) return "network-wireless-signal-excellent-symbolic";
-        if (root.signal >= 0.6) return "network-wireless-signal-good-symbolic";
-        if (root.signal >= 0.4) return "network-wireless-signal-ok-symbolic";
-        return "network-wireless-signal-weak-symbolic";
+    function getWifiIcon() {
+        if (!root.wifiEnabled) return "󰤭"; // WiFi Off
+        if (!root.connected) return "󰤮";   // Disconnected
+        
+        if (root.signal >= 0.8) return "󰤨"; // Excellent
+        if (root.signal >= 0.6) return "󰤥"; // Good
+        if (root.signal >= 0.4) return "󰤢"; // OK
+        return "󰤟"; // Weak
     }
 
     function getTooltipText() {
@@ -76,17 +75,13 @@ Rectangle {
         onExited: TooltipController.hide()
     }
 
-    Image {
-        id: wifiIcon
+    Text {
         anchors.centerIn: parent
-        width: 18
-        height: 18
-        source: Quickshell.iconPath(root.getWifiIconName())
-        smooth: true
+        text: root.getWifiIcon()
+        font.family: "JetBrainsMono Nerd Font"
+        font.pixelSize: 16 // Increased size for visibility
+        color: !root.wifiEnabled ? Theme.surface1 : (root.connected ? Theme.sapphire : Theme.red)
         
-        layer.enabled: true
-        layer.effect: Colorize {
-            color: !root.wifiEnabled ? Theme.surface1 : (root.connected ? Theme.sapphire : Theme.red)
-        }
+        Behavior on color { ColorAnimation { duration: 200 } }
     }
 }
