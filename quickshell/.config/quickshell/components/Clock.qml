@@ -5,13 +5,12 @@ import "../theme"
 Rectangle {
     id: root
     
-    // Consolidate color property into one declaration
     color: mouseArea.containsMouse ? Theme.surface0 : Theme.base
     radius: Theme.radius
     border.color: Theme.borderColor
-    border.width: Theme.borderWidth
+    border.width: 1
     
-    implicitWidth: layout.implicitWidth + 32
+    implicitWidth: layout.implicitWidth + 24
     implicitHeight: 32
 
     property string timeStr: "--:--"
@@ -19,12 +18,11 @@ Rectangle {
 
     function updateTime() {
         const d = new Date();
-        // Time format: 14:05
         root.timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
         
-        // Date format: Sat, Mar 14
+        // Stylish date: SAT, MAR 14
         const options = { weekday: 'short', month: 'short', day: 'numeric' };
-        root.dateStr = d.toLocaleDateString(undefined, options);
+        root.dateStr = d.toLocaleDateString(undefined, options).toUpperCase();
     }
 
     Component.onCompleted: updateTime()
@@ -36,45 +34,51 @@ Rectangle {
         onTriggered: updateTime()
     }
 
-    // Hover effect
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
     }
 
-    Behavior on color { ColorAnimation { duration: 200 } }
+    Behavior on color { ColorAnimation { duration: 250 } }
 
     RowLayout {
         id: layout
         anchors.centerIn: parent
-        spacing: 10
+        spacing: 12
 
-        // Time
+        // Icon Section
         Text {
+            text: "󱑂"
+            font.family: "JetBrainsMono Nerd Font"
+            font.pixelSize: 16
             color: Theme.mauve
-            font.family: Theme.fontName
-            font.pixelSize: Theme.fontSize + 1
-            font.bold: true
-            text: root.timeStr
+            opacity: mouseArea.containsMouse ? 1.0 : 0.8
+            Behavior on opacity { NumberAnimation { duration: 200 } }
         }
 
-        // Dot Separator
-        Rectangle {
-            width: 4
-            height: 4
-            radius: 2
-            color: Theme.surface1
-            Layout.alignment: Qt.AlignCenter
-        }
+        // Stacked Time & Date
+        ColumnLayout {
+            spacing: -4 // Tight stacking for aesthetic
+            
+            Text {
+                Layout.alignment: Qt.AlignLeft
+                color: Theme.text
+                font.family: Theme.fontName
+                font.pixelSize: 12
+                font.bold: true
+                text: root.timeStr
+            }
 
-        // Date
-        Text {
-            color: Theme.subtext0
-            font.family: Theme.fontName
-            font.pixelSize: Theme.fontSize
-            font.weight: Font.Medium
-            text: root.dateStr
+            Text {
+                Layout.alignment: Qt.AlignLeft
+                color: Theme.subtext0
+                font.family: Theme.fontName
+                font.pixelSize: 8
+                font.weight: Font.Black
+                text: root.dateStr
+                letterSpacing: 0.5
+            }
         }
     }
 }
