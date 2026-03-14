@@ -2,7 +2,12 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
     set fish_greeting
     
+    # Initialize Starship
     starship init fish | source
+    
+    # FZF configuration
+    set -gx FZF_DEFAULT_COMMAND "fd --type f"
+    set -gx FZF_CTRL_T_COMMAND "$FZF_DEFAULT_COMMAND"
     
     # Aliases
     alias clear "printf '\033[2J\033[3J\033[1;1H'" # fix: kitty doesn't clear properly

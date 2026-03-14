@@ -19,3 +19,4 @@ SidePanel 1.0 SidePanel.qml
 ControlCenterButton 1.0 ControlCenterButton.qml
 ControlCenterSlider 1.0 ControlCenterSlider.qml
 PowerButton 1.0 PowerButton.qml
+Launcher 1.0 Launcher.qml

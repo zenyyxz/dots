@@ -11,6 +11,15 @@ import "components"
 ShellRoot {
     id: root
 
+    // Professional way to handle toggles used by end4
+    GlobalShortcut {
+        name: "launcherToggle"
+        description: "Toggles the application launcher"
+        onPressed: {
+            appLauncher.visible = !appLauncher.visible;
+        }
+    }
+
     PanelWindow {
         id: panel
 
@@ -40,7 +49,7 @@ ShellRoot {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
                 Workspaces { }
-                Title { }
+                // Title { }
             }
 
             // Spacer to keep clock centered
@@ -83,6 +92,7 @@ ShellRoot {
     OSD { id: globalOSD }
     SidePanel { id: sidePanel }
     NotificationPopup { id: notifPopup }
+    Launcher { id: appLauncher; visible: false }
 
     // Click-away listener (Closes panel when clicking outside)
     PanelWindow {
@@ -93,7 +103,7 @@ ShellRoot {
             left: true
             right: true
         }
-        visible: sidePanel.isOpen
+        visible: sidePanel.isOpen || appLauncher.visible
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "click-away"
@@ -101,7 +111,10 @@ ShellRoot {
         
         MouseArea {
             anchors.fill: parent
-            onClicked: sidePanel.isOpen = false
+            onClicked: {
+                sidePanel.isOpen = false;
+                appLauncher.visible = false;
+            }
         }
     }
 
