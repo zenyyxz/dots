@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
+import Quickshell.Hyprland
 import "../theme"
 
 Rectangle {
@@ -17,28 +17,7 @@ Rectangle {
     implicitHeight: 32
     
     visible: windowTitle !== ""
-    property string windowTitle: "Desktop"
-
-    Socket {
-        path: `${Quickshell.env("XDG_RUNTIME_DIR")}/hypr/${Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")}/.socket2.sock`
-        connected: true
-
-        parser: SplitParser {
-            onRead: msg => {
-                if (msg.startsWith("activewindowv2>>")) {
-                    const parts = msg.split(">>")[1].split(",");
-                    if (parts.length >= 2) {
-                        root.windowTitle = parts[1].trim();
-                    }
-                } else if (msg.startsWith("activewindow>>")) {
-                    const parts = msg.split(">>")[1].split(",");
-                    if (parts.length >= 2) {
-                        root.windowTitle = parts[1].trim();
-                    }
-                }
-            }
-        }
-    }
+    readonly property string windowTitle: Hyprland.focusedWindow?.title || "Desktop"
 
     RowLayout {
         id: layout

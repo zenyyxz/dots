@@ -2,95 +2,143 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
+import Quickshell.Wayland
+import Quickshell.Services.Notifications
 import "theme"
 import "components"
 
 ShellRoot {
     id: root
 
-	Socket {
-		path: `${Quickshell.env("XDG_RUNTIME_DIR")}/hypr/${Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")}/.socket2.sock`
-		connected: true
+    PanelWindow {
+        id: panel
 
-		Component.onCompleted: console.log("Connecting to socket: " + path)
+        anchors {
+            top: true
+            left: true
+            right: true
+        }
 
-		parser: SplitParser {
-			property var regex: new RegExp("focusedmon>>(.+),.*");
+        margins {
+            top: 8
+            left: 10
+            right: 10
+        }
 
-			onRead: msg => {
-				const match = regex.exec(msg);
-				if (match != null) {
-					panel.screen = Quickshell.screens.filter(screen => screen.name == match[1])[0];
-				}
-			}
-		}
-	}
+        implicitHeight: 40
+        color: "transparent"
 
-	PanelWindow {
-		id: panel
+        RowLayout {
+            anchors.fill: parent
+            spacing: 0
 
-		anchors {
-			top: true
-			left: true
-			right: true
-		}
+            // Left Group (Workspaces + Title)
+            RowLayout {
+                id: leftGroup
+                spacing: 8
+                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
-		margins {
-			top: 8
-			left: 10
-			right: 10
-		}
+                Workspaces { }
+                Title { }
+            }
 
-		implicitHeight: 40
-		color: "transparent"
+            // Spacer to keep clock centered
+            Item {
+                Layout.fillWidth: true
+            }
 
-		Item {
-			anchors.fill: parent
+            // Center Group (Clock + Media)
+            RowLayout {
+                id: centerGroup
+                spacing: 12
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
-			// Left Group (Workspaces + Title)
-			RowLayout {
-				id: leftGroup
-				anchors.left: parent.left
-				anchors.verticalCenter: parent.verticalCenter
-				spacing: 8
+                Media { }
+                Clock { }
+            }
 
-				Workspaces { }
-				Title { }
-			}
+            // Spacer to keep clock centered
+            Item {
+                Layout.fillWidth: true
+            }
 
-			// MEDIA CARD
-			Media {
-				anchors.left: parent.left
-				anchors.leftMargin: 380 
-				anchors.verticalCenter: parent.verticalCenter
-			}
+            // Right Group
+            RowLayout {
+                id: rightGroup
+                spacing: 8
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
-			// Clock (Exact Center)
-			Clock {
-				anchors.horizontalCenter: parent.horizontalCenter
-				anchors.verticalCenter: parent.verticalCenter
-			}
-
-			// Right Group
-			RowLayout {
-				anchors.right: parent.right
-				anchors.verticalCenter: parent.verticalCenter
-				spacing: 8
-
-				SysTray { }
-				Network { }
-				SysInfo { }
-				Target { }
-			}
-		}
-	}
+                SysTray { }
+                Network { }
+                SysInfo { }
+                Target { }
+            }
+        }
+    }
 
     // Global Floating Elements
     Tooltip { }
     MediaPopup { }
     OSD { id: globalOSD }
+    NotificationPanel { id: notifPanel }
+    NotificationPopup { id: notifPopup }
 
-    // Listeners
+    // Click-away listener (Closes panel when clicking outside)
+    PanelWindow {
+        id: clickAway
+        anchors {
+            top: true
+            bottom: true
+            left: true
+            right: true
+        }
+        visible: notifPanel.isOpen
+        exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "click-away"
+        color: "transparent"
+        
+        MouseArea {
+            anchors.fill: parent
+            onClicked: notifPanel.isOpen = false
+        }
+    }
+
+    // Top-Right Hover Trigger
+    PanelWindow {
+        id: trigger
+        anchors {
+            top: true
+            right: true
+        }
+        width: 10
+        height: 10
+        color: "transparent"
+        exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "trigger"
+        
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            onEntered: notifPanel.isOpen = true
+        }
+    }
+
+    // Notification Server
+    NotificationServer {
+        id: notifServer
+        onNotification: (n) => {
+            notifPanel.addNotification(n);
+            // Only show popup if history panel is closed
+            if (!notifPanel.isOpen) {
+                notifPopup.show(n);
+            }
+        }
+    }
+
+    // Volume Listener (Reverted to Polling for reliability)
     property string lastVolState: ""
     Process {
         id: volWatcher

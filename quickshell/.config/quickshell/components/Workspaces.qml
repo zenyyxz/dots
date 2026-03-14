@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
+import Quickshell.Hyprland
 import "../theme"
 
 Rectangle {
@@ -16,24 +16,7 @@ Rectangle {
     width: row.width + 24
     height: 32
 
-    property int activeWorkspace: 1
-
-    Socket {
-        path: `${Quickshell.env("XDG_RUNTIME_DIR")}/hypr/${Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")}/.socket2.sock`
-        connected: true
-
-        parser: SplitParser {
-            onRead: msg => {
-                if (msg.startsWith("workspace>>") || msg.startsWith("workspacev2>>")) {
-                    const parts = msg.split(">>")[1].split(",");
-                    const wsId = parseInt(parts[0]);
-                    if (!isNaN(wsId)) {
-                        root.activeWorkspace = wsId;
-                    }
-                }
-            }
-        }
-    }
+    readonly property int activeWorkspace: Hyprland.focusedWorkspace?.id ?? 1
 
     Row {
         id: row

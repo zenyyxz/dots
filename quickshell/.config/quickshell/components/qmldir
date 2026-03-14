@@ -13,3 +13,5 @@ Title 1.0 Title.qml
 Tooltip 1.0 Tooltip.qml
 Volume 1.0 Volume.qml
 Workspaces 1.0 Workspaces.qml
+NotificationPanel 1.0 NotificationPanel.qml
+NotificationPopup 1.0 NotificationPopup.qml

@@ -2,103 +2,135 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Fusion
 import Quickshell.Wayland
+import "../.config/quickshell/theme"
 
 Rectangle {
     id: root
     required property LockContext context
-    readonly property ColorGroup colors: Window.active ? palette.active : palette.inactive
+    
+    color: Theme.crust
 
-    color: colors.window
-
-    Button {
-        text: "Its not working, let me out"
-        onClicked: context.unlocked();
-    }
-
-    Label {
-        id: clock
-        property var date: new Date()
-
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            top: parent.top
-            topMargin: 100
-        }
-
-        // The native font renderer tends to look nicer at large sizes
-        renderType: Text.NativeRendering
-        font.pointSize: 80
-
-        // update the clock every second
-        Timer {
-            running: true
-            repeat: true
-            interval: 1000
-
-            onTriggered: clock.date = new Date()
-        }
-
-        // updated when the date changes
-        text: {
-            const hours = this.date.getHours().toString().padStart(2, '0');
-            const minutes = this.date.getMinutes().toString().padStart(2, '0');
-            return '${hours}:${minutes}';
+    // Background Image or Gradient
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Theme.crust }
+            GradientStop { position: 1.0; color: Theme.base }
         }
     }
 
     ColumnLayout {
-        // Uncommenting this will make the password entry insivible except on the active monitor.
-        // visible: Window.active
+        anchors.centerIn: parent
+        spacing: 40
 
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            top: parent.verticalCenter
+        // Clock
+        ColumnLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 0
+            
+            Label {
+                id: clock
+                property var date: new Date()
+                Layout.alignment: Qt.AlignHCenter
+
+                renderType: Text.NativeRendering
+                font.family: Theme.fontName
+                font.pointSize: 80
+                font.bold: true
+                color: Theme.mauve
+
+                Timer {
+                    running: true
+                    repeat: true
+                    interval: 1000
+                    onTriggered: clock.date = new Date()
+                }
+
+                text: {
+                    const hours = this.date.getHours().toString().padStart(2, '0');
+                    const minutes = this.date.getMinutes().toString().padStart(2, '0');
+                    return `${hours}:${minutes}`;
+                }
+            }
+
+            Label {
+                Layout.alignment: Qt.AlignHCenter
+                text: new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
+                font.family: Theme.fontName
+                font.pointSize: 18
+                color: Theme.subtext0
+            }
         }
 
-        RowLayout {
-            TextField {
-                id: passwordBox
+        // Input Field
+        ColumnLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 15
 
-                implicitWidth: 400
-                padding: 10
+            Rectangle {
+                implicitWidth: 320
+                implicitHeight: 50
+                color: Theme.surface0
+                radius: 12
+                border.color: root.context.showFailure ? Theme.red : Theme.surface1
+                border.width: 1
 
-                focus: true
-                enabled: !root.context.unlockInProgress
-                echoMode: TextInput.Password
-                inputMethodHints: Qt.ImhSensitiveData
+                TextField {
+                    id: passwordBox
+                    anchors.fill: parent
+                    anchors.leftMargin: 15
+                    anchors.rightMargin: 15
+                    
+                    background: null
+                    focus: true
+                    enabled: !root.context.unlockInProgress
+                    echoMode: TextInput.Password
+                    inputMethodHints: Qt.ImhSensitiveData
+                    
+                    color: Theme.text
+                    font.family: Theme.fontName
+                    font.pointSize: 14
+                    
+                    placeholderText: "Enter Password..."
+                    placeholderTextColor: Theme.surface2
 
-                // Update the text in the contect when the text in the box changes
-                onTextChanged: root.context.currentText = this.text;
+                    onTextChanged: root.context.currentText = this.text;
+                    onAccepted: root.context.tryUnlock();
 
-                // Try to unlock when enter is pressed
-                onAccepted: root.context.tryUnlocl();
-
-                // Update the text in the box to match the text in the context
-                // This makes sure multiple monitors have the same text.
-                Connections {
-                    target: root.context
-
-                    function onCurrentTextChanged() {
-                        passwordBox.text = root.context.currentText;
+                    Connections {
+                        target: root.context
+                        function onCurrentTextChanged() {
+                            passwordBox.text = root.context.currentText;
+                        }
                     }
                 }
             }
 
-            Button {
-                text: "Unlock"
-                padding: 10
-
-                // don't steal focus from the text box.
-                focusPolicy: Qt.NoFocus
-
-                enabled: !root.context.unlockInProgress && root.context.cuurentText !== "";
-                onClicked: root.context.tryUnlock();
+            Label {
+                Layout.alignment: Qt.AlignHCenter
+                visible: root.context.showFailure
+                text: "Authentication Failed"
+                color: Theme.red
+                font.family: Theme.fontName
+                font.pointSize: 12
             }
         }
+    }
 
-        Label {
-            visible: root.context.showFailure
-            text: "Incorrect Password"
+    // Emergency Exit (for dev/debugging)
+    Button {
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin: 20
+        text: "Emergency Unlock"
+        flat: true
+        contentItem: Text {
+            text: parent.text
+            color: Theme.surface2
+            font.family: Theme.fontName
+            horizontalAlignment: Text.AlignHCenter
         }
+        onClicked: context.unlocked();
+        opacity: 0.5
     }
 }

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
+import Quickshell.Services.Pipewire
 import "../theme"
 
 Rectangle {
@@ -15,30 +15,8 @@ Rectangle {
     implicitWidth: layout.implicitWidth + 24
     implicitHeight: 32
 
-    property real volume: 0.0
-    property bool muted: false
-
-    Process {
-        id: volProc
-        command: ["bash", "-c", "wpctl get-volume @DEFAULT_AUDIO_SINK@"]
-        running: true
-        stdout: SplitParser {
-            onRead: msg => {
-                const trimmed = msg.trim();
-                if (trimmed.startsWith("Volume:")) {
-                    root.muted = trimmed.includes("[MUTED]");
-                    root.volume = parseFloat(trimmed.split(/\s+/)[1]);
-                }
-            }
-        }
-    }
-
-    Timer {
-        interval: 500
-        repeat: true
-        running: true
-        onTriggered: volProc.running = true
-    }
+    readonly property real volume: Pipewire.defaultAudioSink?.audio.volume ?? 0.0
+    readonly property bool muted: Pipewire.defaultAudioSink?.audio.muted ?? true
 
     MouseArea {
         id: mouseArea
@@ -46,7 +24,11 @@ Rectangle {
         hoverEnabled: true
         onEntered: TooltipController.show(root.muted ? "Audio Muted" : "Volume: " + Math.round(root.volume * 100) + "%", root)
         onExited: TooltipController.hide()
-        onClicked: Quickshell.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
+        onClicked: {
+            if (Pipewire.defaultAudioSink) {
+                Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;
+            }
+        }
     }
 
     function getVolIcon() {
