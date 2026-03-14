@@ -37,11 +37,20 @@ PanelWindow {
     ScriptModel {
         id: filteredModel
         values: {
-            const allApps = [...DesktopEntries.applications.values];
             const q = root.query.trim().toLowerCase();
-            let results = allApps;
+            const appsMap = new Map();
+            
+            // Deduplicate by app id to prevent triple entries
+            for (const app of DesktopEntries.applications.values) {
+                if (!app.id || !appsMap.has(app.id)) {
+                    appsMap.set(app.id || Math.random().toString(), app);
+                }
+            }
+            
+            let results = [...appsMap.values()];
+            
             if (q !== "") {
-                results = allApps.filter(app => 
+                results = results.filter(app => 
                     (app.name && app.name.toLowerCase().includes(q)) || 
                     (app.description && app.description.toLowerCase().includes(q))
                 );
