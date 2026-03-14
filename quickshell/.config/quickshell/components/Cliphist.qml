@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-Singleton {
+QtObject {
     id: root
 
     property list<string> entries: []
@@ -28,15 +28,13 @@ Singleton {
         refreshTimer.restart();
     }
 
-    Timer {
-        id: refreshTimer
+    property Timer refreshTimer: Timer {
         interval: 100
         repeat: false
         onTriggered: root.refresh()
     }
 
-    Process {
-        id: readProc
+    property Process readProc: Process {
         command: ["cliphist", "list"]
         
         property list<string> buffer: []
@@ -53,7 +51,7 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
-                root.entries = buffer
+                root.entries = readProc.buffer
             }
         }
     }
@@ -62,9 +60,7 @@ Singleton {
     Component.onCompleted: refresh()
 
     // Watch for clipboard changes. 
-    // Note: cliphist usually has its own watcher daemon, 
-    // but we refresh when Quickshell detects a change.
-    Connections {
+    property Connections clipboardWatcher: Connections {
         target: Quickshell
         function onClipboardTextChanged() {
             refreshTimer.restart()

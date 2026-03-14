@@ -4,7 +4,6 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
 import "../theme"
-import "../services"
 
 PanelWindow {
     id: root
