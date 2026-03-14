@@ -28,6 +28,14 @@ ShellRoot {
         }
     }
 
+    GlobalShortcut {
+        name: "screenshotToggle"
+        description: "Toggles the screen snip tool"
+        onPressed: {
+            screenSnip.visible = !screenSnip.visible;
+        }
+    }
+
     PanelWindow {
         id: panel
 
@@ -102,6 +110,7 @@ ShellRoot {
     NotificationPopup { id: notifPopup }
     Launcher { id: appLauncher; visible: false }
     Clipboard { id: clipboardMenu; visible: false }
+    ScreenSnip { id: screenSnip; visible: false }
 
     // Click-away listener (Closes panel when clicking outside)
     PanelWindow {
@@ -112,7 +121,7 @@ ShellRoot {
             left: true
             right: true
         }
-        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible
+        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "click-away"
@@ -124,6 +133,7 @@ ShellRoot {
                 sidePanel.isOpen = false;
                 appLauncher.visible = false;
                 clipboardMenu.visible = false;
+                screenSnip.visible = false;
             }
         }
     }

@@ -252,6 +252,7 @@ PanelWindow {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.rightMargin: 40 // Make space for delete button
                                         spacing: 2
                                         Text {
                                             Layout.fillWidth: true
@@ -271,32 +272,25 @@ PanelWindow {
                                         }
                                     }
 
-                                    ToolButton {
-                                        id: delBtn
-                                        flat: true
-                                        onClicked: Cliphist.deleteEntry(modelData)
-                                        contentItem: Text {
-                                            text: "󰆴"
-                                            font.family: "JetBrainsMono Nerd Font"
-                                            font.pixelSize: 20
-                                            color: delBtn.hovered ? Theme.red : Theme.surface2
-                                            opacity: delBtn.hovered ? 1.0 : 0.4
-                                        }
-                                        background: null
-                                    }
+                                    // Spacer to keep the delete button aligned right
+                                    Item { Layout.fillWidth: true }
                                 }
 
-                                CliphistImage {
-                                    visible: Cliphist.isImage(modelData)
+                                Loader {
+                                    active: Cliphist.isImage(modelData)
+                                    visible: active
                                     Layout.fillWidth: true
-                                    Layout.fillHeight: true
-                                    entry: modelData
-                                    maxWidth: parent.width
-                                    maxHeight: 140
+                                    Layout.preferredHeight: 140
+                                    sourceComponent: CliphistImage {
+                                        entry: modelData
+                                        maxWidth: container.width - 80 
+                                        maxHeight: 140
+                                    }
                                 }
                             }
                         }
 
+                        // Main item interaction
                         MouseArea {
                             anchors.fill: parent
                             hoverEnabled: true
@@ -306,13 +300,49 @@ PanelWindow {
                                 root.visible = false;
                             }
                         }
+
+                        // Separate Delete Button with high priority
+                        ToolButton {
+                            id: delBtn
+                            z: 10 
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.rightMargin: 12
+                            anchors.topMargin: 12
+                            width: 36; height: 36
+                            flat: true
+                            hoverEnabled: true
+                            onClicked: Cliphist.deleteEntry(modelData)
+                            
+                            contentItem: Item {
+                                anchors.fill: parent
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰆴"
+                                    font.family: "JetBrainsMono Nerd Font"
+                                    font.pixelSize: 18
+                                    color: delBtn.hovered ? Theme.red : Theme.text
+                                    opacity: delBtn.hovered ? 1.0 : 0.3
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                                }
+                            }
+                            
+                            background: Rectangle {
+                                anchors.fill: parent
+                                radius: 8
+                                color: delBtn.hovered ? Theme.surface2 : "transparent"
+                                opacity: delBtn.hovered ? 0.4 : 0.0
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
+                            }
+                        }
                     }
                     
                     onCurrentIndexChanged: {
                         positionViewAtIndex(currentIndex, ListView.Contain);
                     }
 
-                    // Smooth list transitions
                     add: Transition {
                         NumberAnimation { properties: "opacity,scale"; from: 0; to: 1; duration: 200 }
                     }

@@ -23,7 +23,7 @@ Rectangle {
     clip: true
     
     implicitWidth: maxWidth
-    implicitHeight: Math.min(maxHeight, (img.implicitHeight / img.implicitWidth) * maxWidth)
+    implicitHeight: maxHeight
 
     Component.onCompleted: {
         decodeProc.running = true;
@@ -31,7 +31,8 @@ Rectangle {
 
     Process {
         id: decodeProc
-        command: ["bash", "-c", `cliphist decode <<< '${root.entry}' > ${root.tempPath}`]
+        // Use printf to handle the input string safely without adding trailing newlines
+        command: ["bash", "-c", `printf "%s" '${root.entry}' | cliphist decode > ${root.tempPath}`]
         onExited: (exitCode) => {
             if (exitCode === 0) {
                 root.source = "file://" + root.tempPath;
