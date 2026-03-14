@@ -4,13 +4,14 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
 import "../theme"
+import "../services"
 
 PanelWindow {
     id: root
     
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "launcher"
+    WlrLayershell.namespace: "clipboard"
     
     anchors {
         top: true
@@ -27,26 +28,11 @@ PanelWindow {
 
     onVisibleChanged: {
         if (visible) {
+            Cliphist.refresh();
             searchField.forceActiveFocus();
             root.query = "";
             root.selectedIndex = 0;
             searchField.text = "";
-        }
-    }
-
-    ScriptModel {
-        id: filteredModel
-        values: {
-            const allApps = [...DesktopEntries.applications.values];
-            const q = root.query.trim().toLowerCase();
-            let results = allApps;
-            if (q !== "") {
-                results = allApps.filter(app => 
-                    (app.name && app.name.toLowerCase().includes(q)) || 
-                    (app.description && app.description.toLowerCase().includes(q))
-                );
-            }
-            return results.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         }
     }
 
@@ -63,7 +49,7 @@ PanelWindow {
         }
     }
 
-    // Centered Launcher Container
+    // Centered Container
     Rectangle {
         id: container
         width: 500
@@ -96,7 +82,7 @@ PanelWindow {
                     color: Theme.surface0
                     Text {
                         anchors.centerIn: parent
-                        text: "󰀻"
+                        text: "󰅍"
                         font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 20
                         color: Theme.mauve
@@ -104,11 +90,40 @@ PanelWindow {
                 }
 
                 Text {
-                    text: "Applications"
+                    text: "Clipboard"
                     color: Theme.text
                     font.family: Theme.fontName
                     font.pixelSize: 22
                     font.bold: true
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    id: wipeButton
+                    flat: true
+                    onClicked: Cliphist.wipe()
+                    
+                    contentItem: RowLayout {
+                        spacing: 8
+                        Text {
+                            text: "󰆴"
+                            font.family: "JetBrainsMono Nerd Font"
+                            font.pixelSize: 16
+                            color: wipeButton.hovered ? Theme.red : Theme.subtext0
+                        }
+                        Text {
+                            text: "Clear All"
+                            color: wipeButton.hovered ? Theme.red : Theme.subtext0
+                            font.family: Theme.fontName
+                            font.pixelSize: 14
+                        }
+                    }
+                    
+                    background: Rectangle {
+                        radius: 8
+                        color: wipeButton.hovered ? Theme.surface1 : "transparent"
+                    }
                 }
             }
 
@@ -138,7 +153,7 @@ PanelWindow {
                     TextField {
                         id: searchField
                         Layout.fillWidth: true
-                        placeholderText: "Search apps..."
+                        placeholderText: "Search your history..."
                         placeholderTextColor: Theme.surface2
                         color: Theme.text
                         font.family: Theme.fontName
@@ -154,15 +169,15 @@ PanelWindow {
                             if (event.key === Qt.Key_Escape) {
                                 root.visible = false;
                             } else if (event.key === Qt.Key_Down) {
-                                root.selectedIndex = Math.min(filteredModel.values.length - 1, root.selectedIndex + 1);
+                                root.selectedIndex = Math.min(listView.count - 1, root.selectedIndex + 1);
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Up) {
                                 root.selectedIndex = Math.max(0, root.selectedIndex - 1);
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Return) {
-                                const selectedApp = filteredModel.values[root.selectedIndex];
-                                if (selectedApp) {
-                                    selectedApp.execute();
+                                const entries = listView.model;
+                                if (entries && entries.length > 0) {
+                                    Cliphist.copy(entries[root.selectedIndex]);
                                     root.visible = false;
                                 }
                             }
@@ -171,22 +186,23 @@ PanelWindow {
                 }
             }
 
-            // --- App List ---
+            // --- History List ---
             ListView {
-                id: appList
+                id: listView
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: filteredModel.values
                 spacing: 8
                 clip: true
                 currentIndex: root.selectedIndex
                 
-                onCurrentIndexChanged: {
-                    positionViewAtIndex(currentIndex, ListView.Contain);
+                model: {
+                    const q = root.query.trim().toLowerCase();
+                    if (q === "") return Cliphist.entries;
+                    return Cliphist.entries.filter(e => e.toLowerCase().includes(q));
                 }
 
                 delegate: Item {
-                    width: appList.width
+                    width: listView.width
                     height: 64
                     
                     Rectangle {
@@ -204,52 +220,49 @@ PanelWindow {
                             spacing: 15
                             
                             Rectangle {
-                                width: 40; height: 40
+                                width: 32; height: 32
                                 radius: 8
                                 color: Theme.base
-                                clip: true
-                                
-                                Image {
-                                    anchors.fill: parent
-                                    anchors.margins: 4
-                                    source: Quickshell.iconPath(modelData.icon) || ""
-                                    sourceSize: Qt.size(64, 64)
-                                    smooth: true
-                                    
-                                    // Fallback icon if image fails to load
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: parent.status !== Image.Ready
-                                        text: "󰀻"
-                                        color: Theme.mauve
-                                        font.pixelSize: 20
-                                    }
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰅍"
+                                    font.family: "JetBrainsMono Nerd Font"
+                                    font.pixelSize: 14
+                                    color: root.selectedIndex === index ? Theme.mauve : Theme.subtext0
                                 }
                             }
-                            
+
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 2
                                 Text {
                                     Layout.fillWidth: true
-                                    text: modelData.name || "App"
+                                    text: modelData.replace(/^\d+\s+/, "")
                                     color: root.selectedIndex === index ? Theme.text : Theme.subtext1
                                     font.family: Theme.fontName
-                                    font.pixelSize: 15
-                                    font.bold: root.selectedIndex === index
-                                    verticalAlignment: Text.AlignVCenter
+                                    font.pixelSize: 14
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
                                 }
                                 Text {
-                                    text: modelData.description || "Application"
+                                    text: "Entry #" + modelData.split(/\s+/)[0]
                                     color: Theme.surface2
                                     font.family: Theme.fontName
                                     font.pixelSize: 11
-                                    elide: Text.ElideRight
-                                    maximumLineCount: 1
-                                    visible: text !== "Application"
                                 }
+                            }
+
+                            ToolButton {
+                                id: delBtn
+                                flat: true
+                                onClicked: Cliphist.deleteEntry(modelData)
+                                contentItem: Text {
+                                    text: "󰆴"
+                                    font.family: "JetBrainsMono Nerd Font"
+                                    font.pixelSize: 18
+                                    color: delBtn.hovered ? Theme.red : Theme.surface2
+                                }
+                                background: null
                             }
                         }
                     }
@@ -259,10 +272,14 @@ PanelWindow {
                         hoverEnabled: true
                         onEntered: root.selectedIndex = index
                         onClicked: {
-                            modelData.execute();
+                            Cliphist.copy(modelData);
                             root.visible = false;
                         }
                     }
+                }
+                
+                onCurrentIndexChanged: {
+                    positionViewAtIndex(currentIndex, ListView.Contain);
                 }
             }
         }

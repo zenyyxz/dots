@@ -20,6 +20,14 @@ ShellRoot {
         }
     }
 
+    GlobalShortcut {
+        name: "clipboardToggle"
+        description: "Toggles the clipboard manager"
+        onPressed: {
+            clipboardMenu.visible = !clipboardMenu.visible;
+        }
+    }
+
     PanelWindow {
         id: panel
 
@@ -93,6 +101,7 @@ ShellRoot {
     SidePanel { id: sidePanel }
     NotificationPopup { id: notifPopup }
     Launcher { id: appLauncher; visible: false }
+    Clipboard { id: clipboardMenu; visible: false }
 
     // Click-away listener (Closes panel when clicking outside)
     PanelWindow {
@@ -103,7 +112,7 @@ ShellRoot {
             left: true
             right: true
         }
-        visible: sidePanel.isOpen || appLauncher.visible
+        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "click-away"
@@ -114,6 +123,7 @@ ShellRoot {
             onClicked: {
                 sidePanel.isOpen = false;
                 appLauncher.visible = false;
+                clipboardMenu.visible = false;
             }
         }
     }
