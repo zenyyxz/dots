@@ -47,9 +47,9 @@ PanelWindow {
         
         if (root.mode === 0) { // Screenshot
             let cmd = ""
-            if (root.action === 0) cmd = `sleep 0.1 && grim -g "${region}" - | tee >(wl-copy) | swappy -f -`
-            else if (root.action === 1) cmd = `sleep 0.1 && grim -g "${region}" - | wl-copy`
-            else if (root.action === 2) cmd = `mkdir -p ~/Pictures/Screenshots && sleep 0.1 && grim -g "${region}" - | tee >(wl-copy) > ~/Pictures/Screenshots/screenshot-$(date +%Y-%m-%d_%H-%M-%S).png`
+            if (root.action === 0) cmd = `sleep 0.2 && grim -g "${region}" - | tee >(wl-copy) | swappy -f -`
+            else if (root.action === 1) cmd = `sleep 0.2 && grim -g "${region}" - | wl-copy`
+            else if (root.action === 2) cmd = `mkdir -p ~/Pictures/Screenshots && sleep 0.2 && grim -g "${region}" - | tee >(wl-copy) > ~/Pictures/Screenshots/screenshot-$(date +%Y-%m-%d_%H-%M-%S).png`
             
             Quickshell.execDetached(["bash", "-c", cmd]);
         }
@@ -61,11 +61,14 @@ PanelWindow {
         }
     }
 
-    ScreencopyView {
-        id: screencopy
+    Loader {
         anchors.fill: parent
-        live: false
-        captureSource: root.screen
+        active: root.visible
+        sourceComponent: ScreencopyView {
+            anchors.fill: parent
+            live: false
+            captureSource: root.screen
+        }
     }
 
     Rectangle {
@@ -159,36 +162,6 @@ PanelWindow {
                     font.bold: true
                 }
             }
-            
-            Button {
-                anchors.centerIn: parent
-                visible: root.hasSelection && !root.isSelecting
-                width: 64; height: 64
-                z: 100
-                
-                background: Rectangle {
-                    radius: 32
-                    color: parent.hovered ? Theme.mauve : Theme.base
-                    opacity: 0.9
-                    border.color: Theme.mauve
-                    border.width: 2
-                    Behavior on color { ColorAnimation { duration: 200 } }
-                }
-                
-                contentItem: Item {
-                    anchors.fill: parent
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰄄"
-                        font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 32
-                        color: parent.parent.hovered ? Theme.base : Theme.mauve
-                        Behavior on color { ColorAnimation { duration: 200 } }
-                    }
-                }
-                
-                onClicked: root.capture()
-            }
         }
     }
 
@@ -197,10 +170,10 @@ PanelWindow {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 40
         anchors.horizontalCenter: parent.horizontalCenter
-        width: contentLayout.implicitWidth + 60 // Increased width for better spacing
-        height: 64
+        width: contentLayout.implicitWidth + 64 // Extra padding for the toolbar
+        height: 72
         color: Theme.base
-        radius: 32
+        radius: 36
         border.color: Theme.surface0
         border.width: 1
         z: 100
@@ -210,7 +183,6 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
 
-        // Block background clicks from starting a new selection
         MouseArea {
             anchors.fill: parent
             onPressed: (mouse) => mouse.accepted = true
@@ -219,132 +191,167 @@ PanelWindow {
         RowLayout {
             id: contentLayout
             anchors.centerIn: parent
-            spacing: 16 // Increased spacing between major groups
+            spacing: 32 // More space between pills
 
-            RowLayout {
-                spacing: 8 // Spacing between mode icons
-                ToolButton {
-                    id: scMode
-                    flat: true; width: 44; height: 44
-                    onClicked: root.mode = 0
-                    background: Rectangle {
-                        radius: 22
-                        color: (root.mode === 0 || scMode.hovered) ? Theme.surface0 : "transparent"
-                        Behavior on color { ColorAnimation { duration: 200 } }
-                    }
-                    contentItem: Item {
-                        anchors.fill: parent
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰄄"
-                            font.family: "JetBrainsMono Nerd Font"
-                            font.pixelSize: 20
-                            color: root.mode === 0 ? Theme.mauve : Theme.surface2
-                            Behavior on color { ColorAnimation { duration: 200 } }
-                        }
-                    }
-                }
-                ToolButton {
-                    id: recMode
-                    flat: true; width: 44; height: 44
-                    onClicked: root.mode = 1
-                    background: Rectangle {
-                        radius: 22
-                        color: (root.mode === 1 || recMode.hovered) ? Theme.surface0 : "transparent"
-                        Behavior on color { ColorAnimation { duration: 200 } }
-                    }
-                    contentItem: Item {
-                        anchors.fill: parent
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰕧"
-                            font.family: "JetBrainsMono Nerd Font"
-                            font.pixelSize: 20
-                            color: root.mode === 1 ? Theme.mauve : Theme.surface2
-                            Behavior on color { ColorAnimation { duration: 200 } }
-                        }
-                    }
-                }
-            }
+            // --- Mode Pill ---
+            Rectangle {
+                Layout.preferredHeight: 48
+                Layout.preferredWidth: modeRow.implicitWidth + 32 // Extra padding inside pill
+                color: Theme.surface0
+                radius: 24
+                border.color: Theme.surface1
+                border.width: 1
 
-            Rectangle { width: 1; height: 32; color: Theme.surface0; Layout.alignment: Qt.AlignVCenter; Layout.leftMargin: 4; Layout.rightMargin: 4 }
-
-            RowLayout {
-                spacing: 12 // Increased spacing between action icons
-                ToolButton {
-                    id: editBtn
-                    flat: true; width: 44; height: 44
-                    onClicked: { root.action = 0; if (root.hasSelection) root.capture() }
-                    background: Rectangle {
-                        radius: 22
-                        color: (root.action === 0 || editBtn.hovered) ? Theme.surface0 : "transparent"
-                        Behavior on color { ColorAnimation { duration: 200 } }
-                    }
-                    contentItem: Item {
-                        anchors.fill: parent
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰏫"
-                            font.family: "JetBrainsMono Nerd Font"
-                            font.pixelSize: 20
-                            color: root.action === 0 ? Theme.mauve : Theme.text
+                RowLayout {
+                    id: modeRow
+                    anchors.centerIn: parent
+                    spacing: 16 // More space between mode icons
+                    
+                    ToolButton {
+                        id: scMode
+                        flat: true; width: 40; height: 40
+                        onClicked: root.mode = 0
+                        scale: hovered ? 1.1 : (pressed ? 0.9 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                        background: Rectangle {
+                            radius: 20
+                            color: root.mode === 0 ? Theme.mauve : (scMode.hovered ? Theme.surface1 : "transparent")
                             Behavior on color { ColorAnimation { duration: 200 } }
                         }
-                    }
-                }
-                ToolButton {
-                    id: copyBtn
-                    flat: true; width: 44; height: 44
-                    onClicked: { root.action = 1; if (root.hasSelection) root.capture() }
-                    background: Rectangle {
-                        radius: 22
-                        color: (root.action === 1 || copyBtn.hovered) ? Theme.surface0 : "transparent"
-                        Behavior on color { ColorAnimation { duration: 200 } }
-                    }
-                    contentItem: Item {
-                        anchors.fill: parent
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰅍"
-                            font.family: "JetBrainsMono Nerd Font"
-                            font.pixelSize: 20
-                            color: root.action === 1 ? Theme.mauve : Theme.text
-                            Behavior on color { ColorAnimation { duration: 200 } }
+                        contentItem: Item {
+                            anchors.fill: parent
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰄄"
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 18
+                                color: root.mode === 0 ? Theme.base : Theme.text
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
                         }
                     }
-                }
-                ToolButton {
-                    id: saveBtn
-                    flat: true; width: 44; height: 44
-                    onClicked: { root.action = 2; if (root.hasSelection) root.capture() }
-                    background: Rectangle {
-                        radius: 22
-                        color: (root.action === 2 || saveBtn.hovered) ? Theme.surface0 : "transparent"
-                        Behavior on color { ColorAnimation { duration: 200 } }
-                    }
-                    contentItem: Item {
-                        anchors.fill: parent
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰆓"
-                            font.family: "JetBrainsMono Nerd Font"
-                            font.pixelSize: 20
-                            color: root.action === 2 ? Theme.mauve : Theme.text
+                    ToolButton {
+                        id: recMode
+                        flat: true; width: 40; height: 40
+                        onClicked: root.mode = 1
+                        scale: hovered ? 1.1 : (pressed ? 0.9 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                        background: Rectangle {
+                            radius: 20
+                            color: root.mode === 1 ? Theme.mauve : (recMode.hovered ? Theme.surface1 : "transparent")
                             Behavior on color { ColorAnimation { duration: 200 } }
+                        }
+                        contentItem: Item {
+                            anchors.fill: parent
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰕧"
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 18
+                                color: root.mode === 1 ? Theme.base : Theme.text
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
                         }
                     }
                 }
             }
 
-            Rectangle { width: 1; height: 32; color: Theme.surface0; Layout.alignment: Qt.AlignVCenter; Layout.leftMargin: 4; Layout.rightMargin: 4 }
+            // --- Action Pill ---
+            Rectangle {
+                Layout.preferredHeight: 48
+                Layout.preferredWidth: actionRow.implicitWidth + 32 // Extra padding inside pill
+                color: Theme.surface0
+                radius: 24
+                border.color: Theme.surface1
+                border.width: 1
 
+                RowLayout {
+                    id: actionRow
+                    anchors.centerIn: parent
+                    spacing: 16 // More space between action icons
+                    
+                    ToolButton {
+                        id: editBtn
+                        flat: true; width: 40; height: 40
+                        onClicked: { root.action = 0; if (root.hasSelection) root.capture() }
+                        scale: hovered ? 1.1 : (pressed ? 0.9 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                        background: Rectangle {
+                            radius: 20
+                            color: (root.action === 0 && root.hasSelection) ? Theme.mauve : (editBtn.hovered ? Theme.surface1 : "transparent")
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                        }
+                        contentItem: Item {
+                            anchors.fill: parent
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰏫"
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 18
+                                color: (root.action === 0 && root.hasSelection) ? Theme.base : Theme.text
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
+                        }
+                    }
+                    ToolButton {
+                        id: copyBtn
+                        flat: true; width: 40; height: 40
+                        onClicked: { root.action = 1; if (root.hasSelection) root.capture() }
+                        scale: hovered ? 1.1 : (pressed ? 0.9 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                        background: Rectangle {
+                            radius: 20
+                            color: (root.action === 1 && root.hasSelection) ? Theme.mauve : (copyBtn.hovered ? Theme.surface1 : "transparent")
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                        }
+                        contentItem: Item {
+                            anchors.fill: parent
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰅍"
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 18
+                                color: (root.action === 1 && root.hasSelection) ? Theme.base : Theme.text
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
+                        }
+                    }
+                    ToolButton {
+                        id: saveBtn
+                        flat: true; width: 40; height: 40
+                        onClicked: { root.action = 2; if (root.hasSelection) root.capture() }
+                        scale: hovered ? 1.1 : (pressed ? 0.9 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                        background: Rectangle {
+                            radius: 20
+                            color: (root.action === 2 && root.hasSelection) ? Theme.mauve : (saveBtn.hovered ? Theme.surface1 : "transparent")
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                        }
+                        contentItem: Item {
+                            anchors.fill: parent
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰆓"
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 18
+                                color: (root.action === 2 && root.hasSelection) ? Theme.base : Theme.text
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- Close Button ---
             ToolButton {
                 id: closeBtn
-                flat: true; width: 44; height: 44
+                flat: true; width: 48; height: 48
                 onClicked: root.visible = false
+                scale: hovered ? 1.1 : (pressed ? 0.9 : 1.0)
+                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                 background: Rectangle {
-                    radius: 22
-                    color: closeBtn.hovered ? Theme.surface0 : "transparent"
+                    radius: 24
+                    color: closeBtn.hovered ? Theme.red : Theme.surface0
                     Behavior on color { ColorAnimation { duration: 200 } }
                 }
                 contentItem: Item {
@@ -354,7 +361,8 @@ PanelWindow {
                         text: "󰅖"
                         font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 20
-                        color: Theme.red
+                        color: closeBtn.hovered ? Theme.base : Theme.red
+                        Behavior on color { ColorAnimation { duration: 200 } }
                     }
                 }
             }
