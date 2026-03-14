@@ -40,25 +40,11 @@ ShellRoot {
                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
                 Workspaces { }
+                Media { }
                 // Title { }
             }
 
-            // Spacer to keep clock centered
-            Item {
-                Layout.fillWidth: true
-            }
-
-            // Center Group (Clock + Media)
-            RowLayout {
-                id: centerGroup
-                spacing: 12
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-
-                Media { }
-                Clock { }
-            }
-
-            // Spacer to keep clock centered
+            // Spacer to keep layout balanced
             Item {
                 Layout.fillWidth: true
             }
@@ -74,6 +60,11 @@ ShellRoot {
                 SysInfo { }
                 Target { }
             }
+        }
+
+        // Absolute Center Clock
+        Clock {
+            anchors.centerIn: parent
         }
     }
 
