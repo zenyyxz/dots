@@ -1,0 +1,58 @@
+[Colors:Button]
+BackgroundAlternate=24,24,37
+BackgroundNormal=49,50,68
+ForegroundInactive=108,112,136
+ForegroundNormal=205,214,244
+
+[Colors:Selection]
+BackgroundAlternate=202,158,230
+BackgroundNormal=202,158,230
+ForegroundInactive=30,30,46
+ForegroundNormal=30,30,46
+
+[Colors:Tooltip]
+BackgroundAlternate=17,17,27
+BackgroundNormal=17,17,27
+ForegroundInactive=108,112,136
+ForegroundNormal=205,214,244
+
+[Colors:View]
+BackgroundAlternate=24,24,37
+BackgroundNormal=30,30,46
+ForegroundInactive=108,112,136
+ForegroundNormal=205,214,244
+
+[Colors:Window]
+BackgroundAlternate=24,24,37
+BackgroundNormal=30,30,46
+ForegroundInactive=108,112,136
+ForegroundNormal=205,214,244
+
+[Colors:Header]
+BackgroundAlternate=24,24,37
+BackgroundNormal=30,30,46
+ForegroundInactive=108,112,136
+ForegroundNormal=205,214,244
+
+[Colors:Header:Normal]
+BackgroundAlternate=24,24,37
+BackgroundNormal=30,30,46
+ForegroundInactive=108,112,136
+ForegroundNormal=205,214,244
+
+[General]
+ColorScheme=CatppuccinMocha
+Name=Catppuccin Mocha
+font=JetBrains Mono,11,-1,5,50,0,0,0,0,0
+menuFont=JetBrains Mono,11,-1,5,50,0,0,0,0,0
+smallestReadableFont=JetBrains Mono,8,-1,5,50,0,0,0,0,0
+toolBarFont=JetBrains Mono,11,-1,5,50,0,0,0,0,0
+
+[KDE]
+ShowIconsInMenuItems=true
+ShowIconsOnPushButtons=true
+widgetStyle=Breeze
+LookAndFeelPackage=org.kde.breezedark.desktop
+
+[Icons]
+Theme=breeze-dark

@@ -1,0 +1,29 @@
+[DetailsMode]
+ColumnMessages=
+VisibleColumns=Name,Size,ModificationTime
+
+[General]
+GlobalViewProps=false
+OpenTargetInNewTab=true
+ShowFullPath=false
+ShowStatusbar=false
+Version=202
+
+[IconsMode]
+IconSize=64
+TextLines=2
+
+[KFileDialog Settings]
+Places Icons Auto-resize=false
+Places Icons Static Size=22
+
+[MainWindow]
+MenuBar=Disabled
+ToolBar=Disabled
+ToolBarsShown=false
+
+[PreviewSettings]
+Plugins=imagethumbnail,jpegthumbnail,directorythumbnail,videopreview
+
+[UiSettings]
+ColorScheme=CatppuccinMocha

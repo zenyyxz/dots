@@ -1,0 +1,91 @@
+/* Force light text everywhere in Dolphin's view */
+* {
+    color: #cdd6f4;
+}
+
+/* Specifically target the Dolphin file view widget */
+KItemListWidget {
+    color: #cdd6f4;
+}
+
+KItemListLabel {
+    color: #cdd6f4;
+}
+
+QAbstractItemView {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}
+
+QMainWindow, QDialog, QAbstractScrollArea, QListView, QTreeView, QColumnView {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}
+
+QMenuBar, QMenuBar::item {
+    background-color: #181825;
+    color: #cdd6f4;
+}
+
+QToolBar, QToolBar QToolButton {
+    background-color: #181825;
+    color: #cdd6f4;
+    border: none;
+}
+
+QHeaderView::section {
+    background-color: #313244;
+    color: #cdd6f4;
+    padding: 4px;
+    border: 1px solid #11111b;
+}
+
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background-color: #181825;
+    color: #cdd6f4;
+    border: 1px solid #313244;
+    border-radius: 4px;
+}
+
+QScrollBar:vertical {
+    border: none;
+    background: #11111b;
+    width: 10px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #313244;
+    min-height: 20px;
+    border-radius: 5px;
+}
+
+QTabBar::tab {
+    background-color: #11111b;
+    color: #a6adc8;
+    padding: 8px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}
+
+/* Force selection text color to be dark on light highlight */
+QAbstractItemView::item:selected {
+    background-color: #ca9ee6;
+    color: #11111b;
+}
+
+/* Specific Dolphin elements */
+KFilePlacesView {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+}
+
+#DolphinNavigationControl {
+    background-color: #181825;
+    color: #cdd6f4;
+}
