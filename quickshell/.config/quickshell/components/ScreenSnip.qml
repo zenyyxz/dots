@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Widgets
 import "../theme"
 
 PanelWindow {
@@ -13,10 +14,7 @@ PanelWindow {
     WlrLayershell.namespace: "screen-snip"
     
     anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
+        top: true; bottom: true; left: true; right: true
     }
 
     WlrLayershell.keyboardFocus: visible ? WlrLayershell.OnDemand : WlrLayershell.None
@@ -25,163 +23,194 @@ PanelWindow {
     property point startPos: Qt.point(0, 0)
     property point endPos: Qt.point(0, 0)
     property bool isSelecting: false
+    property int mode: 0 // 0: Screenshot, 1: Record (Not implemented yet but following end4 style)
+    property int action: 0 // 0: Edit, 1: Copy, 2: Save
 
     function reset() {
-        startPos = Qt.point(0, 0);
-        endPos = Qt.point(0, 0);
-        isSelecting = false;
+        startPos = Qt.point(0, 0)
+        endPos = Qt.point(0, 0)
+        isSelecting = false
     }
 
     onVisibleChanged: {
         if (visible) {
-            reset();
+            reset()
+            screencopy.capture()
         }
     }
 
-    // Overlay Background
-    Rectangle {
+    // Static background capture
+    ScreencopyView {
+        id: screencopy
         anchors.fill: parent
-        color: "#000000"
-        opacity: 0.4
+        live: false
+        captureSource: root.screen
     }
 
-    // Selection Area
+    // Darkening Overlay with Hole
+    Rectangle {
+        id: overlay
+        anchors.fill: parent
+        color: "#000000"
+        opacity: 0.5
+        visible: !isSelecting && selectionRect.width === 0
+    }
+
+    // Selection logic
     MouseArea {
         id: selectionArea
         anchors.fill: parent
         cursorShape: Qt.CrossCursor
+        hoverEnabled: true
 
         onPressed: (mouse) => {
-            root.startPos = Qt.point(mouse.x, mouse.y);
-            root.endPos = Qt.point(mouse.x, mouse.y);
-            root.isSelecting = true;
+            root.startPos = Qt.point(mouse.x, mouse.y)
+            root.endPos = Qt.point(mouse.x, mouse.y)
+            root.isSelecting = true
         }
 
         onPositionChanged: (mouse) => {
             if (root.isSelecting) {
-                root.endPos = Qt.point(mouse.x, mouse.y);
+                root.endPos = Qt.point(mouse.x, mouse.y)
             }
         }
 
         onReleased: {
-            root.isSelecting = false;
+            root.isSelecting = false
         }
     }
 
-    // Visual Selection Rectangle
-    Rectangle {
-        id: selectionRect
-        visible: root.startPos.x !== root.endPos.x || root.startPos.y !== root.endPos.y
-        x: Math.min(root.startPos.x, root.endPos.x)
-        y: Math.min(root.startPos.y, root.endPos.y)
-        width: Math.abs(root.startPos.x - root.endPos.x)
-        height: Math.abs(root.startPos.y - root.endPos.y)
-        
-        color: "transparent"
-        border.color: Theme.mauve
-        border.width: 2
-        
-        // Hole in the overlay
+    // Selection Rectangle and Cutout
+    Item {
+        anchors.fill: parent
+        visible: root.startPos.x !== root.endPos.x
+
+        readonly property real selX: Math.min(root.startPos.x, root.endPos.x)
+        readonly property real selY: Math.min(root.startPos.y, root.endPos.y)
+        readonly property real selW: Math.abs(root.startPos.x - root.endPos.x)
+        readonly property real selH: Math.abs(root.startPos.y - root.endPos.y)
+
+        // The darkening pieces around the selection
+        Rectangle { x: 0; y: 0; width: parent.width; height: parent.selY; color: "#000000"; opacity: 0.5 }
+        Rectangle { x: 0; y: parent.selY + parent.selH; width: parent.width; height: parent.height - (parent.selY + parent.selH); color: "#000000"; opacity: 0.5 }
+        Rectangle { x: 0; y: parent.selY; width: parent.selX; height: parent.selH; color: "#000000"; opacity: 0.5 }
+        Rectangle { x: parent.selX + parent.selW; y: parent.selY; width: parent.width - (parent.selX + parent.selW); height: parent.selH; color: "#000000"; opacity: 0.5 }
+
+        // Border
         Rectangle {
-            anchors.fill: parent
-            anchors.margins: -2000 // Large enough to cover screen
-            color: "#000000"
-            opacity: 0.2
-            z: -1
+            id: selectionRect
+            x: parent.selX; y: parent.selY; width: parent.selW; height: parent.selH
+            color: "transparent"
+            border.color: Theme.mauve
+            border.width: 2
             
-            // This is a trick to create a cutout, but in standard QML we'll just use another overlay
-            visible: false
+            // Magnifier corner indicators (end4 style)
+            Rectangle { width: 10; height: 10; color: Theme.mauve; anchors.left: parent.left; anchors.top: parent.top; anchors.margins: -2 }
+            Rectangle { width: 10; height: 10; color: Theme.mauve; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: -2 }
+            Rectangle { width: 10; height: 10; color: Theme.mauve; anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: -2 }
+            Rectangle { width: 10; height: 10; color: Theme.mauve; anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: -2 }
         }
     }
 
-    // Floating Action Buttons
-    RowLayout {
-        visible: selectionRect.visible && !root.isSelecting
-        x: selectionRect.x + (selectionRect.width / 2) - (width / 2)
-        y: selectionRect.y + selectionRect.height + 15 > root.height - height - 20 
-           ? selectionRect.y - height - 15 
-           : selectionRect.y + selectionRect.height + 15
+    // Modern Bottom Toolbar (Exact end4 style placement)
+    Rectangle {
+        id: toolbar
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 40
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: 350
+        height: 60
+        color: Theme.base
+        radius: 30
+        border.color: Theme.surface0
+        border.width: 1
         
-        spacing: 10
+        opacity: root.visible ? 1.0 : 0.0
+        scale: root.visible ? 1.0 : 0.9
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
 
-        Rectangle {
-            id: actionsContainer
-            Layout.preferredHeight: 50
-            Layout.preferredWidth: actionsLayout.implicitWidth + 30
-            color: Theme.base
-            radius: 12
-            border.color: Theme.surface0
-            border.width: 1
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 20; anchors.rightMargin: 20
+            spacing: 15
 
+            // Mode Selector
             RowLayout {
-                id: actionsLayout
-                anchors.centerIn: parent
-                spacing: 15
-
-                // Capture & Edit (Swappy)
+                spacing: 5
                 ToolButton {
-                    id: editBtn
-                    onClicked: {
-                        const region = `${selectionRect.x},${selectionRect.y} ${selectionRect.width}x${selectionRect.height}`;
-                        Quickshell.execDetached(["bash", "-c", `grim -g "${region}" - | swappy -f -`]);
-                        root.visible = false;
-                    }
-                    contentItem: RowLayout {
-                        spacing: 8
-                        Text { text: "󰄄"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 18; color: Theme.mauve }
-                        Text { text: "Edit"; color: Theme.text; font.family: Theme.fontName; font.pixelSize: 14; font.bold: true }
-                    }
-                    background: Rectangle { radius: 8; color: editBtn.hovered ? Theme.surface1 : "transparent" }
+                    flat: true
+                    contentItem: Text { text: "󰄄"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20; color: root.mode === 0 ? Theme.mauve : Theme.surface2 }
+                    onClicked: root.mode = 0
                 }
-
-                // Copy to Clipboard
                 ToolButton {
-                    id: copyBtn
-                    onClicked: {
-                        const region = `${selectionRect.x},${selectionRect.y} ${selectionRect.width}x${selectionRect.height}`;
-                        Quickshell.execDetached(["bash", "-c", `grim -g "${region}" - | wl-copy`]);
-                        root.visible = false;
-                    }
-                    contentItem: RowLayout {
-                        spacing: 8
-                        Text { text: "󰅍"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 18; color: Theme.blue }
-                        Text { text: "Copy"; color: Theme.text; font.family: Theme.fontName; font.pixelSize: 14; font.bold: true }
-                    }
-                    background: Rectangle { radius: 8; color: copyBtn.hovered ? Theme.surface1 : "transparent" }
+                    flat: true
+                    contentItem: Text { text: "󰕧"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20; color: root.mode === 1 ? Theme.mauve : Theme.surface2 }
+                    onClicked: root.mode = 1
                 }
+            }
 
-                // Close
+            Rectangle { width: 1; height: 30; color: Theme.surface0; Layout.alignment: Qt.AlignVCenter }
+
+            // Action Selector
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 10
+                
                 ToolButton {
-                    id: closeBtn
-                    onClicked: root.visible = false
-                    contentItem: Text {
-                        text: "󰅖"
-                        font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 20
-                        color: closeBtn.hovered ? Theme.red : Theme.surface2
-                    }
-                    background: null
+                    id: editToggle
+                    flat: true
+                    onClicked: root.action = 0
+                    contentItem: Text { text: "󰏫"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20; color: root.action === 0 ? Theme.mauve : Theme.text }
+                    ToolTip.visible: hovered; ToolTip.text: "Capture & Edit"
                 }
+                ToolButton {
+                    id: copyToggle
+                    flat: true
+                    onClicked: root.action = 1
+                    contentItem: Text { text: "󰅍"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20; color: root.action === 1 ? Theme.mauve : Theme.text }
+                    ToolTip.visible: hovered; ToolTip.text: "Copy to Clipboard"
+                }
+                ToolButton {
+                    id: saveToggle
+                    flat: true
+                    onClicked: root.action = 2
+                    contentItem: Text { text: "󰆓"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20; color: root.action === 2 ? Theme.mauve : Theme.text }
+                    ToolTip.visible: hovered; ToolTip.text: "Save to File"
+                }
+            }
+
+            Rectangle { width: 1; height: 30; color: Theme.surface0; Layout.alignment: Qt.AlignVCenter }
+
+            // Close
+            ToolButton {
+                flat: true
+                onClicked: root.visible = false
+                contentItem: Text { text: "󰅖"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20; color: Theme.red }
             }
         }
     }
 
-    // Help Text
-    Text {
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottomMargin: 40
-        visible: !selectionRect.visible
-        text: "Drag to select a region • ESC to cancel"
-        color: "white"
-        font.family: Theme.fontName
-        font.pixelSize: 16
-        opacity: 0.8
+    // Execution trigger on release if selection is valid
+    onIsSelectingChanged: {
+        if (!isSelecting && selectionRect.width > 5 && selectionRect.height > 5) {
+            const region = `${selectionRect.x},${selectionRect.y} ${selectionRect.width}x${selectionRect.height}`
+            
+            if (root.mode === 0) { // Screenshot
+                let cmd = ""
+                if (root.action === 0) cmd = `grim -g "${region}" - | swappy -f -`
+                else if (root.action === 1) cmd = `grim -g "${region}" - | wl-copy`
+                else if (root.action === 2) cmd = `grim -g "${region}" ~/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png`
+                
+                Quickshell.execDetached(["bash", "-c", cmd])
+            }
+            
+            root.visible = false
+        }
     }
 
     Keys.onPressed: (event) => {
-        if (event.key === Qt.Key_Escape) {
-            root.visible = false;
-        }
+        if (event.key === Qt.Key_Escape) root.visible = false
     }
 }

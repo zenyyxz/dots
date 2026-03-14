@@ -11,31 +11,6 @@ import "components"
 ShellRoot {
     id: root
 
-    // Professional way to handle toggles used by end4
-    GlobalShortcut {
-        name: "launcherToggle"
-        description: "Toggles the application launcher"
-        onPressed: {
-            appLauncher.visible = !appLauncher.visible;
-        }
-    }
-
-    GlobalShortcut {
-        name: "clipboardToggle"
-        description: "Toggles the clipboard manager"
-        onPressed: {
-            clipboardMenu.visible = !clipboardMenu.visible;
-        }
-    }
-
-    GlobalShortcut {
-        name: "screenshotToggle"
-        description: "Toggles the screen snip tool"
-        onPressed: {
-            screenSnip.visible = !screenSnip.visible;
-        }
-    }
-
     PanelWindow {
         id: panel
 
@@ -111,6 +86,31 @@ ShellRoot {
     Launcher { id: appLauncher; visible: false }
     Clipboard { id: clipboardMenu; visible: false }
     ScreenSnip { id: screenSnip; visible: false }
+
+    // Global Shortcuts
+    GlobalShortcut {
+        name: "launcherToggle"
+        description: "Toggles the application launcher"
+        onPressed: {
+            appLauncher.visible = !appLauncher.visible;
+        }
+    }
+
+    GlobalShortcut {
+        name: "clipboardToggle"
+        description: "Toggles the clipboard manager"
+        onPressed: {
+            clipboardMenu.visible = !clipboardMenu.visible;
+        }
+    }
+
+    GlobalShortcut {
+        name: "screenshotToggle"
+        description: "Toggles the screen snip tool"
+        onPressed: {
+            screenSnip.visible = !screenSnip.visible;
+        }
+    }
 
     // Click-away listener (Closes panel when clicking outside)
     PanelWindow {
