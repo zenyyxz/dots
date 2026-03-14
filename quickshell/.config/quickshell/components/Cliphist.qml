@@ -58,7 +58,11 @@ QtObject {
     }
 
     // Initial load
-    Component.onCompleted: refresh()
+    Component.onCompleted: {
+        refresh();
+        // Start the watcher if it's not already running
+        Quickshell.execDetached(["bash", "-c", "pgrep -x wl-paste > /dev/null || wl-paste --watch cliphist store"]);
+    }
 
     // Watch for clipboard changes. 
     property Connections clipboardWatcher: Connections {
