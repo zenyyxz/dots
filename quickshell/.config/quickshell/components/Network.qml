@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.GraphicalEffects
 import Quickshell
 import Quickshell.Io
 import "../theme"
@@ -12,7 +13,7 @@ Rectangle {
     border.color: Theme.borderColor
     border.width: 1
     
-    implicitWidth: 32
+    implicitWidth: 40
     implicitHeight: 32
 
     property string ssid: ""
@@ -22,7 +23,6 @@ Rectangle {
 
     Process {
         id: netProc
-        // Improved command to return one line: SSID|SIGNAL|ENABLED
         command: ["bash", "-c", "printf '%s|%s\\n' \"$(nmcli -t -f active,ssid,signal dev wifi | grep '^yes' | cut -d: -f2,3)\" \"$(nmcli radio wifi)\""]
         running: true
         
@@ -30,8 +30,8 @@ Rectangle {
             onRead: msg => {
                 const mainParts = msg.trim().split("|");
                 if (mainParts.length >= 2) {
-                    const statusPart = mainParts[0]; // "SSID:SIGNAL"
-                    const enabledPart = mainParts[1]; // "enabled" or "disabled"
+                    const statusPart = mainParts[0];
+                    const enabledPart = mainParts[1];
                     
                     if (statusPart.includes(":")) {
                         const statusParts = statusPart.split(":");
@@ -52,10 +52,14 @@ Rectangle {
         onTriggered: netProc.running = true
     }
 
-    function getWifiIcon() {
-        if (!root.wifiEnabled) return "󰤭"; // WiFi Off
-        if (!root.connected) return "󰤮";   // Disconnected
-        return "󰤨";                        // Connected
+    function getWifiIconName() {
+        if (!root.wifiEnabled) return "network-wireless-disabled-symbolic";
+        if (!root.connected) return "network-wireless-offline-symbolic";
+
+        if (root.signal >= 0.8) return "network-wireless-signal-excellent-symbolic";
+        if (root.signal >= 0.6) return "network-wireless-signal-good-symbolic";
+        if (root.signal >= 0.4) return "network-wireless-signal-ok-symbolic";
+        return "network-wireless-signal-weak-symbolic";
     }
 
     function getTooltipText() {
@@ -72,21 +76,17 @@ Rectangle {
         onExited: TooltipController.hide()
     }
 
-    RowLayout {
-        id: layout
+    Image {
+        id: wifiIcon
         anchors.centerIn: parent
-
-        ProgressCircle {
-            value: root.connected ? root.signal : 0.0
+        width: 18
+        height: 18
+        source: Quickshell.iconPath(root.getWifiIconName())
+        smooth: true
+        
+        layer.enabled: true
+        layer.effect: Colorize {
             color: !root.wifiEnabled ? Theme.surface1 : (root.connected ? Theme.sapphire : Theme.red)
-            
-            Text {
-                anchors.centerIn: parent
-                text: root.getWifiIcon()
-                font.family: "JetBrainsMono Nerd Font"
-                font.pixelSize: 10
-                color: parent.color
-            }
         }
     }
 }
