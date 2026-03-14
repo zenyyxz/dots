@@ -2,15 +2,16 @@ import QtQuick
 import QtQuick.Layouts
 import "../theme"
 
+// Parent Pill
 Rectangle {
     id: root
     
-    color: mouseArea.containsMouse ? Theme.surface0 : Theme.base
+    color: Theme.mantle
     radius: Theme.radius
     border.color: Theme.borderColor
     border.width: 1
     
-    implicitWidth: layout.implicitWidth + 24
+    implicitWidth: mainLayout.implicitWidth + 20
     implicitHeight: 32
 
     property string timeStr: "--:--"
@@ -20,9 +21,11 @@ Rectangle {
         const d = new Date();
         root.timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
         
-        // Stylish date: SAT, MAR 14
-        const options = { weekday: 'short', month: 'short', day: 'numeric' };
-        root.dateStr = d.toLocaleDateString(undefined, options).toUpperCase();
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        
+        // Exact Format: Saturday, 14 March
+        root.dateStr = days[d.getDay()] + ", " + d.getDate() + " " + months[d.getMonth()];
     }
 
     Component.onCompleted: updateTime()
@@ -34,50 +37,66 @@ Rectangle {
         onTriggered: updateTime()
     }
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-    }
-
-    Behavior on color { ColorAnimation { duration: 250 } }
-
     RowLayout {
-        id: layout
+        id: mainLayout
         anchors.centerIn: parent
-        spacing: 12
+        spacing: 8
 
-        // Icon Section
-        Text {
-            text: "󱑂"
-            font.family: "JetBrainsMono Nerd Font"
-            font.pixelSize: 16
-            color: Theme.mauve
-            opacity: mouseArea.containsMouse ? 1.0 : 0.8
-            Behavior on opacity { NumberAnimation { duration: 200 } }
+        // --- Time Child Pill ---
+        Rectangle {
+            Layout.preferredHeight: 24
+            Layout.preferredWidth: timeLayout.implicitWidth + 16
+            color: Theme.surface0
+            radius: 12
+            
+            RowLayout {
+                id: timeLayout
+                anchors.centerIn: parent
+                spacing: 6
+                
+                Text {
+                    text: "󱑂"
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.pixelSize: 12
+                    color: Theme.mauve
+                }
+                
+                Text {
+                    color: Theme.text
+                    font.family: Theme.fontName
+                    font.pixelSize: 11
+                    font.bold: true
+                    text: root.timeStr
+                }
+            }
         }
 
-        // Stacked Time & Date
-        ColumnLayout {
-            spacing: -4 // Tight stacking for aesthetic
+        // --- Date Child Pill ---
+        Rectangle {
+            Layout.preferredHeight: 24
+            Layout.preferredWidth: dateLayout.implicitWidth + 16
+            color: Theme.surface0
+            radius: 12
             
-            Text {
-                Layout.alignment: Qt.AlignLeft
-                color: Theme.text
-                font.family: Theme.fontName
-                font.pixelSize: 12
-                font.bold: true
-                text: root.timeStr
-            }
-
-            Text {
-                Layout.alignment: Qt.AlignLeft
-                color: Theme.subtext0
-                font.family: Theme.fontName
-                font.pixelSize: 8
-                font.weight: Font.Black
-                text: root.dateStr
-                letterSpacing: 0.5
+            RowLayout {
+                id: dateLayout
+                anchors.centerIn: parent
+                spacing: 6
+                
+                Text {
+                    text: "󰃭"
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.pixelSize: 12
+                    color: Theme.mauve
+                }
+                
+                Text {
+                    color: Theme.text
+                    font.family: Theme.fontName
+                    font.pixelSize: 10
+                    font.bold: true
+                    text: root.dateStr
+                }
             }
         }
     }
