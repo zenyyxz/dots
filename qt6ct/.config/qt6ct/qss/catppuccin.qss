@@ -85,6 +85,64 @@ KFilePlacesView {
     color: #cdd6f4;
 }
 
+/* --- RE-ENGINEERED ROUNDED MENUS --- */
+QMenu {
+    background-color: #1e1e2e;
+    border: 1px solid #313244;
+    border-radius: 12px;
+    padding: 4px;
+}
+
+QMenu::item {
+    /* Use padding-left to create space for the indicator */
+    padding: 6px 24px 6px 36px;
+    border-radius: 8px;
+    margin: 2px 4px;
+}
+
+QMenu::item:selected {
+    background-color: #313244;
+    color: #ca9ee6;
+}
+
+/* Standard Indicator Styling */
+QMenu::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+QMenu::indicator:non-exclusive:unchecked {
+    border: 2px solid #45475a;
+    border-radius: 4px;
+}
+
+QMenu::indicator:non-exclusive:checked {
+    background-color: #ca9ee6;
+    border: 2px solid #ca9ee6;
+    border-radius: 4px;
+}
+
+QMenu::indicator:exclusive:unchecked {
+    border: 2px solid #45475a;
+    border-radius: 8px;
+}
+
+QMenu::indicator:exclusive:checked {
+    background-color: #ca9ee6;
+    border: 2px solid #ca9ee6;
+    border-radius: 8px;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #313244;
+    margin: 6px 10px;
+}
+
+QMenu::icon {
+    padding-left: 10px;
+}
+
 #DolphinNavigationControl {
     background-color: #181825;
     color: #cdd6f4;

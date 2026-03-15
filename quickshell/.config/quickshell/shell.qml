@@ -1,4 +1,5 @@
 //@ pragma UseQApplication
+//@ pragma Env QT_QPA_PLATFORMTHEME=qt6ct
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
