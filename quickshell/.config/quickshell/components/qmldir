@@ -1,6 +1,7 @@
 module components
 singleton Cliphist 1.0 Cliphist.qml
 Brightness 1.0 Brightness.qml
+DistroIcon 1.0 DistroIcon.qml
 Clock 1.0 Clock.qml
 Media 1.0 Media.qml
 MediaButton 1.0 MediaButton.qml

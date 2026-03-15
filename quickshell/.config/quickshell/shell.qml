@@ -39,6 +39,7 @@ ShellRoot {
                 spacing: 8
                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
+                DistroIcon { }
                 Workspaces { }
                 Media { }
                 // Title { }
