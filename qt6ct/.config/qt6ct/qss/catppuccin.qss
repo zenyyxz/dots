@@ -85,17 +85,16 @@ KFilePlacesView {
     color: #cdd6f4;
 }
 
-/* --- RE-ENGINEERED ROUNDED MENUS --- */
+/* --- REFINED ROUNDED MENUS --- */
 QMenu {
     background-color: #1e1e2e;
     border: 1px solid #313244;
     border-radius: 12px;
-    padding: 4px;
+    padding: 4px; /* More padding for breathing room */
 }
 
 QMenu::item {
-    /* Use padding-left to create space for the indicator */
-    padding: 6px 24px 6px 36px;
+    padding: 6px 24px 6px 36px; /* Balanced padding */
     border-radius: 8px;
     margin: 2px 4px;
 }
@@ -105,10 +104,11 @@ QMenu::item:selected {
     color: #ca9ee6;
 }
 
-/* Standard Indicator Styling */
+/* Refined Indicator Styling */
 QMenu::indicator {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+    margin-left: 6px;
 }
 
 QMenu::indicator:non-exclusive:unchecked {
@@ -136,7 +136,7 @@ QMenu::indicator:exclusive:checked {
 QMenu::separator {
     height: 1px;
     background: #313244;
-    margin: 6px 10px;
+    margin: 6px 10px; /* More margin for separators */
 }
 
 QMenu::icon {
