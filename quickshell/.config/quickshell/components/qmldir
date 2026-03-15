@@ -19,6 +19,7 @@ NotificationPanel 1.0 NotificationPanel.qml
 NotificationPopup 1.0 NotificationPopup.qml
 SidePanel 1.0 SidePanel.qml
 ControlCenterButton 1.0 ControlCenterButton.qml
+ControlCenterIconButton 1.0 ControlCenterIconButton.qml
 ControlCenterSlider 1.0 ControlCenterSlider.qml
 PowerButton 1.0 PowerButton.qml
 Launcher 1.0 Launcher.qml

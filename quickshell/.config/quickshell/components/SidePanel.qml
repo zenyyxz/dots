@@ -49,6 +49,26 @@ PanelWindow {
     property bool flightMode: false
     property bool idleInhibited: false
     
+    property string uptime: "00:00"
+    Process {
+        id: uptimeProc
+        command: ["bash", "-c", "uptime -p | sed 's/up //; s/ hours,/h/; s/ hour,/h/; s/ minutes/m/; s/ minute/m/'"]
+        running: true
+        stdout: SplitParser {
+            onRead: msg => { root.uptime = msg.trim() }
+        }
+    }
+    Timer { interval: 60000; repeat: true; running: root.isOpen; onTriggered: uptimeProc.running = true }
+
+    Process {
+        id: checkIdle
+        command: ["pgrep", "hypridle"]
+        running: true
+        onExited: (exitCode) => {
+            root.idleInhibited = (exitCode !== 0);
+        }
+    }
+
     property real volume: 0.0
     property bool muted: false
     property bool isMovingVolume: false
@@ -110,6 +130,58 @@ PanelWindow {
             anchors.margins: 25
             spacing: 25
 
+            // --- 'ii' Style Header ---
+            RowLayout {
+                Layout.fillWidth: true
+                height: 40
+
+                Rectangle {
+                    Layout.preferredWidth: uptimeLayout.implicitWidth + 30
+                    Layout.preferredHeight: 40
+                    radius: 20
+                    color: Theme.surface0
+                    border.color: Theme.surface1
+                    border.width: 1
+
+                    RowLayout {
+                        id: uptimeLayout
+                        anchors.centerIn: parent
+                        spacing: 10
+                        Text {
+                            text: "󰣇"
+                            font.family: "JetBrainsMono Nerd Font"
+                            font.pixelSize: 20
+                            color: Theme.blue
+                        }
+                        Text {
+                            text: root.uptime
+                            font.family: Theme.fontName
+                            font.pixelSize: 13
+                            color: Theme.text
+                            font.bold: true
+                        }
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                RowLayout {
+                    spacing: 10
+                    PowerButton { 
+                        width: 40; height: 40
+                        icon: "󰒲"
+                        accentColor: Theme.mauve
+                        onClicked: Quickshell.execDetached(["systemctl", "suspend"]) 
+                    }
+                    PowerButton { 
+                        width: 40; height: 40
+                        icon: "󰐥"
+                        accentColor: Theme.red
+                        onClicked: Quickshell.execDetached(["systemctl", "poweroff"]) 
+                    }
+                }
+            }
+
             // --- Quick Toggles Grid ---
             GridLayout {
                 columns: 2
@@ -150,17 +222,17 @@ PanelWindow {
                     }
                 }
 
-                // Idle Inhibitor
-                ControlCenterButton {
-                    icon: root.idleInhibited ? "󰈈" : "󰈉"
-                    label: root.idleInhibited ? "Inhibiting" : "Idle OK"
+                // Idle Inhibitor (Icon-only)
+                ControlCenterIconButton {
+                    icon: Quickshell.shellPath("assets/idle-coffee.svg")
                     active: root.idleInhibited
                     onClicked: {
-                        root.idleInhibited = !root.idleInhibited;
                         if (root.idleInhibited) {
-                             Quickshell.execDetached(["systemd-inhibit", "--what=idle", "--who=quickshell", "--why=manual-inhibit", "sleep", "infinity"]);
+                             Quickshell.execDetached(["hypridle"]);
+                             root.idleInhibited = false;
                         } else {
-                             Quickshell.execDetached(["pkill", "-f", "manual-inhibit"]);
+                             Quickshell.execDetached(["pkill", "hypridle"]);
+                             root.idleInhibited = true;
                         }
                     }
                 }
@@ -265,11 +337,10 @@ PanelWindow {
                 }
             }
             
-            // Power Menu
+            // Power Menu (Simplified footer as it's now in the header)
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 30
-                PowerButton { icon: "󰤄"; accentColor: Theme.red; onClicked: Quickshell.execDetached(["systemctl", "poweroff"]) }
                 PowerButton { icon: "󰑓"; accentColor: Theme.yellow; onClicked: Quickshell.execDetached(["systemctl", "reboot"]) }
                 PowerButton { icon: "󰍃"; accentColor: Theme.blue; onClicked: Quickshell.execDetached(["hyprctl", "dispatch", "exit"]) }
             }

@@ -22,43 +22,51 @@ Rectangle {
 
     Process {
         id: netProc
-        command: ["bash", "-c", "printf '%s|%s\\n' \"$(nmcli -t -f active,ssid,signal dev wifi | grep '^yes' | cut -d: -f2,3)\" \"$(nmcli radio wifi)\""]
+        command: ["bash", "-c", "printf '%s|%s\\n' \"$(nmcli radio wifi)\" \"$(nmcli -t -f active,ssid,signal dev wifi | grep '^yes' | cut -d: -f2,3)\""]
         running: true
         
         stdout: SplitParser {
             onRead: msg => {
-                const mainParts = msg.trim().split("|");
-                if (mainParts.length >= 2) {
-                    const statusPart = mainParts[0];
-                    const enabledPart = mainParts[1];
-                    
-                    if (statusPart.includes(":")) {
-                        const statusParts = statusPart.split(":");
-                        root.ssid = statusParts[0];
-                        root.signal = parseInt(statusParts[1]) / 100.0;
+                const parts = msg.trim().split("|");
+                if (parts.length >= 2) {
+                    root.wifiEnabled = (parts[0] === "enabled");
+                    const statusStr = parts[1];
+                    const lastColon = statusStr.lastIndexOf(":");
+                    if (lastColon !== -1) {
+                        root.ssid = statusStr.substring(0, lastColon);
+                        root.signal = parseInt(statusStr.substring(lastColon + 1)) / 100.0;
                     } else {
-                        root.ssid = "Disconnected";
+                        root.ssid = "";
                         root.signal = 0.0;
                     }
-                    root.wifiEnabled = (enabledPart === "enabled");
                 }
             }
         }
     }
 
     Timer {
-        interval: 10000; repeat: true; running: true
+        interval: 5000; repeat: true; running: true
         onTriggered: netProc.running = true
     }
 
     function getWifiIcon() {
-        if (!root.wifiEnabled) return "󰤭"; // WiFi Off
+        if (!root.wifiEnabled) return "󰤭"; // WiFi Disabled
         if (!root.connected) return "󰤮";   // Disconnected
         
-        if (root.signal >= 0.8) return "󰤨"; // Excellent
-        if (root.signal >= 0.6) return "󰤥"; // Good
-        if (root.signal >= 0.4) return "󰤢"; // OK
-        return "󰤟"; // Weak
+        if (root.signal >= 0.75) return "󰤨"; // Excellent (4 bars)
+        if (root.signal >= 0.5) return "󰤥";  // Good (3 bars)
+        if (root.signal >= 0.25) return "󰤢"; // OK (2 bars)
+        return "󰤟"; // Weak (1 bar)
+    }
+
+    function getWifiColor() {
+        if (!root.wifiEnabled) return Theme.surface1;
+        if (!root.connected) return Theme.red;
+        
+        if (root.signal >= 0.75) return Theme.blue;
+        if (root.signal >= 0.5) return Theme.green;
+        if (root.signal >= 0.25) return Theme.yellow;
+        return Theme.maroon;
     }
 
     function getTooltipText() {
@@ -79,9 +87,9 @@ Rectangle {
         anchors.centerIn: parent
         text: root.getWifiIcon()
         font.family: "JetBrainsMono Nerd Font"
-        font.pixelSize: 16 // Increased size for visibility
-        color: !root.wifiEnabled ? Theme.surface1 : (root.connected ? Theme.sapphire : Theme.red)
+        font.pixelSize: 18
+        color: root.getWifiColor()
         
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on color { ColorAnimation { duration: 300 } }
     }
 }
