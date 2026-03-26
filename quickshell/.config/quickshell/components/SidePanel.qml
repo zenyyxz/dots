@@ -32,6 +32,13 @@ PanelWindow {
     property bool isOpen: false
     visible: isOpen || container.opacity > 0
 
+    onIsOpenChanged: {
+        if (isOpen) {
+            uptimeProc.running = true;
+            stateUpdater.running = true;
+        }
+    }
+
     // Notification Model
     ListModel { id: notifModel }
 
