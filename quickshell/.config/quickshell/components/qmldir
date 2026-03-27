@@ -26,3 +26,4 @@ Launcher 1.0 Launcher.qml
 Clipboard 1.0 Clipboard.qml
 CliphistImage 1.0 CliphistImage.qml
 ScreenSnip 1.0 ScreenSnip.qml
+ChatWidget 1.0 ChatWidget.qml

@@ -31,3 +31,6 @@ end
 # Environment variables
 set -gx EDITOR code
 set -gx VISUAL code
+
+# opencode
+fish_add_path /home/zenyyxz/.opencode/bin

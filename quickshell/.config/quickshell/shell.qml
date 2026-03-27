@@ -80,6 +80,7 @@ ShellRoot {
     Launcher { id: appLauncher; visible: false }
     Clipboard { id: clipboardMenu; visible: false }
     ScreenSnip { id: screenSnip; visible: false }
+    ChatWidget { id: chatWidget; visible: false }
 
     // Global Shortcuts
     GlobalShortcut {
@@ -106,6 +107,14 @@ ShellRoot {
         }
     }
 
+    GlobalShortcut {
+        name: "chatToggle"
+        description: "Toggles the AI Chat widget"
+        onPressed: {
+            chatWidget.visible = !chatWidget.visible;
+        }
+    }
+
     // Click-away listener (Closes panel when clicking outside)
     PanelWindow {
         id: clickAway
@@ -115,7 +124,7 @@ ShellRoot {
             left: true
             right: true
         }
-        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible
+        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.visible
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "click-away"
@@ -128,6 +137,7 @@ ShellRoot {
                 appLauncher.visible = false;
                 clipboardMenu.visible = false;
                 screenSnip.visible = false;
+                chatWidget.visible = false;
             }
         }
     }
