@@ -31,6 +31,8 @@ return {
             LualineCommand = { bg = "NONE" },
             LualineInactive = { bg = "NONE" },
             StatusLine = { bg = "NONE" },
+            -- Neon blue scope highlight
+            MiniIndentscopeSymbol = { fg = "#00ffff" },
           }
         end,
       })
@@ -259,8 +261,34 @@ return {
     end,
   },
 
-  -- Indent Guides
-  { "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = { scope = { enabled = false } } },
+  -- Indent Guides (Background)
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    opts = {
+      indent = { char = "│" },
+      scope = { enabled = false }, -- Disable IBL scope to use mini.indentscope
+    },
+  },
+
+  -- Current Scope Highlight (Prominent line)
+  {
+    "echasnovski/mini.indentscope",
+    version = false, -- wait for next release
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      symbol = "│",
+      options = { try_as_border = true },
+    },
+    init = function()
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "help", "alpha", "dashboard", "nvim-tree", "Trouble", "lazy", "mason", "toggleterm" },
+        callback = function()
+          vim.b.miniindentscope_disable = true
+        end,
+      })
+    end,
+  },
 
   -- UI (Noice)
   {
