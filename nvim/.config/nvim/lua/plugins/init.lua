@@ -8,6 +8,25 @@ return {
       require("catppuccin").setup({
         flavour = "mocha", -- latte, frappe, macchiato, mocha
         transparent_background = true,
+        integrations = {
+          alpha = true,
+          cmp = true,
+          gitsigns = true,
+          indent_blankline = {
+            enabled = true,
+            scope_color = "", -- catppuccin color (eg. `lavender`)
+          },
+          lualine = true,
+          mason = true,
+          noice = true,
+          notify = true,
+          nvimtree = true,
+          telescope = {
+            enabled = true,
+            -- style = "nvchad"
+          },
+          which_key = true,
+        }
       })
       vim.cmd.colorscheme("catppuccin")
     end,
@@ -120,8 +139,9 @@ return {
     config = function()
       require("lualine").setup({
         options = {
-          theme = "catppuccin",
-          component_separators = { left = "|", right = "|" },
+          theme = "auto",
+          globalstatus = true,
+          component_separators = { left = "", right = "" },
           section_separators = { left = "", right = "" },
         },
       })
@@ -160,5 +180,97 @@ return {
   {
     "numToStr/Comment.nvim",
     config = true,
+  },
+
+  -- Dashboard
+  {
+    "goolord/alpha-nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      local alpha = require("alpha")
+      local dashboard = require("alpha.themes.startify")
+      dashboard.section.header.val = {
+        "                                ",
+        "  ███╗   ██╗██╗   ██╗██╗███╗   ███╗ ",
+        "  ████╗  ██║██║   ██║██║████╗ ████║ ",
+        "  ██╔██╗ ██║██║   ██║██║██╔████╔██║ ",
+        "  ██║╚██╗██║╚██╗ ██╔╝██║██║╚██╔╝██║ ",
+        "  ██║ ╚████║ ╚████╔╝ ██║██║ ╚═╝ ██║ ",
+        "  ╚═╝  ╚═══╝  ╚═══╝  ╚═╝╚═╝     ╚═╝ ",
+        "                                ",
+      }
+      alpha.setup(dashboard.config)
+    end,
+  },
+
+  -- Indent Guides
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    opts = {
+      indent = {
+        char = "│", -- Use a standard thin vertical line
+        tab_char = "│",
+      },
+      scope = { enabled = false }, -- Disable scope highlighting to fix the box/rendering issue
+      exclude = {
+        filetypes = {
+          "help",
+          "alpha",
+          "dashboard",
+          "nvimtree",
+          "lazy",
+          "mason",
+          "notify",
+          "toggleterm",
+        },
+      },
+    },
+  },
+
+  -- UI Enhancements (Noice)
+  {
+    "folke/noice.nvim",
+    event = "VeryLazy",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      {
+        "rcarriga/nvim-notify",
+        config = function()
+          require("notify").setup({
+            background_colour = "#000000",
+            render = "compact",
+          })
+        end,
+      },
+    },
+    opts = {
+      lsp = {
+        override = {
+          ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+          ["vim.lsp.util.set_autocmds"] = true,
+          ["sysext.lsp.util.stylize_markdown"] = true,
+          ["cmp.entry.get_documentation"] = true,
+        },
+      },
+      presets = {
+        bottom_search = true,
+        command_palette = true, -- This makes the command line float in the center
+        long_message_to_split = true,
+        inc_rename = false,
+        lsp_doc_border = true, -- Adds a nice border to documentation popups
+      },
+    },
+  },
+
+  -- Keybinding Helper
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    init = function()
+      vim.o.timeout = true
+      vim.o.timeoutlen = 300
+    end,
+    opts = {},
   },
 }
