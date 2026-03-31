@@ -23,8 +23,8 @@ opt.cursorline = true
 -- Clipboard (system clipboard)
 opt.clipboard = "unnamedplus"
 
--- Disable mouse
-opt.mouse = ""
+-- Enable mouse
+opt.mouse = "a"
 
 -- Better split windows
 opt.splitright = true
