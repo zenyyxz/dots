@@ -17,12 +17,12 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    config = function()
-      local configs = require("nvim-treesitter.configs")
-      configs.setup({
-        ensure_installed = { "lua", "javascript", "typescript", "python", "bash", "markdown", "hyprlang" },
-        highlight = { enable = true },
-      })
+    opts = {
+      ensure_installed = { "lua", "javascript", "typescript", "python", "bash", "markdown", "hyprlang" },
+      highlight = { enable = true },
+    },
+    config = function(_, opts)
+      require("nvim-treesitter").setup(opts)
     end,
   },
 
@@ -52,11 +52,14 @@ return {
         ensure_installed = { "lua_ls", "ts_ls", "pyright" },
       })
       
-      local lspconfig = require("lspconfig")
-      -- Use nvim 0.11 compatible setup if available, otherwise fallback
+      -- Use nvim 0.11+ native LSP config if available
       local servers = { "lua_ls", "ts_ls", "pyright" }
       for _, lsp in ipairs(servers) do
-        lspconfig[lsp].setup({})
+        if vim.lsp.enable then
+          vim.lsp.enable(lsp)
+        else
+          require("lspconfig")[lsp].setup({})
+        end
       end
       
       -- LSP Keybindings
