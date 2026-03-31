@@ -112,4 +112,53 @@ return {
       })
     end,
   },
+
+  -- Statusline
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("lualine").setup({
+        options = {
+          theme = "catppuccin",
+          component_separators = "|",
+          section_separators = "",
+        },
+      })
+    end,
+  },
+
+  -- File Explorer
+  {
+    "nvim-tree/nvim-tree.lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    keys = {
+      { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "Toggle File Explorer" },
+    },
+    config = function()
+      require("nvim-tree").setup({
+        filters = { dotfiles = false },
+        view = { width = 30 },
+      })
+    end,
+  },
+
+  -- Autopairs
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    config = true,
+  },
+
+  -- Git signs in gutter
+  {
+    "lewis6991/gitsigns.nvim",
+    config = true,
+  },
+
+  -- Commenting utility (gcc to comment line, gc in visual mode)
+  {
+    "numToStr/Comment.nvim",
+    config = true,
+  },
 }
