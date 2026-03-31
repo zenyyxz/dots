@@ -34,3 +34,4 @@ set -gx VISUAL code
 
 # opencode
 fish_add_path /home/zenyyxz/.opencode/bin
+fish_add_path /home/zenyyxz/node_modules/.bin

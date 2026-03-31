@@ -23,8 +23,11 @@ PanelWindow {
 
     color: "transparent"
 
-    onVisibleChanged: {
-        if (visible) {
+    property bool isOpen: false
+    visible: isOpen || container.opacity > 0
+
+    onIsOpenChanged: {
+        if (isOpen) {
             inputField.forceActiveFocus();
         }
     }
@@ -33,12 +36,12 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: "#000000"
-        opacity: root.visible ? 0.4 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        opacity: root.isOpen ? 0.4 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 300 } }
         
         MouseArea {
             anchors.fill: parent
-            onClicked: root.visible = false
+            onClicked: root.isOpen = false
         }
     }
 
@@ -76,19 +79,25 @@ PanelWindow {
 
     Rectangle {
         id: container
-        width: 600
-        height: 700
-        anchors.centerIn: parent
+        width: 450
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+            topMargin: 60
+            bottomMargin: 15
+        }
+        
+        x: root.isOpen ? 15 : -width - 20
+        Behavior on x { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+
         color: Theme.base
         radius: 16
         border.color: Theme.borderColor
         border.width: 1
         clip: true
 
-        opacity: root.visible ? 1.0 : 0.0
-        scale: root.visible ? 1.0 : 0.95
-        Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+        opacity: root.isOpen ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
         ColumnLayout {
             anchors.fill: parent
@@ -224,7 +233,7 @@ PanelWindow {
                         
                         Keys.onPressed: (event) => {
                             if (event.key === Qt.Key_Escape) {
-                                root.visible = false;
+                                root.isOpen = false;
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 if (text.trim() !== "" && !root.isThinking) {

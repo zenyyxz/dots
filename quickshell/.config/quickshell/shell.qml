@@ -80,7 +80,7 @@ ShellRoot {
     Launcher { id: appLauncher; visible: false }
     Clipboard { id: clipboardMenu; visible: false }
     ScreenSnip { id: screenSnip; visible: false }
-    ChatWidget { id: chatWidget; visible: false }
+    ChatWidget { id: chatWidget; isOpen: false }
 
     // Global Shortcuts
     GlobalShortcut {
@@ -111,7 +111,7 @@ ShellRoot {
         name: "chatToggle"
         description: "Toggles the AI Chat widget"
         onPressed: {
-            chatWidget.visible = !chatWidget.visible;
+            chatWidget.isOpen = !chatWidget.isOpen;
         }
     }
 
@@ -124,7 +124,7 @@ ShellRoot {
             left: true
             right: true
         }
-        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.visible
+        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.isOpen
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "click-away"
@@ -137,8 +137,29 @@ ShellRoot {
                 appLauncher.visible = false;
                 clipboardMenu.visible = false;
                 screenSnip.visible = false;
-                chatWidget.visible = false;
+                chatWidget.isOpen = false;
             }
+        }
+    }
+
+    // Top-Left Hover Trigger
+    PanelWindow {
+        id: leftTrigger
+        anchors {
+            top: true
+            left: true
+        }
+        width: 10
+        height: 10
+        color: "transparent"
+        exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "left-trigger"
+        
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            onEntered: chatWidget.isOpen = true
         }
     }
 
