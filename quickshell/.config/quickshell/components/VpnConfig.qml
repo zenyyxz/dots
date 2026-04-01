@@ -128,6 +128,7 @@ PanelWindow {
     }
 
     function deleteProfile(name) {
+        root.statusMessage = "Deleting " + name + "...";
         deleteProfileProc.running = false;
         deleteProfileProc.command = ["bash", "/home/zenyyxz/dotfiles/vpn/sing-box/manage_profiles.sh", "delete", name];
         deleteProfileProc.running = true;
@@ -137,7 +138,7 @@ PanelWindow {
         if (isOpen) {
             listProfilesProc.running = false;
             listProfilesProc.running = true;
-            root.addingProfile = (profilesModel.count === 0);
+            root.addingProfile = false; // Always start on List View
             root.statusMessage = "";
         }
     }
@@ -219,6 +220,12 @@ PanelWindow {
                             color: (root.activeProfile === model.name) ? Theme.surface1 : Theme.surface0
                             border.color: (root.activeProfile === model.name) ? Theme.mauve : "transparent"; border.width: 1
 
+                            // Apply profile MouseArea
+                            MouseArea { 
+                                anchors.fill: parent
+                                onClicked: root.applyProfile(model.name) 
+                            }
+
                             RowLayout {
                                 anchors.fill: parent; anchors.margins: 12; spacing: 10
                                 Text {
@@ -229,15 +236,30 @@ PanelWindow {
                                 
                                 // Delete Icon
                                 Rectangle {
-                                    width: 24; height: 24; radius: 6; color: "transparent"
+                                    id: deleteBtn
+                                    width: 28; height: 28; radius: 8
+                                    color: deleteMouseArea.containsMouse ? Theme.surface1 : "transparent"
+                                    
                                     Text {
                                         anchors.centerIn: parent; text: "󰅖"; 
-                                        font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; color: Theme.surface2
+                                        font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; 
+                                        color: deleteMouseArea.containsMouse ? Theme.red : Theme.surface2
+                                        Behavior on color { ColorAnimation { duration: 150 } }
                                     }
-                                    MouseArea { anchors.fill: parent; onClicked: root.deleteProfile(model.name) }
+                                    
+                                    MouseArea { 
+                                        id: deleteMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: (mouse) => {
+                                            root.deleteProfile(model.name);
+                                            mouse.accepted = true; // Prevent event propagation
+                                        }
+                                    }
+                                    
+                                    Behavior on color { ColorAnimation { duration: 150 } }
                                 }
                             }
-                            MouseArea { anchors.fill: parent; onClicked: root.applyProfile(model.name) }
                         }
                     }
                     

@@ -2,21 +2,6 @@
   {
     "name": "zenyyprivsg-Me-Arch-SG",
     "content": "vless://c4bd98c1-b83c-4b32-a086-40f67a7ec3ff@sg.panel.zenyypriv.ggff.net:443?encryption=none&security=tls&sni=aka.ms&allowInsecure=true&packetEncoding=xudp#zenyyprivsg-Me-Arch-SG",
-    "active": false
-  },
-  {
-    "name": "zenyyprivsg-Me-Arch-SG-1",
-    "content": "vless://c4bd98c1-b83c-4b32-a086-40f67a7ec3ff@sg.panel.zenyypriv.ggff.net:443?encryption=none&security=tls&sni=aka.ms&allowInsecure=true&packetEncoding=xudp#zenyyprivsg-Me-Arch-SG",
     "active": true
-  },
-  {
-    "name": "zenyyprivsg-Me-Arch-SG-2",
-    "content": "vless://c4bd98c1-b83c-4b32-a086-40f67a7ec3ff@sg.panel.zenyypriv.ggff.net:443?encryption=none&security=tls&sni=aka.ms&allowInsecure=true&packetEncoding=xudp#zenyyprivsg-Me-Arch-SG",
-    "active": false
-  },
-  {
-    "name": "zenyyprivsg-Me-Arch-SG-3",
-    "content": "vless://c4bd98c1-b83c-4b32-a086-40f67a7ec3ff@sg.panel.zenyypriv.ggff.net:443?encryption=none&security=tls&sni=aka.ms&allowInsecure=true&packetEncoding=xudp#zenyyprivsg-Me-Arch-SG",
-    "active": false
   }
 ]
