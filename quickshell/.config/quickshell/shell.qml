@@ -75,14 +75,28 @@ ShellRoot {
     Tooltip { }
     MediaPopup { }
     OSD { id: globalOSD }
-    SidePanel { id: sidePanel }
+    SidePanel { 
+        id: sidePanel
+        onRequestVpnConfig: {
+            vpnConfig.isOpen = true;
+        }
+    }
     NotificationPopup { id: notifPopup }
     Launcher { id: appLauncher; visible: false }
     Clipboard { id: clipboardMenu; visible: false }
     ScreenSnip { id: screenSnip; visible: false }
     ChatWidget { id: chatWidget; isOpen: false }
+    VpnConfig { id: vpnConfig; isOpen: false }
 
     // Global Shortcuts
+    GlobalShortcut {
+        name: "vpnConfigToggle"
+        description: "Toggles the VPN configuration window"
+        onPressed: {
+            vpnConfig.isOpen = !vpnConfig.isOpen;
+        }
+    }
+
     GlobalShortcut {
         name: "launcherToggle"
         description: "Toggles the application launcher"
@@ -124,7 +138,7 @@ ShellRoot {
             left: true
             right: true
         }
-        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.isOpen
+        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.isOpen || vpnConfig.isOpen
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "click-away"
@@ -138,6 +152,7 @@ ShellRoot {
                 clipboardMenu.visible = false;
                 screenSnip.visible = false;
                 chatWidget.isOpen = false;
+                vpnConfig.isOpen = false;
             }
         }
     }

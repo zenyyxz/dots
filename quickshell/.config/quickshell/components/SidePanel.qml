@@ -56,10 +56,36 @@ PanelWindow {
     property bool bluetoothEnabled: true
     property bool flightMode: false
     property bool idleInhibited: false
+    property bool vpnEnabled: false
     
+    signal requestVpnConfig()
+
     property string currentPowerProfile: "balanced"
     
     property string uptime: "00:00"
+    
+    // --- VPN Logic ---
+    Process {
+        id: vpnStatusProc
+        command: ["bash", Quickshell.shellPath("../../vpn/sing-box/toggle_vpn.sh"), "status"]
+        running: true
+        stdout: SplitParser {
+            onRead: msg => { root.vpnEnabled = (msg.trim() === "on") }
+        }
+    }
+
+    function toggleVpn() {
+        Quickshell.execDetached(["bash", Quickshell.shellPath("../../vpn/sing-box/toggle_vpn.sh"), "toggle"]);
+        // Optimistic update
+        root.vpnEnabled = !root.vpnEnabled;
+    }
+
+    function openVpnConfig() {
+        root.requestVpnConfig();
+        root.isOpen = false;
+    }
+    // -----------------
+
     Process {
         id: uptimeProc
         command: ["bash", "-c", "uptime -p | sed 's/up //; s/ hours,/h/; s/ hour,/h/; s/ minutes/m/; s/ minute/m/'"]
@@ -129,7 +155,7 @@ PanelWindow {
         }
     }
 
-    Timer { interval: 2000; repeat: true; running: root.isOpen; onTriggered: stateUpdater.running = true }
+    Timer { interval: 2000; repeat: true; running: root.isOpen; onTriggered: { stateUpdater.running = true; vpnStatusProc.running = true; } }
 
     Rectangle {
         id: container
@@ -240,6 +266,26 @@ PanelWindow {
                     onClicked: {
                         Quickshell.execDetached(["rfkill", root.flightMode ? "unblock" : "block", "all"]);
                         root.flightMode = !root.flightMode;
+                    }
+                }
+
+                // VPN Toggle
+                ControlCenterButton {
+                    icon: "󰖂"
+                    label: "VPN"
+                    active: root.vpnEnabled
+                    onClicked: root.toggleVpn()
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onClicked: (mouse) => {
+                            if (mouse.button === Qt.RightButton) {
+                                root.openVpnConfig();
+                            } else {
+                                root.toggleVpn();
+                            }
+                        }
                     }
                 }
 
