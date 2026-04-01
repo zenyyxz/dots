@@ -26,7 +26,7 @@ PanelWindow {
         right: 15
     }
 
-    implicitWidth: 380
+    implicitWidth: 420
     color: "transparent"
 
     property bool isOpen: false
@@ -229,71 +229,81 @@ PanelWindow {
                 }
             }
 
-            // --- Quick Toggles Grid ---
-            RowLayout {
-                spacing: 15
+            // --- Quick Toggles Pill ---
+            Rectangle {
                 Layout.fillWidth: true
+                height: 80
+                radius: 24
+                color: Theme.surface0
+                border.color: Theme.surface1
+                border.width: 1
 
-                // WiFi Toggle
-                ControlCenterIconButton {
-                    icon: "󰤨"
-                    active: root.wifiEnabled
-                    onClicked: {
-                        Quickshell.execDetached(["nmcli", "radio", "wifi", root.wifiEnabled ? "off" : "on"]);
-                        root.wifiEnabled = !root.wifiEnabled;
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 10
+
+                    // WiFi Toggle
+                    ControlCenterIconButton {
+                        icon: "󰤨"
+                        active: root.wifiEnabled
+                        onClicked: {
+                            Quickshell.execDetached(["nmcli", "radio", "wifi", root.wifiEnabled ? "off" : "on"]);
+                            root.wifiEnabled = !root.wifiEnabled;
+                        }
                     }
-                }
 
-                // Bluetooth Toggle
-                ControlCenterIconButton {
-                    icon: "󰂯"
-                    active: root.bluetoothEnabled
-                    onClicked: {
-                        Quickshell.execDetached(["bluetoothctl", "power", root.bluetoothEnabled ? "off" : "on"]);
-                        root.bluetoothEnabled = !root.bluetoothEnabled;
+                    // Bluetooth Toggle
+                    ControlCenterIconButton {
+                        icon: "󰂯"
+                        active: root.bluetoothEnabled
+                        onClicked: {
+                            Quickshell.execDetached(["bluetoothctl", "power", root.bluetoothEnabled ? "off" : "on"]);
+                            root.bluetoothEnabled = !root.bluetoothEnabled;
+                        }
                     }
-                }
 
-                // Flight Mode
-                ControlCenterIconButton {
-                    icon: "󰀝"
-                    active: root.flightMode
-                    onClicked: {
-                        Quickshell.execDetached(["rfkill", root.flightMode ? "unblock" : "block", "all"]);
-                        root.flightMode = !root.flightMode;
+                    // Flight Mode
+                    ControlCenterIconButton {
+                        icon: "󰀝"
+                        active: root.flightMode
+                        onClicked: {
+                            Quickshell.execDetached(["rfkill", root.flightMode ? "unblock" : "block", "all"]);
+                            root.flightMode = !root.flightMode;
+                        }
                     }
-                }
 
-                // VPN Toggle
-                ControlCenterIconButton {
-                    icon: "󰖂"
-                    active: root.vpnEnabled
-                    onClicked: root.toggleVpn()
-                    
-                    MouseArea {
-                        anchors.fill: parent
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        onClicked: (mouse) => {
-                            if (mouse.button === Qt.RightButton) {
-                                root.openVpnConfig();
-                            } else {
-                                root.toggleVpn();
+                    // VPN Toggle
+                    ControlCenterIconButton {
+                        icon: "󰖂"
+                        active: root.vpnEnabled
+                        onClicked: root.toggleVpn()
+                        
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: (mouse) => {
+                                if (mouse.button === Qt.RightButton) {
+                                    root.openVpnConfig();
+                                } else {
+                                    root.toggleVpn();
+                                }
                             }
                         }
                     }
-                }
 
-                // Idle Inhibitor (Icon-only)
-                ControlCenterIconButton {
-                    icon: Quickshell.shellPath("assets/idle-coffee.svg")
-                    active: root.idleInhibited
-                    onClicked: {
-                        if (root.idleInhibited) {
-                             Quickshell.execDetached(["hypridle"]);
-                             root.idleInhibited = false;
-                        } else {
-                             Quickshell.execDetached(["pkill", "hypridle"]);
-                             root.idleInhibited = true;
+                    // Idle Inhibitor (Icon-only)
+                    ControlCenterIconButton {
+                        icon: Quickshell.shellPath("assets/idle-coffee.svg")
+                        active: root.idleInhibited
+                        onClicked: {
+                            if (root.idleInhibited) {
+                                 Quickshell.execDetached(["hypridle"]);
+                                 root.idleInhibited = false;
+                            } else {
+                                 Quickshell.execDetached(["pkill", "hypridle"]);
+                                 root.idleInhibited = true;
+                            }
                         }
                     }
                 }

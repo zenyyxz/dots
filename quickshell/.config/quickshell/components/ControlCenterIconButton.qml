@@ -10,7 +10,7 @@ Rectangle {
     property bool active: false
     signal clicked()
 
-    Layout.fillWidth: true
+    width: 60
     height: 60
     radius: 16
     
