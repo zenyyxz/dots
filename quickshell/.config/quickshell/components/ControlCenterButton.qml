@@ -47,19 +47,25 @@ Rectangle {
 
         ColumnLayout {
             spacing: 0
+            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             Text { 
                 text: root.label
+                Layout.alignment: Qt.AlignLeft
                 color: root.active ? Theme.base : Theme.text
                 font.family: Theme.fontName; font.pixelSize: 13; font.bold: true 
                 Behavior on color { ColorAnimation { duration: 250 } }
             }
             Text { 
                 text: root.active ? "On" : "Off"
+                Layout.alignment: Qt.AlignLeft
                 color: root.active ? Theme.base : Theme.subtext0
                 font.family: Theme.fontName; font.pixelSize: 11; opacity: 0.8 
                 Behavior on color { ColorAnimation { duration: 250 } }
             }
         }
+
+        // Add a spacer to push everything to the left
+        Item { Layout.fillWidth: true }
     }
 
     MouseArea { 
