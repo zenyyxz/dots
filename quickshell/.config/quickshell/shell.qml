@@ -204,8 +204,8 @@ ShellRoot {
         id: notifServer
         onNotification: (n) => {
             sidePanel.addNotification(n);
-            // Only show popup if side panel is closed
-            if (!sidePanel.isOpen) {
+            // Only show popup if side panel is closed AND DND is disabled
+            if (!sidePanel.isOpen && !sidePanel.dndEnabled) {
                 notifPopup.show(n);
             }
         }

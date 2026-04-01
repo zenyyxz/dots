@@ -7,8 +7,14 @@ Rectangle {
     property color accentColor: Theme.mauve
     signal clicked()
 
-    width: 60; height: 60; radius: 30
-    color: Theme.surface0; border.color: Theme.surface1; border.width: 1
+    width: 60; height: 60; radius: 16
+    color: mouseArea.containsMouse ? Theme.surface1 : Theme.surface0
+    border.color: mouseArea.containsMouse ? root.accentColor : Theme.surface1
+    border.width: 1
+
+    Behavior on color { ColorAnimation { duration: 200 } }
+    scale: mouseArea.pressed ? 0.9 : 1.0
+    Behavior on scale { NumberAnimation { duration: 100 } }
 
     Text {
         anchors.centerIn: parent
@@ -16,10 +22,9 @@ Rectangle {
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        onEntered: root.accentColor = Qt.lighter(root.accentColor, 1.2)
-        onExited: root.accentColor = root.accentColor
         onClicked: root.clicked()
     }
 }

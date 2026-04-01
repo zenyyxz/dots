@@ -40,7 +40,6 @@ PanelWindow {
         }
     }
 
-    // Notification Model
     ListModel { id: notifModel }
 
     function addNotification(n) {
@@ -51,20 +50,18 @@ PanelWindow {
         });
     }
 
-    // --- State Properties ---
     property bool wifiEnabled: true
     property bool bluetoothEnabled: true
     property bool flightMode: false
     property bool idleInhibited: false
     property bool vpnEnabled: false
+    property bool dndEnabled: false
     
     signal requestVpnConfig()
 
     property string currentPowerProfile: "balanced"
-    
     property string uptime: "00:00"
     
-    // --- VPN Logic ---
     Process {
         id: vpnStatusProc
         command: ["bash", Quickshell.shellPath("../../vpn/sing-box/toggle_vpn.sh"), "status"]
@@ -76,7 +73,6 @@ PanelWindow {
 
     function toggleVpn() {
         Quickshell.execDetached(["bash", Quickshell.shellPath("../../vpn/sing-box/toggle_vpn.sh"), "toggle"]);
-        // Optimistic update
         root.vpnEnabled = !root.vpnEnabled;
     }
 
@@ -84,7 +80,6 @@ PanelWindow {
         root.requestVpnConfig();
         root.isOpen = false;
     }
-    // -----------------
 
     Process {
         id: uptimeProc
@@ -121,7 +116,6 @@ PanelWindow {
     property real brightness: 1.0
     property bool isMovingBrightness: false
 
-    // --- Process Handlers ---
     Process {
         id: stateUpdater
         command: ["bash", "-c", "printf '%s|%s|%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep 'Powered:' | awk '{print $2}')\" \"$(rfkill list all | grep -qi 'all: blocked' && echo 'blocked' || echo 'unblocked')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\" \"$(powerprofilesctl get)\""]
@@ -175,9 +169,9 @@ PanelWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 25
-            spacing: 25
+            spacing: 20
 
-            // --- 'ii' Style Header ---
+            // --- Header ---
             RowLayout {
                 Layout.fillWidth: true
                 height: 40
@@ -194,18 +188,10 @@ PanelWindow {
                         id: uptimeLayout
                         anchors.centerIn: parent
                         spacing: 10
-                        Text {
-                            text: "󰣇"
-                            font.family: "JetBrainsMono Nerd Font"
-                            font.pixelSize: 20
-                            color: Theme.blue
-                        }
+                        Text { text: "󰣇"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20; color: Theme.blue }
                         Text {
                             text: root.uptime
-                            font.family: Theme.fontName
-                            font.pixelSize: 13
-                            color: Theme.text
-                            font.bold: true
+                            font.family: Theme.fontName; font.pixelSize: 13; color: Theme.text; font.bold: true
                         }
                     }
                 }
@@ -243,7 +229,6 @@ PanelWindow {
                     anchors.margins: 10
                     spacing: 10
 
-                    // WiFi Toggle
                     ControlCenterIconButton {
                         icon: "󰤨"
                         active: root.wifiEnabled
@@ -253,7 +238,6 @@ PanelWindow {
                         }
                     }
 
-                    // Bluetooth Toggle
                     ControlCenterIconButton {
                         icon: "󰂯"
                         active: root.bluetoothEnabled
@@ -263,7 +247,6 @@ PanelWindow {
                         }
                     }
 
-                    // Flight Mode
                     ControlCenterIconButton {
                         icon: "󰀝"
                         active: root.flightMode
@@ -273,7 +256,6 @@ PanelWindow {
                         }
                     }
 
-                    // VPN Toggle
                     ControlCenterIconButton {
                         icon: "󰖂"
                         active: root.vpnEnabled
@@ -283,16 +265,12 @@ PanelWindow {
                             anchors.fill: parent
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                             onClicked: (mouse) => {
-                                if (mouse.button === Qt.RightButton) {
-                                    root.openVpnConfig();
-                                } else {
-                                    root.toggleVpn();
-                                }
+                                if (mouse.button === Qt.RightButton) root.openVpnConfig();
+                                else root.toggleVpn();
                             }
                         }
                     }
 
-                    // Idle Inhibitor (Icon-only)
                     ControlCenterIconButton {
                         icon: Quickshell.shellPath("assets/idle-coffee.svg")
                         active: root.idleInhibited
@@ -309,117 +287,138 @@ PanelWindow {
                 }
             }
 
-            // --- Power Modes ---
-            GridLayout {
-                columns: 3
-                columnSpacing: 10
+            // --- Power Modes Pill ---
+            Rectangle {
                 Layout.fillWidth: true
+                height: 90
+                radius: 24
+                color: Theme.surface0
+                border.color: Theme.surface1
+                border.width: 1
 
-                PowerModeButton {
-                    icon: "󰓅"
-                    label: "Performance"
-                    active: root.currentPowerProfile === "performance"
-                    onClicked: {
-                        Quickshell.execDetached(["powerprofilesctl", "set", "performance"]);
-                        root.currentPowerProfile = "performance";
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 10
+
+                    PowerModeButton {
+                        icon: "󰓅"
+                        label: "Performance"
+                        active: root.currentPowerProfile === "performance"
+                        onClicked: {
+                            Quickshell.execDetached(["powerprofilesctl", "set", "performance"]);
+                            root.currentPowerProfile = "performance";
+                        }
                     }
-                }
 
-                PowerModeButton {
-                    icon: "󰾆"
-                    label: "Balanced"
-                    active: root.currentPowerProfile === "balanced"
-                    onClicked: {
-                        Quickshell.execDetached(["powerprofilesctl", "set", "balanced"]);
-                        root.currentPowerProfile = "balanced";
+                    PowerModeButton {
+                        icon: "󰾆"
+                        label: "Balanced"
+                        active: root.currentPowerProfile === "balanced"
+                        onClicked: {
+                            Quickshell.execDetached(["powerprofilesctl", "set", "balanced"]);
+                            root.currentPowerProfile = "balanced";
+                        }
                     }
-                }
 
-                PowerModeButton {
-                    icon: "󰌪"
-                    label: "Power Saver"
-                    active: root.currentPowerProfile === "power-saver"
-                    onClicked: {
-                        Quickshell.execDetached(["powerprofilesctl", "set", "power-saver"]);
-                        root.currentPowerProfile = "power-saver";
+                    PowerModeButton {
+                        icon: "󰌪"
+                        label: "Power Saver"
+                        active: root.currentPowerProfile === "power-saver"
+                        onClicked: {
+                            Quickshell.execDetached(["powerprofilesctl", "set", "power-saver"]);
+                            root.currentPowerProfile = "power-saver";
+                        }
                     }
                 }
             }
 
-            // --- Sliders ---
-            ColumnLayout {
-                spacing: 20
+            // --- Sliders Pill ---
+            Rectangle {
                 Layout.fillWidth: true
+                height: 140
+                radius: 24
+                color: Theme.surface0
+                border.color: Theme.surface1
+                border.width: 1
 
-                // Volume Slider
-                ControlCenterSlider {
-                    icon: root.muted ? "󰝟" : "󰕾"
-                    value: root.volume
-                    color: Theme.mauve
-                    onPressed: root.isMovingVolume = true
-                    onReleased: root.isMovingVolume = false
-                    onMoved: (val) => {
-                        root.volume = val;
-                        Quickshell.execDetached(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", val.toFixed(2)]);
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 20
+                    spacing: 10
+
+                    ControlCenterSlider {
+                        icon: root.muted ? "󰝟" : "󰕾"
+                        value: root.volume
+                        color: Theme.mauve
+                        onPressed: root.isMovingVolume = true
+                        onReleased: root.isMovingVolume = false
+                        onMoved: (val) => {
+                            root.volume = val;
+                            Quickshell.execDetached(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", val.toFixed(2)]);
+                        }
                     }
-                }
 
-                // Brightness Slider
-                ControlCenterSlider {
-                    icon: "󰃠"
-                    value: root.brightness
-                    color: Theme.yellow
-                    onPressed: root.isMovingBrightness = true
-                    onReleased: root.isMovingBrightness = false
-                    onMoved: (val) => {
-                        root.brightness = val;
-                        Quickshell.execDetached(["brightnessctl", "set", Math.round(val * 100) + "%"]);
+                    ControlCenterSlider {
+                        icon: "󰃠"
+                        value: root.brightness
+                        color: Theme.yellow
+                        onPressed: root.isMovingBrightness = true
+                        onReleased: root.isMovingBrightness = false
+                        onMoved: (val) => {
+                            root.brightness = val;
+                            Quickshell.execDetached(["brightnessctl", "set", Math.round(val * 100) + "%"]);
+                        }
                     }
                 }
             }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface1; opacity: 0.5 }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface1; opacity: 0.3 }
 
-            // --- Notifications History ---
+            // --- Notifications ---
             ColumnLayout {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                spacing: 15
+                Layout.fillHeight: true; Layout.fillWidth: true; spacing: 15
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Text {
-                        text: "Notifications"
-                        color: Theme.text
-                        font.family: Theme.fontName; font.pixelSize: 16; font.bold: true
-                    }
+                    Text { text: "Notifications"; color: Theme.text; font.family: Theme.fontName; font.pixelSize: 16; font.bold: true }
                     Item { Layout.fillWidth: true }
-                    Text {
-                        text: "Clear All"
-                        color: Theme.mauve; font.family: Theme.fontName; font.pixelSize: 12
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                for (let i = 0; i < notifModel.count; i++) {
-                                    const n = notifModel.get(i).notifObject;
-                                    if (n) n.dismiss();
-                                }
-                                notifModel.clear();
-                            }
+
+                    // Do Not Disturb
+                    Rectangle {
+                        id: dndBtn; width: 32; height: 32; radius: 16
+                        color: root.dndEnabled ? Theme.mauve : (dndMouse.containsMouse ? Theme.surface1 : Theme.surface0)
+                        border.color: dndMouse.containsMouse ? Theme.mauve : Theme.surface1; border.width: 1
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        scale: dndMouse.pressed ? 0.9 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 100 } }
+                        Text { 
+                            anchors.centerIn: parent
+                            text: root.dndEnabled ? "󰂛" : "󰂚"
+                            color: root.dndEnabled ? Theme.base : Theme.mauve
+                            font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16 
                         }
+                        MouseArea { id: dndMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.dndEnabled = !root.dndEnabled }
+                    }
+
+                    // Clear All
+                    Rectangle {
+                        id: clearNotifsBtn; width: 32; height: 32; radius: 16
+                        color: clearNotifMouse.containsMouse ? Theme.red : Theme.surface0
+                        border.color: clearNotifMouse.containsMouse ? "transparent" : Theme.surface1; border.width: 1
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        scale: clearNotifMouse.pressed ? 0.9 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 100 } }
+                        Text { anchors.centerIn: parent; text: "󰆴"; color: clearNotifMouse.containsMouse ? Theme.base : Theme.mauve; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16; Behavior on color { ColorAnimation { duration: 200 } } }
+                        MouseArea { id: clearNotifMouse; anchors.fill: parent; hoverEnabled: true; onClicked: { for (let i = 0; i < notifModel.count; i++) { const n = notifModel.get(i).notifObject; if (n) n.dismiss(); } notifModel.clear(); } }
                     }
                 }
 
                 ListView {
-                    id: notifList
-                    Layout.fillHeight: true; Layout.fillWidth: true
-                    model: notifModel
-                    spacing: 10
-                    clip: true
+                    id: notifList; Layout.fillHeight: true; Layout.fillWidth: true; model: notifModel; spacing: 10; clip: true
+                    Text { anchors.centerIn: parent; text: "󰣇"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 120; color: Theme.text; opacity: 0.05; visible: notifModel.count === 0 }
                     delegate: Rectangle {
-                        width: ListView.view.width; height: 70; radius: 12
-                        color: Theme.surface0; border.color: Theme.surface1; border.width: 1
-
+                        width: ListView.view.width; height: 70; radius: 12; color: Theme.surface0; border.color: Theme.surface1; border.width: 1
                         RowLayout {
                             anchors.fill: parent; anchors.margins: 12; spacing: 10
                             Rectangle { width: 32; height: 32; radius: 6; color: Theme.surface1; Text { anchors.centerIn: parent; text: "󰵚"; color: Theme.mauve; font.pixelSize: 14 } }
@@ -428,29 +427,16 @@ PanelWindow {
                                 Text { text: model.summaryText; color: Theme.text; font.family: Theme.fontName; font.pixelSize: 13; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true }
                                 Text { text: model.bodyText; color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true; maximumLineCount: 1 }
                             }
-                            Text {
-                                text: "󰅖"
-                                font.family: "JetBrainsMono Nerd Font"; color: Theme.surface2
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: {
-                                        const n = notifModel.get(index).notifObject;
-                                        if (n) n.dismiss();
-                                        notifModel.remove(index);
-                                    }
-                                }
-                            }
+                            Text { text: "󰅖"; font.family: "JetBrainsMono Nerd Font"; color: Theme.surface2; MouseArea { anchors.fill: parent; onClicked: { const n = notifModel.get(index).notifObject; if (n) n.dismiss(); notifModel.remove(index); } } }
                         }
                     }
                 }
             }
             
-            // Power Menu (Simplified footer as it's now in the header)
             RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 30
-                PowerButton { icon: "󰑓"; accentColor: Theme.yellow; onClicked: Quickshell.execDetached(["systemctl", "reboot"]) }
-                PowerButton { icon: "󰍃"; accentColor: Theme.blue; onClicked: Quickshell.execDetached(["hyprctl", "dispatch", "exit"]) }
+                Layout.alignment: Qt.AlignHCenter; spacing: 30
+                PowerButton { width: 50; height: 50; icon: "󰑓"; accentColor: Theme.yellow; onClicked: Quickshell.execDetached(["systemctl", "reboot"]) }
+                PowerButton { width: 50; height: 50; icon: "󰍃"; accentColor: Theme.blue; onClicked: Quickshell.execDetached(["hyprctl", "dispatch", "exit"]) }
             }
         }
     }

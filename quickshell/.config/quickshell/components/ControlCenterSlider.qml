@@ -16,7 +16,7 @@ RowLayout {
 
     Rectangle {
         width: 45; height: 45; radius: 12
-        color: Theme.surface0
+        color: Theme.base
         Text {
             anchors.centerIn: parent
             text: root.icon
@@ -26,6 +26,7 @@ RowLayout {
     }
 
     Slider {
+        id: control
         Layout.fillWidth: true
         from: 0; to: 1.0; value: root.value
         onMoved: root.moved(value)
@@ -35,17 +36,17 @@ RowLayout {
         }
 
         background: Rectangle {
-            x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2
-            implicitWidth: 200; implicitHeight: 6; width: parent.availableWidth; height: implicitHeight
-            radius: 3; color: Theme.surface0
+            x: control.leftPadding; y: control.topPadding + control.availableHeight / 2 - height / 2
+            implicitWidth: 200; implicitHeight: 6; width: control.availableWidth; height: implicitHeight
+            radius: 3; color: Theme.base
             Rectangle {
-                width: parent.visualPosition * parent.width; height: parent.height
+                width: control.visualPosition * parent.width; height: parent.height
                 color: root.color; radius: 3
             }
         }
 
         handle: Rectangle {
-            x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2
+            x: control.leftPadding + control.visualPosition * (control.availableWidth - width); y: control.topPadding + control.availableHeight / 2 - height / 2
             implicitWidth: 16; implicitHeight: 16; radius: 8
             color: Theme.text; border.color: root.color; border.width: 2
         }
