@@ -21,12 +21,12 @@ PanelWindow {
     }
     
     margins {
-        top: 60
-        bottom: 15
-        right: 15
+        top: 56
+        bottom: 8
+        right: 8
     }
 
-    implicitWidth: 420
+    implicitWidth: 434
     color: "transparent"
 
     property bool isOpen: false
