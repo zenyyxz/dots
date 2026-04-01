@@ -13,15 +13,11 @@ else
     RAW_INPUT=$(cat)
 fi
 
-# Convert VLESS link to JSON if needed
-if [[ "$RAW_INPUT" == vless://* ]]; then
-    PROCESSED_JSON=$(echo "$RAW_INPUT" | python3 "$CONVERTER")
-    if [ $? -ne 0 ]; then
-        echo "Error: Failed to parse VLESS link."
-        exit 1
-    fi
-else
-    PROCESSED_JSON="$RAW_INPUT"
+# Always run through converter to ensure logging config is injected
+PROCESSED_JSON=$(echo "$RAW_INPUT" | python3 "$CONVERTER")
+if [ $? -ne 0 ] || [ -z "$PROCESSED_JSON" ]; then
+    echo "Error: Failed to process configuration."
+    exit 1
 fi
 
 # Validate JSON with jq

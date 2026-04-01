@@ -1,39 +1,62 @@
 {
   "log": {
     "level": "info",
+    "output": "/home/zenyyxz/dotfiles/vpn/sing-box/box.log",
     "timestamp": true
   },
   "dns": {
     "servers": [
       {
         "tag": "dns-remote",
-        "address": "https://1.1.1.1/dns-query",
-        "detour": "proxy"
+        "type": "udp",
+        "detour": "proxy",
+        "server": "1.1.1.1",
+        "domain_resolver": "dns-local"
       },
       {
         "tag": "dns-local",
-        "address": "8.8.8.8",
-        "detour": "direct"
+        "type": "local"
       }
     ],
     "rules": [
       {
         "outbound": "any",
         "server": "dns-local"
+      },
+      {
+        "clash_mode": "Global",
+        "server": "dns-remote"
+      },
+      {
+        "clash_mode": "Direct",
+        "server": "dns-local"
       }
     ],
-    "strategy": "prefer_ipv4"
+    "strategy": "prefer_ipv4",
+    "independent_cache": true,
+    "final": "dns-local"
   },
   "inbounds": [
     {
       "type": "tun",
       "tag": "tun-in",
       "interface_name": "tun0",
-      "inet4_address": "172.19.0.1/30",
       "auto_route": true,
       "strict_route": true,
       "stack": "system",
-      "sniff": true
+      "route_exclude_address": [
+        "192.168.0.0/16",
+        "127.0.0.0/8",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "8.8.8.8/32",
+        "1.1.1.1/32",
+        "161.118.248.52/32"
+      ],
+      "address": [
+        "172.19.0.1/30"
+      ],
+      "mtu": 1500
     }
   ],
   "outbounds": [
@@ -43,37 +66,104 @@
       "server": "sg.panel.zenyypriv.ggff.net",
       "server_port": 443,
       "uuid": "c4bd98c1-b83c-4b32-a086-40f67a7ec3ff",
-      "packet_encoding": "xudp",
       "tls": {
         "enabled": true,
         "server_name": "aka.ms",
-        "utls": {
-          "enabled": true,
-          "fingerprint": "chrome"
-        },
         "insecure": true
-      }
+      },
+      "domain_resolver": "dns-local"
     },
     {
       "type": "direct",
       "tag": "direct"
-    },
-    {
-      "type": "dns",
-      "tag": "dns-out"
     }
   ],
   "route": {
     "rules": [
       {
-        "protocol": "dns",
-        "outbound": "dns-out"
+        "domain": [
+          "sg.panel.zenyypriv.ggff.net"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "ip_cidr": [
+          "161.118.248.52/32"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "process_path": [
+          "/home/zenyyxz/dotfiles/vpn/sing-box/sing-box"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "process_name": [
+          "sing-box"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "domain": [
+          "sg.panel.zenyypriv.ggff.net"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "ip_cidr": [
+          "161.118.248.52/32"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "ip_version": 6,
+        "action": "reject"
+      },
+      {
+        "ip_cidr": [
+          "8.8.8.8/32",
+          "1.1.1.1/32"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "ip_version": 6,
+        "action": "reject"
+      },
+      {
+        "ip_version": 6,
+        "action": "reject"
       },
       {
         "ip_is_private": true,
         "outbound": "direct"
+      },
+      {
+        "ip_cidr": [
+          "8.8.8.8/32"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "outbound": "direct"
+      },
+      {
+        "domain": [
+          "sg.panel.zenyypriv.ggff.net"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
+        "inbound": "tun-in",
+        "action": "sniff"
       }
     ],
-    "auto_detect_interface": true
+    "auto_detect_interface": true,
+    "final": "proxy"
   }
 }

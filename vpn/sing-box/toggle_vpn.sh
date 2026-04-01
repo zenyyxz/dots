@@ -21,10 +21,9 @@ start() {
     fi
     
     echo "Starting VPN..."
-    # We use sudo because TUN mode needs it. 
-    # To avoid password prompt, add this to /etc/sudoers:
-    # %wheel ALL=(ALL) NOPASSWD: /home/zenyyxz/dotfiles/vpn/sing-box/sing-box
-    sudo "$BINARY" run -c "$CONFIG" > /tmp/sing-box-vpn.log 2>&1 &
+    # No sudo here - depends on setcap being run once manually:
+    # sudo setcap cap_net_admin,cap_net_bind_service=+ep /home/zenyyxz/dotfiles/vpn/sing-box/sing-box
+    "$BINARY" run -c "$CONFIG" > /dev/null 2>&1 &
     
     echo $! > "$PID_FILE"
     echo "VPN started."
@@ -33,16 +32,13 @@ start() {
 stop() {
     if ! status; then
         echo "VPN is not running."
-        # Cleanup orphan pids if any
-        sudo pkill -f "$BINARY run -c $CONFIG"
         rm -f "$PID_FILE"
         exit 0
     fi
     
     echo "Stopping VPN..."
     PID=$(cat "$PID_FILE")
-    sudo kill $PID
-    sudo pkill -f "$BINARY run -c $CONFIG"
+    kill $PID
     rm -f "$PID_FILE"
     echo "VPN stopped."
 }

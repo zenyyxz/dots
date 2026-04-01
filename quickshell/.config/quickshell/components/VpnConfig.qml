@@ -128,17 +128,20 @@ PanelWindow {
     }
 
     function deleteProfile(name) {
-        root.statusMessage = "Deleting " + name + "...";
         deleteProfileProc.running = false;
         deleteProfileProc.command = ["bash", "/home/zenyyxz/dotfiles/vpn/sing-box/manage_profiles.sh", "delete", name];
         deleteProfileProc.running = true;
+    }
+
+    function openLogs() {
+        Quickshell.execDetached(["kitty", "tail", "-f", "/home/zenyyxz/dotfiles/vpn/sing-box/box.log"]);
     }
 
     onIsOpenChanged: {
         if (isOpen) {
             listProfilesProc.running = false;
             listProfilesProc.running = true;
-            root.addingProfile = false; // Always start on List View
+            root.addingProfile = false;
             root.statusMessage = "";
         }
     }
@@ -183,6 +186,13 @@ PanelWindow {
                 Text { text: "VPN Manager"; color: Theme.text; font.family: Theme.fontName; font.pixelSize: 16; font.bold: true }
                 Item { Layout.fillWidth: true }
                 
+                // Logs Button
+                Rectangle {
+                    width: 32; height: 32; radius: 8; color: Theme.surface0
+                    Text { anchors.centerIn: parent; text: "󰄱"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16; color: Theme.text }
+                    MouseArea { anchors.fill: parent; onClicked: root.openLogs() }
+                }
+
                 // Toggle Add View Button
                 Rectangle {
                     width: 32; height: 32; radius: 8; color: root.addingProfile ? Theme.mauve : Theme.surface0
@@ -253,7 +263,7 @@ PanelWindow {
                                         hoverEnabled: true
                                         onClicked: (mouse) => {
                                             root.deleteProfile(model.name);
-                                            mouse.accepted = true; // Prevent event propagation
+                                            mouse.accepted = true; 
                                         }
                                     }
                                     
