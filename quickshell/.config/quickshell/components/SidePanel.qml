@@ -230,16 +230,13 @@ PanelWindow {
             }
 
             // --- Quick Toggles Grid ---
-            GridLayout {
-                columns: 2
-                columnSpacing: 15
-                rowSpacing: 15
+            RowLayout {
+                spacing: 15
                 Layout.fillWidth: true
 
                 // WiFi Toggle
-                ControlCenterButton {
+                ControlCenterIconButton {
                     icon: "󰤨"
-                    label: "WiFi"
                     active: root.wifiEnabled
                     onClicked: {
                         Quickshell.execDetached(["nmcli", "radio", "wifi", root.wifiEnabled ? "off" : "on"]);
@@ -248,9 +245,8 @@ PanelWindow {
                 }
 
                 // Bluetooth Toggle
-                ControlCenterButton {
+                ControlCenterIconButton {
                     icon: "󰂯"
-                    label: "Bluetooth"
                     active: root.bluetoothEnabled
                     onClicked: {
                         Quickshell.execDetached(["bluetoothctl", "power", root.bluetoothEnabled ? "off" : "on"]);
@@ -259,9 +255,8 @@ PanelWindow {
                 }
 
                 // Flight Mode
-                ControlCenterButton {
+                ControlCenterIconButton {
                     icon: "󰀝"
-                    label: "Flight Mode"
                     active: root.flightMode
                     onClicked: {
                         Quickshell.execDetached(["rfkill", root.flightMode ? "unblock" : "block", "all"]);
@@ -270,9 +265,8 @@ PanelWindow {
                 }
 
                 // VPN Toggle
-                ControlCenterButton {
+                ControlCenterIconButton {
                     icon: "󰖂"
-                    label: "VPN"
                     active: root.vpnEnabled
                     onClicked: root.toggleVpn()
                     
