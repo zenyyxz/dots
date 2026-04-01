@@ -37,7 +37,7 @@ PanelWindow {
         anchors.fill: parent
         color: "#000000"
         opacity: root.isOpen ? 0.4 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 300 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
         
         MouseArea {
             anchors.fill: parent
@@ -88,7 +88,7 @@ PanelWindow {
         }
         
         x: root.isOpen ? 15 : -width - 20
-        Behavior on x { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+        Behavior on x { NumberAnimation { duration: Theme.animDuration; easing.type: Theme.animEasing } }
 
         color: Theme.base
         radius: 16
@@ -97,7 +97,7 @@ PanelWindow {
         clip: true
 
         opacity: root.isOpen ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.OutCubic } }
 
         ColumnLayout {
             anchors.fill: parent

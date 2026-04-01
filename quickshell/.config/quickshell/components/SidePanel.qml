@@ -153,7 +153,9 @@ PanelWindow {
 
     Rectangle {
         id: container
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: parent.width
         color: Theme.base
         radius: 24
         border.color: Theme.borderColor
@@ -161,10 +163,10 @@ PanelWindow {
         clip: true
         
         opacity: root.isOpen ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 300 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
         
-        x: root.isOpen ? 0 : 50
-        Behavior on x { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+        x: root.isOpen ? 0 : root.width
+        Behavior on x { NumberAnimation { duration: Theme.animDuration; easing.type: Theme.animEasing } }
 
         ColumnLayout {
             anchors.fill: parent
