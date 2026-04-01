@@ -22,6 +22,7 @@ ControlCenterButton 1.0 ControlCenterButton.qml
 ControlCenterIconButton 1.0 ControlCenterIconButton.qml
 ControlCenterSlider 1.0 ControlCenterSlider.qml
 PowerButton 1.0 PowerButton.qml
+PowerModeButton 1.0 PowerModeButton.qml
 Launcher 1.0 Launcher.qml
 Clipboard 1.0 Clipboard.qml
 CliphistImage 1.0 CliphistImage.qml

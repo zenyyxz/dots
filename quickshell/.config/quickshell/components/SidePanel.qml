@@ -35,6 +35,7 @@ PanelWindow {
     onIsOpenChanged: {
         if (isOpen) {
             uptimeProc.running = true;
+            powerProfileProc.running = true;
             stateUpdater.running = true;
         }
     }
@@ -56,6 +57,8 @@ PanelWindow {
     property bool flightMode: false
     property bool idleInhibited: false
     
+    property string currentPowerProfile: "balanced"
+    
     property string uptime: "00:00"
     Process {
         id: uptimeProc
@@ -66,6 +69,15 @@ PanelWindow {
         }
     }
     Timer { interval: 60000; repeat: true; running: root.isOpen; onTriggered: uptimeProc.running = true }
+
+    Process {
+        id: powerProfileProc
+        command: ["powerprofilesctl", "get"]
+        running: true
+        stdout: SplitParser {
+            onRead: msg => { root.currentPowerProfile = msg.trim() }
+        }
+    }
 
     Process {
         id: checkIdle
@@ -86,12 +98,12 @@ PanelWindow {
     // --- Process Handlers ---
     Process {
         id: stateUpdater
-        command: ["bash", "-c", "printf '%s|%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep 'Powered:' | awk '{print $2}')\" \"$(rfkill list all | grep -qi 'all: blocked' && echo 'blocked' || echo 'unblocked')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\""]
+        command: ["bash", "-c", "printf '%s|%s|%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep 'Powered:' | awk '{print $2}')\" \"$(rfkill list all | grep -qi 'all: blocked' && echo 'blocked' || echo 'unblocked')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\" \"$(powerprofilesctl get)\""]
         running: true
         stdout: SplitParser {
             onRead: msg => {
                 const parts = msg.trim().split("|");
-                if (parts.length >= 5) {
+                if (parts.length >= 6) {
                     root.wifiEnabled = (parts[0] === "enabled");
                     root.bluetoothEnabled = (parts[1] === "yes");
                     root.flightMode = (parts[2] === "blocked");
@@ -110,6 +122,8 @@ PanelWindow {
                         const b = parseFloat(parts[4]);
                         if (!isNaN(b)) root.brightness = b / 100.0;
                     }
+                    
+                    root.currentPowerProfile = parts[5].trim();
                 }
             }
         }
@@ -241,6 +255,43 @@ PanelWindow {
                              Quickshell.execDetached(["pkill", "hypridle"]);
                              root.idleInhibited = true;
                         }
+                    }
+                }
+            }
+
+            // --- Power Modes ---
+            GridLayout {
+                columns: 3
+                columnSpacing: 10
+                Layout.fillWidth: true
+
+                PowerModeButton {
+                    icon: "󰓅"
+                    label: "Performance"
+                    active: root.currentPowerProfile === "performance"
+                    onClicked: {
+                        Quickshell.execDetached(["powerprofilesctl", "set", "performance"]);
+                        root.currentPowerProfile = "performance";
+                    }
+                }
+
+                PowerModeButton {
+                    icon: "󰾆"
+                    label: "Balanced"
+                    active: root.currentPowerProfile === "balanced"
+                    onClicked: {
+                        Quickshell.execDetached(["powerprofilesctl", "set", "balanced"]);
+                        root.currentPowerProfile = "balanced";
+                    }
+                }
+
+                PowerModeButton {
+                    icon: "󰌪"
+                    label: "Power Saver"
+                    active: root.currentPowerProfile === "power-saver"
+                    onClicked: {
+                        Quickshell.execDetached(["powerprofilesctl", "set", "power-saver"]);
+                        root.currentPowerProfile = "power-saver";
                     }
                 }
             }
