@@ -63,10 +63,10 @@ PanelWindow {
     property string currentPowerProfile: "balanced"
     property string uptime: "00:00"
     
-    // Persistent Status Poller: Robustly tracks VPN state without PID file permission issues
+    // Unified Core Status Poller
     Process {
         id: vpnStatusProc
-        command: ["bash", "-c", "while true; do (pgrep -x sing-box >/dev/null && ip addr show tun0 >/dev/null 2>&1) && echo 'on' || echo 'off'; sleep 2; done"]
+        command: ["bash", "-c", "while true; do /home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py status | grep -q '\"running\": true' && echo 'on' || echo 'off'; sleep 2; done"]
         running: true
         stdout: SplitParser {
             onRead: msg => { 
@@ -83,8 +83,8 @@ PanelWindow {
 
     function toggleVpn() {
         if (vpnToggleProc.running) return;
-        const scriptPath = "/home/zenyyxz/dotfiles/vpn/sing-box/toggle_vpn.sh";
-        vpnToggleProc.command = ["pkexec", scriptPath, root.vpnEnabled ? "stop" : "start"];
+        const cliPath = "/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py";
+        vpnToggleProc.command = ["pkexec", cliPath, root.vpnEnabled ? "stop" : "start"];
         vpnToggleProc.running = true;
     }
 

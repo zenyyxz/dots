@@ -1,100 +1,106 @@
 {
-  "log": {
-    "level": "warn"
-  },
   "dns": {
-    "servers": [
-      {
-        "tag": "dns-remote",
-        "type": "https",
-        "server": "1.1.1.1",
-        "server_port": 443,
-        "detour": "proxy"
-      },
-      {
-        "tag": "dns-fakeip",
-        "type": "fakeip",
-        "inet4_range": "198.18.0.0/15"
-      }
-    ],
+    "independent_cache": true,
     "rules": [
       {
         "query_type": [
           "A",
           "AAAA"
         ],
-        "server": "dns-fakeip",
-        "rewrite_ttl": 1
+        "rewrite_ttl": 1,
+        "server": "dns-fakeip"
       }
     ],
-    "strategy": "prefer_ipv4",
-    "independent_cache": true
+    "servers": [
+      {
+        "detour": "proxy",
+        "server": "1.1.1.1",
+        "server_port": 443,
+        "tag": "dns-remote",
+        "type": "https"
+      },
+      {
+        "inet4_range": "198.18.0.0/15",
+        "tag": "dns-fakeip",
+        "type": "fakeip"
+      }
+    ],
+    "strategy": "prefer_ipv4"
   },
   "inbounds": [
     {
-      "type": "tun",
-      "tag": "tun-in",
-      "interface_name": "tun0",
       "address": [
         "172.19.0.1/30"
       ],
-      "mtu": 1500,
       "auto_route": true,
-      "strict_route": true,
-      "stack": "system",
+      "interface_name": "tun0",
+      "mtu": 1500,
       "route_exclude_address": [
         "161.118.248.52/32"
-      ]
+      ],
+      "stack": "system",
+      "strict_route": true,
+      "tag": "tun-in",
+      "type": "tun"
     },
     {
-      "type": "direct",
-      "tag": "dns-in",
       "listen": "127.0.0.1",
-      "listen_port": 53
+      "listen_port": 53,
+      "tag": "dns-in",
+      "type": "direct"
     }
   ],
+  "log": {
+    "level": "info",
+    "output": "/home/zenyyxz/dotfiles/vpn/sing-box/box.log",
+    "timestamp": true
+  },
   "outbounds": [
     {
-      "type": "vless",
-      "tag": "proxy",
       "server": "161.118.248.52",
       "server_port": 443,
-      "uuid": "c4bd98c1-b83c-4b32-a086-40f67a7ec3ff",
+      "tag": "proxy",
       "tls": {
         "enabled": true,
-        "server_name": "aka.ms",
-        "insecure": true
-      }
+        "insecure": true,
+        "server_name": "aka.ms"
+      },
+      "type": "vless",
+      "uuid": "c4bd98c1-b83c-4b32-a086-40f67a7ec3ff"
     },
     {
-      "type": "direct",
-      "tag": "direct"
+      "tag": "direct",
+      "type": "direct"
     }
   ],
   "route": {
+    "auto_detect_interface": true,
+    "final": "proxy",
     "rules": [
       {
-        "protocol": "dns",
-        "action": "hijack-dns"
+        "action": "hijack-dns",
+        "protocol": "dns"
       },
       {
-        "port": 53,
-        "action": "hijack-dns"
+        "action": "hijack-dns",
+        "port": 53
       },
       {
-        "inbound": "tun-in",
         "action": "sniff",
-        "protocol": ["http", "tls", "quic"]
+        "inbound": "tun-in",
+        "protocol": [
+          "http",
+          "tls",
+          "quic"
+        ]
       },
       {
+        "action": "route",
         "ip_cidr": [
           "161.118.248.52/32"
         ],
-        "action": "route",
         "outbound": "direct"
       }
-    ],
-    "auto_detect_interface": true,
-    "final": "proxy"
+    ]
   }
 }
