@@ -19,10 +19,12 @@ Rectangle {
     property string localIp: "Offline"
     property bool torActive: false
     property bool torUpdating: false
+    property bool torConfigOk: true
 
     Process {
         id: targetProc
-        command: ["bash", "-c", "ip -4 addr show | grep -v '127.0.0.1' | grep inet | head -n 1 | awk '{print $2}' | cut -d/ -f1 && (systemctl is-active --quiet tor && echo true || echo false)"]
+        // Detect IP + Tor Status + Verify Tor Config (checks for TransPort in torrc)
+        command: ["bash", "-c", "ip -4 addr show | grep -v '127.0.0.1' | grep inet | head -n 1 | awk '{print $2}' | cut -d/ -f1 && (systemctl is-active --quiet tor && echo true || echo false) && (grep -q 'TransPort' /etc/tor/torrc 2>/dev/null && echo true || echo false)"]
         running: true
         
         stdout: SplitParser {
@@ -32,6 +34,7 @@ Rectangle {
                     root.torActive = (msg.trim() === "true");
                     root.torUpdating = false;
                 }
+                else if (index == 2) root.torConfigOk = (msg.trim() === "true");
             }
         }
     }
@@ -48,12 +51,15 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         onClicked: {
+            if (!root.torConfigOk) {
+                // If config is missing, offer a helpful hint (or run setup script)
+                Quickshell.execDetached(["notify-send", "Tor Setup Required", "Run vpn/tor/install_tor_config.sh to configure torrc."]);
+                return;
+            }
             root.torUpdating = true;
             const scriptPath = Quickshell.shellPath("../../../vpn/tor/toggle_tor.sh");
             const action = root.torActive ? "stop" : "start";
             Quickshell.execDetached(["pkexec", "bash", scriptPath, action]);
-            
-            // Immediate UI feedback
             root.torActive = !root.torActive;
         }
     }
@@ -73,13 +79,13 @@ Rectangle {
                 Rectangle {
                     anchors.centerIn: parent
                     width: 20; height: 20; radius: 10
-                    color: Theme.mauve
+                    color: root.torConfigOk ? Theme.mauve : Theme.yellow
                     opacity: 0
-                    visible: root.torActive
+                    visible: root.torActive || !root.torConfigOk
                     scale: 1.0
                     
                     SequentialAnimation on opacity {
-                        running: root.torActive
+                        running: root.torActive || !root.torConfigOk
                         loops: Animation.Infinite
                         PauseAnimation { duration: index * 400 }
                         NumberAnimation { from: 0; to: 0.3; duration: 1200; easing.type: Easing.InOutSine }
@@ -87,13 +93,23 @@ Rectangle {
                     }
 
                     SequentialAnimation on scale {
-                        running: root.torActive
+                        running: root.torActive || !root.torConfigOk
                         loops: Animation.Infinite
                         PauseAnimation { duration: index * 400 }
                         NumberAnimation { from: 0.8; to: 2.2; duration: 1200; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 2.2; to: 0.8; duration: 1200; easing.type: Easing.InOutSine }
                     }
                 }
+            }
+
+            // Warning Icon (If config is missing)
+            Text {
+                anchors.centerIn: parent
+                visible: !root.torConfigOk
+                text: "󰀦"
+                font.family: "JetBrainsMono Nerd Font"
+                font.pixelSize: 18
+                color: Theme.yellow
             }
 
             Image {
@@ -103,13 +119,13 @@ Rectangle {
                 source: Quickshell.shellPath("assets/tor-onion.svg")
                 sourceSize: Qt.size(40, 40)
                 smooth: true
-                visible: true
+                visible: root.torConfigOk
                 fillMode: Image.PreserveAspectFit
             }
         }
 
         Text {
-            text: root.torActive ? "Tor Active" : root.localIp
+            text: !root.torConfigOk ? "Setup Tor" : (root.torActive ? "Tor Active" : root.localIp)
             color: Theme.text
             font.family: Theme.fontName
             font.pixelSize: Theme.fontSize
