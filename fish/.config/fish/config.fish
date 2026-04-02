@@ -35,3 +35,7 @@ set -gx VISUAL code
 # opencode
 fish_add_path /home/zenyyxz/.opencode/bin
 fish_add_path /home/zenyyxz/node_modules/.bin
+
+# bun
+set --export BUN_INSTALL "$HOME/.bun"
+set --export PATH $BUN_INSTALL/bin $PATH
