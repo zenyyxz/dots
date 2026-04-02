@@ -1,31 +1,40 @@
 #!/bin/bash
 
 # Configuration
-VPN_DIR="/home/zenyyxz/dotfiles/vpn/sing-box"
-BINARY="$VPN_DIR/sing-box"
-CONFIG="$VPN_DIR/config.json"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BINARY="$SCRIPT_DIR/sing-box"
+CONFIG="$SCRIPT_DIR/config.json"
 PID_FILE="/tmp/sing-box-vpn.pid"
 RESOLV_BAK="/tmp/resolv.conf.vpn.bak"
 
+# Helper to run commands as root
+run_as_root() {
+    if [ "$(id -u)" -eq 0 ]; then
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
+
 status() {
     if [ -f "$PID_FILE" ] && kill -0 $(cat "$PID_FILE") 2>/dev/null; then
-        return 0 # Running
+        return 0
     else
-        return 1 # Not running
+        return 1
     fi
 }
 
 fix_dns() {
     echo "Forcing system DNS to sing-box (127.0.0.1)..."
-    sudo cp /etc/resolv.conf "$RESOLV_BAK"
-    echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf > /dev/null
+    run_as_root cp /etc/resolv.conf "$RESOLV_BAK"
+    echo "nameserver 127.0.0.1" | run_as_root tee /etc/resolv.conf > /dev/null
 }
 
 restore_dns() {
     if [ -f "$RESOLV_BAK" ]; then
         echo "Restoring system DNS..."
-        sudo cp "$RESOLV_BAK" /etc/resolv.conf
-        sudo rm -f "$RESOLV_BAK"
+        run_as_root cp "$RESOLV_BAK" /etc/resolv.conf
+        run_as_root rm -f "$RESOLV_BAK"
     fi
 }
 
@@ -36,37 +45,48 @@ start() {
     fi
     
     echo "Starting VPN..."
-    # Ensure sing-box has permissions:
-    # sudo setcap cap_net_admin,cap_net_bind_service=+ep /home/zenyyxz/dotfiles/vpn/sing-box/sing-box
     
-    # Start sing-box
-    "$BINARY" run -c "$CONFIG" > /dev/null 2>&1 &
+    # 1. Ensure binary has capabilities (just in case)
+    run_as_root setcap cap_net_admin,cap_net_bind_service=+ep "$BINARY"
+    
+    # 2. Start sing-box
+    # We run it as root if the script is already root (pkexec), otherwise standard
+    if [ "$(id -u)" -eq 0 ]; then
+        "$BINARY" run -c "$CONFIG" > /dev/null 2>&1 &
+    else
+        sudo "$BINARY" run -c "$CONFIG" > /dev/null 2>&1 &
+    fi
     echo $! > "$PID_FILE"
     
-    # Wait a moment for tun to initialize
-    sleep 2
+    # 3. Wait for tun0 to appear (up to 5 seconds)
+    echo "Waiting for interface..."
+    for i in {1..10}; do
+        if ip addr show tun0 &>/dev/null; then
+            break
+        fi
+        sleep 0.5
+    done
+
+    if ! ip addr show tun0 &>/dev/null; then
+        echo "Error: tun0 interface failed to appear. Check your vless config."
+        stop
+        exit 1
+    fi
     
-    # The Winning Move
+    # 4. Apply DNS fix
     fix_dns
-    
-    echo "VPN started."
+    echo "VPN started successfully."
 }
 
 stop() {
-    if ! status; then
-        echo "VPN is not running."
-        restore_dns # Just in case
-        rm -f "$PID_FILE"
-        exit 0
+    echo "Stopping VPN..."
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        run_as_root kill $PID
+        rm -f "$PID_FILE" 2>/dev/null
     fi
     
-    echo "Stopping VPN..."
-    PID=$(cat "$PID_FILE")
-    kill $PID
-    rm -f "$PID_FILE"
-    
     restore_dns
-    
     echo "VPN stopped."
 }
 
@@ -74,18 +94,10 @@ case "$1" in
     start) start ;;
     stop) stop ;;
     toggle)
-        if status; then
-            stop
-        else
-            start
-        fi
+        if status; then stop; else start; fi
         ;;
     status)
-        if status; then
-            echo "on"
-        else
-            echo "off"
-        fi
+        if status; then echo "on"; else echo "off"; fi
         ;;
     *)
         echo "Usage: $0 {start|stop|toggle|status}"

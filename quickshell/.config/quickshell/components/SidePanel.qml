@@ -74,13 +74,20 @@ PanelWindow {
 
     Process {
         id: vpnToggleProc
-        onExited: vpnStatusProc.running = true // Immediate poll
+        onExited: {
+            vpnStatusProc.running = false;
+            vpnStatusProc.running = true;
+        }
+        stderr: SplitParser {
+            onRead: msg => console.log("VPN Toggle Error:", msg)
+        }
     }
 
     function toggleVpn() {
         if (vpnToggleProc.running) return;
-        const scriptPath = Quickshell.shellPath("../../vpn/sing-box/toggle_vpn.sh");
-        vpnToggleProc.command = ["pkexec", "bash", scriptPath, root.vpnEnabled ? "stop" : "start"];
+        // Use the explicit absolute path to ensure Polkit policy matching
+        const scriptPath = "/home/zenyyxz/dotfiles/vpn/sing-box/toggle_vpn.sh";
+        vpnToggleProc.command = ["pkexec", scriptPath, root.vpnEnabled ? "stop" : "start"];
         vpnToggleProc.running = true;
     }
 
@@ -157,7 +164,7 @@ PanelWindow {
         }
     }
 
-    Timer { interval: 2000; repeat: true; running: root.isOpen; onTriggered: { stateUpdater.running = true; vpnStatusProc.running = true; } }
+    Timer { interval: 2000; repeat: true; running: root.isOpen; onTriggered: { stateUpdater.running = true; } }
 
     Rectangle {
         id: container
