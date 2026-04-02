@@ -63,29 +63,26 @@ PanelWindow {
     property string currentPowerProfile: "balanced"
     property string uptime: "00:00"
     
+    // Persistent Status Poller: Robustly tracks VPN state without PID file permission issues
     Process {
         id: vpnStatusProc
-        command: ["bash", "-c", "([ -f /tmp/sing-box-vpn.pid ] && kill -0 $(cat /tmp/sing-box-vpn.pid) 2>/dev/null && ip addr show tun0 &>/dev/null) && echo 'on' || echo 'off'"]
+        command: ["bash", "-c", "while true; do (pgrep -x sing-box >/dev/null && ip addr show tun0 >/dev/null 2>&1) && echo 'on' || echo 'off'; sleep 2; done"]
         running: true
         stdout: SplitParser {
-            onRead: msg => { root.vpnEnabled = (msg.trim() === "on") }
+            onRead: msg => { 
+                const status = msg.trim();
+                if (status === "on") root.vpnEnabled = true;
+                else if (status === "off") root.vpnEnabled = false;
+            }
         }
     }
 
     Process {
         id: vpnToggleProc
-        onExited: {
-            vpnStatusProc.running = false;
-            vpnStatusProc.running = true;
-        }
-        stderr: SplitParser {
-            onRead: msg => console.log("VPN Toggle Error:", msg)
-        }
     }
 
     function toggleVpn() {
         if (vpnToggleProc.running) return;
-        // Use the explicit absolute path to ensure Polkit policy matching
         const scriptPath = "/home/zenyyxz/dotfiles/vpn/sing-box/toggle_vpn.sh";
         vpnToggleProc.command = ["pkexec", scriptPath, root.vpnEnabled ? "stop" : "start"];
         vpnToggleProc.running = true;

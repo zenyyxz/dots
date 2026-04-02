@@ -17,12 +17,14 @@ run_as_root() {
 }
 
 status() {
-    if [ -f "$PID_FILE" ] && kill -0 $(cat "$PID_FILE") 2>/dev/null; then
+    # Check if process is running and interface is up
+    if pgrep -x "sing-box" >/dev/null && ip addr show tun0 &>/dev/null; then
         return 0
     else
         return 1
     fi
 }
+
 
 fix_dns() {
     echo "Forcing system DNS to sing-box (127.0.0.1)..."
