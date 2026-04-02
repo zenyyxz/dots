@@ -55,6 +55,7 @@ PanelWindow {
     property bool flightMode: false
     property bool idleInhibited: false
     property bool vpnEnabled: false
+    property bool vpnUpdating: vpnToggleProc.running
     property bool dndEnabled: false
     
     signal requestVpnConfig()
@@ -64,16 +65,23 @@ PanelWindow {
     
     Process {
         id: vpnStatusProc
-        command: ["bash", Quickshell.shellPath("../../vpn/sing-box/toggle_vpn.sh"), "status"]
+        command: ["bash", "-c", "([ -f /tmp/sing-box-vpn.pid ] && kill -0 $(cat /tmp/sing-box-vpn.pid) 2>/dev/null && ip addr show tun0 &>/dev/null) && echo 'on' || echo 'off'"]
         running: true
         stdout: SplitParser {
             onRead: msg => { root.vpnEnabled = (msg.trim() === "on") }
         }
     }
 
+    Process {
+        id: vpnToggleProc
+        onExited: vpnStatusProc.running = true // Immediate poll
+    }
+
     function toggleVpn() {
-        Quickshell.execDetached(["bash", Quickshell.shellPath("../../vpn/sing-box/toggle_vpn.sh"), "toggle"]);
-        root.vpnEnabled = !root.vpnEnabled;
+        if (vpnToggleProc.running) return;
+        const scriptPath = Quickshell.shellPath("../../vpn/sing-box/toggle_vpn.sh");
+        vpnToggleProc.command = ["pkexec", "bash", scriptPath, root.vpnEnabled ? "stop" : "start"];
+        vpnToggleProc.running = true;
     }
 
     function openVpnConfig() {
@@ -260,16 +268,45 @@ PanelWindow {
                     }
 
                     ControlCenterIconButton {
+                        id: vpnBtn
                         icon: "󰖂"
                         active: root.vpnEnabled
                         onClicked: root.toggleVpn()
                         
+                        // Triple Staggered Teal Pulsing Aura
+                        Repeater {
+                            model: 3
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 20; height: 20; radius: 10
+                                color: Theme.teal
+                                opacity: 0
+                                visible: root.vpnEnabled || root.vpnUpdating
+                                scale: 1.0
+                                
+                                SequentialAnimation on opacity {
+                                    running: root.vpnEnabled || root.vpnUpdating
+                                    loops: Animation.Infinite
+                                    PauseAnimation { duration: index * 400 }
+                                    NumberAnimation { from: 0; to: 0.3; duration: 1200; easing.type: Easing.InOutSine }
+                                    NumberAnimation { from: 0.3; to: 0; duration: 1200; easing.type: Easing.InOutSine }
+                                }
+
+                                SequentialAnimation on scale {
+                                    running: root.vpnEnabled || root.vpnUpdating
+                                    loops: Animation.Infinite
+                                    PauseAnimation { duration: index * 400 }
+                                    NumberAnimation { from: 0.8; to: 2.2; duration: 1200; easing.type: Easing.InOutSine }
+                                    NumberAnimation { from: 2.2; to: 0.8; duration: 1200; easing.type: Easing.InOutSine }
+                                }
+                            }
+                        }
+
                         MouseArea {
                             anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            acceptedButtons: Qt.RightButton
                             onClicked: (mouse) => {
                                 if (mouse.button === Qt.RightButton) root.openVpnConfig();
-                                else root.toggleVpn();
                             }
                         }
                     }
