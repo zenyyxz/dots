@@ -118,7 +118,7 @@ PanelWindow {
 
     Process {
         id: stateUpdater
-        command: ["bash", "-c", "printf '%s|%s|%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep 'Powered:' | awk '{print $2}')\" \"$(rfkill list all | grep -qi 'all: blocked' && echo 'blocked' || echo 'unblocked')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\" \"$(powerprofilesctl get)\""]
+        command: ["bash", "-c", "printf '%s|%s|%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep -q 'Powered: yes' && echo 'yes' || echo 'no')\" \"$(rfkill list | grep -q 'Soft blocked: no' && echo 'unblocked' || echo 'blocked')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\" \"$(powerprofilesctl get)\""]
         running: true
         stdout: SplitParser {
             onRead: msg => {

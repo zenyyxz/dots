@@ -1,5 +1,6 @@
 //@ pragma UseQApplication
 //@ pragma Env QT_QPA_PLATFORMTHEME=qt6ct
+//@ pragma IconTheme "breeze-dark"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
