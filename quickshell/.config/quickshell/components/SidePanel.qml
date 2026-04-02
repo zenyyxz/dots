@@ -228,8 +228,9 @@ PanelWindow {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: 10
+                    anchors.leftMargin: 14
+                    anchors.rightMargin: 14
+                    spacing: 14
 
                     ControlCenterIconButton {
                         icon: "󰤨"
