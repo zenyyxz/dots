@@ -159,7 +159,7 @@ namespace Vpn {
             j["inbounds"].push_back({
                 {"type", "tun"},
                 {"tag", "tun-in"},
-                {"interface_name", "tun0"},
+                {"interface_name", "zen-tun"},
                 {"address", json::array({"172.19.0.1/30"})},
                 {"mtu", mtu},
                 {"auto_route", true},
