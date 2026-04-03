@@ -12,7 +12,7 @@ include_directories(/usr/include)
 # that we can link directly into vpn-core.
 # It creates symbols like _binary_sing_box_start and _binary_sing_box_end.
 execute_process(
-    COMMAND ld -r -b binary -o singbox_bin.o /home/zenyyxz/dotfiles/vpn/sing-box/sing-box
+    COMMAND ld -r -b binary -o singbox_bin.o /home/zenyyxz/dotfiles/vpn/arch-vpn/src/sing-box-engine
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 

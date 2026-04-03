@@ -11,8 +11,8 @@
 
 // These symbols are created by the linker (ld) when we embed the binary
 extern "C" {
-    extern char _binary__home_zenyyxz_dotfiles_vpn_sing_box_sing_box_start;
-    extern char _binary__home_zenyyxz_dotfiles_vpn_sing_box_sing_box_end;
+    extern char _binary__home_zenyyxz_dotfiles_vpn_arch_vpn_src_sing_box_engine_start;
+    extern char _binary__home_zenyyxz_dotfiles_vpn_arch_vpn_src_sing_box_engine_end;
 }
 
 namespace Vpn {
@@ -29,10 +29,10 @@ namespace Vpn {
             int fd = memfd_create("sing-box-embedded", MFD_CLOEXEC);
             if (fd == -1) return -1;
 
-            size_t size = &_binary__home_zenyyxz_dotfiles_vpn_sing_box_sing_box_end - 
-                         &_binary__home_zenyyxz_dotfiles_vpn_sing_box_sing_box_start;
+            size_t size = &_binary__home_zenyyxz_dotfiles_vpn_arch_vpn_src_sing_box_engine_end - 
+                         &_binary__home_zenyyxz_dotfiles_vpn_arch_vpn_src_sing_box_engine_start;
             
-            if (write(fd, &_binary__home_zenyyxz_dotfiles_vpn_sing_box_sing_box_start, size) != (ssize_t)size) {
+            if (write(fd, &_binary__home_zenyyxz_dotfiles_vpn_arch_vpn_src_sing_box_engine_start, size) != (ssize_t)size) {
                 close(fd);
                 return -1;
             }
