@@ -275,34 +275,40 @@ PanelWindow {
                         id: vpnBtn
                         icon: "󰖂"
                         active: root.vpnEnabled
+                        activeColor: Theme.sapphire
                         onClicked: root.toggleVpn()
                         
-                        // Triple Staggered Teal Pulsing Aura
-                        Repeater {
-                            model: 3
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: 20; height: 20; radius: 10
-                                color: Theme.teal
-                                opacity: 0
-                                visible: root.vpnEnabled || root.vpnUpdating
-                                scale: 1.0
+                        // Rotating Active Ring
+                        Canvas {
+                            width: 44; height: 44
+                            anchors.centerIn: parent
+                            visible: root.vpnEnabled || root.vpnUpdating
+                            opacity: (root.vpnEnabled || root.vpnUpdating) ? 1.0 : 0
+                            Behavior on opacity { NumberAnimation { duration: 500 } }
+                            
+                            onPaint: {
+                                var ctx = getContext("2d");
+                                ctx.reset();
+                                ctx.lineWidth = 2.5;
                                 
-                                SequentialAnimation on opacity {
-                                    running: root.vpnEnabled || root.vpnUpdating
-                                    loops: Animation.Infinite
-                                    PauseAnimation { duration: index * 400 }
-                                    NumberAnimation { from: 0; to: 0.3; duration: 1200; easing.type: Easing.InOutSine }
-                                    NumberAnimation { from: 0.3; to: 0; duration: 1200; easing.type: Easing.InOutSine }
+                                // Base (dark) provides the best contrast against the light mauve background
+                                ctx.strokeStyle = Theme.base;
+                                
+                                // Draw 3 balanced arcs for a more complex "active" look
+                                var segment = (Math.PI * 2) / 3;
+                                var gap = 0.6; // size of the gap between arcs
+                                
+                                for (var i = 0; i < 3; i++) {
+                                    ctx.beginPath();
+                                    ctx.arc(width/2, height/2, width/2 - ctx.lineWidth, i * segment, (i + 1) * segment - gap);
+                                    ctx.stroke();
                                 }
-
-                                SequentialAnimation on scale {
-                                    running: root.vpnEnabled || root.vpnUpdating
-                                    loops: Animation.Infinite
-                                    PauseAnimation { duration: index * 400 }
-                                    NumberAnimation { from: 0.8; to: 2.2; duration: 1200; easing.type: Easing.InOutSine }
-                                    NumberAnimation { from: 2.2; to: 0.8; duration: 1200; easing.type: Easing.InOutSine }
-                                }
+                            }
+                            
+                            RotationAnimation on rotation {
+                                from: 0; to: 360; duration: 3000
+                                running: root.vpnEnabled || root.vpnUpdating
+                                loops: Animation.Infinite
                             }
                         }
 

@@ -8,13 +8,14 @@ Rectangle {
     id: root
     property string icon: ""
     property bool active: false
+    property color activeColor: Theme.mauve
     signal clicked()
 
     width: 60
     height: 60
     radius: 16
     
-    color: active ? Theme.mauve : Theme.surface0
+    color: active ? activeColor : Theme.surface0
     Behavior on color { ColorAnimation { duration: 250 } }
     
     border.color: active ? "transparent" : Theme.surface1
