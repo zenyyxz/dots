@@ -14,7 +14,8 @@ PanelWindow {
 
     anchors {
         top: true
-        horizontalCenter: true
+        left: true
+        right: true
     }
     
     margins {
@@ -22,7 +23,7 @@ PanelWindow {
     }
 
     implicitWidth: 350
-    implicitHeight: 400
+    implicitHeight: 450
     color: "transparent"
 
     property bool isOpen: false
@@ -43,7 +44,10 @@ PanelWindow {
 
     Rectangle {
         id: container
-        anchors.fill: parent
+        width: 350
+        height: 400
+        anchors.horizontalCenter: parent.horizontalCenter
+        
         color: Theme.base
         radius: 20
         border.color: Theme.borderColor
@@ -53,7 +57,7 @@ PanelWindow {
         opacity: root.isOpen ? 1.0 : 0.0
         Behavior on opacity { NumberAnimation { duration: 300 } }
         
-        // Slide animation
+        // Slide animation on the container, not the window
         y: root.isOpen ? 0 : -20
         Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
 
@@ -67,7 +71,7 @@ PanelWindow {
                 Layout.fillWidth: true
                 
                 Text {
-                    text: Qt.formatDate(viewDate, "MMMM yyyy")
+                    text: Qt.formatDate(root.viewDate, "MMMM yyyy")
                     color: Theme.text
                     font.family: Theme.fontName
                     font.pixelSize: 18; font.bold: true
@@ -119,24 +123,24 @@ PanelWindow {
                 Layout.fillHeight: true
                 rowSpacing: 5; columnSpacing: 5
 
-                property int daysInMonth: new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate()
-                property int firstDayOffset: new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay()
+                property int daysInMonth: new Date(root.viewDate.getFullYear(), root.viewDate.getMonth() + 1, 0).getDate()
+                property int firstDayOffset: new Date(root.viewDate.getFullYear(), root.viewDate.getMonth(), 1).getDay()
 
                 Repeater {
                     model: 42 // 6 weeks
                     delegate: Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: width
+                        Layout.preferredHeight: 38 // Fixed height to avoid binding loops
                         radius: 8
                         
-                        property int day: index - grid.firstDayOffset + 1
-                        property bool isCurrentMonth: day > 0 && day <= grid.daysInMonth
+                        property int dayNum: index - grid.firstDayOffset + 1
+                        property bool isCurrentMonth: dayNum > 0 && dayNum <= grid.daysInMonth
                         property bool isToday: {
                             var today = new Date();
                             return isCurrentMonth && 
-                                   day === today.getDate() && 
-                                   viewDate.getMonth() === today.getMonth() && 
-                                   viewDate.getFullYear() === today.getFullYear();
+                                   dayNum === today.getDate() && 
+                                   root.viewDate.getMonth() === today.getMonth() && 
+                                   root.viewDate.getFullYear() === today.getFullYear();
                         }
                         
                         color: isToday ? Theme.mauve : (dayMouse.containsMouse && isCurrentMonth ? Theme.surface1 : "transparent")
@@ -145,12 +149,12 @@ PanelWindow {
                         Text {
                             anchors.centerIn: parent
                             text: {
-                                if (day > 0 && day <= grid.daysInMonth) return day;
-                                if (day <= 0) {
-                                    var prevMonthLastDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 0).getDate();
-                                    return prevMonthLastDay + day;
+                                if (dayNum > 0 && dayNum <= grid.daysInMonth) return dayNum;
+                                if (dayNum <= 0) {
+                                    var prevMonthLastDay = new Date(root.viewDate.getFullYear(), root.viewDate.getMonth(), 0).getDate();
+                                    return prevMonthLastDay + dayNum;
                                 }
-                                return day - grid.daysInMonth;
+                                return dayNum - grid.daysInMonth;
                             }
                             color: isToday ? Theme.base : Theme.text
                             font.family: Theme.fontName
@@ -162,7 +166,7 @@ PanelWindow {
                             id: dayMouse
                             anchors.fill: parent
                             hoverEnabled: isCurrentMonth
-                            onClicked: if (isCurrentMonth) root.selectedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day)
+                            onClicked: if (isCurrentMonth) root.selectedDate = new Date(root.viewDate.getFullYear(), root.viewDate.getMonth(), dayNum)
                         }
                     }
                 }
