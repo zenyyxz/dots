@@ -43,7 +43,7 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: root.Shell.root.calendarPanel.isOpen = !root.Shell.root.calendarPanel.isOpen
+        onClicked: shellRoot.calendarPanel.isOpen = !shellRoot.calendarPanel.isOpen
     }
 
     RowLayout {
