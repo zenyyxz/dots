@@ -276,6 +276,7 @@ PanelWindow {
                         icon: "󰖂"
                         active: root.vpnEnabled
                         activeColor: Theme.sapphire
+                        inactiveIconColor: Theme.sapphire
                         onClicked: root.toggleVpn()
                         
                         // Rotating Active Ring

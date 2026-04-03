@@ -9,6 +9,7 @@ Rectangle {
     property string icon: ""
     property bool active: false
     property color activeColor: Theme.mauve
+    property color inactiveIconColor: Theme.mauve
     signal clicked()
 
     width: 60
@@ -42,7 +43,7 @@ Rectangle {
         ColorOverlay {
             anchors.fill: svgImg
             source: svgImg
-            color: root.active ? Theme.base : Theme.mauve
+            color: root.active ? Theme.base : root.inactiveIconColor
             visible: svgImg.visible
         }
 
@@ -53,7 +54,7 @@ Rectangle {
             visible: !svgImg.visible
             font.family: "JetBrainsMono Nerd Font"
             font.pixelSize: 24
-            color: root.active ? Theme.base : Theme.mauve
+            color: root.active ? Theme.base : root.inactiveIconColor
             Behavior on color { ColorAnimation { duration: 250 } }
         }
     }
