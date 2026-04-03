@@ -43,11 +43,18 @@ PanelWindow {
     }
 
     function clearAll() {
-        for (let i = 0; i < notifModel.count; i++) {
-            const n = notifModel.get(i).notifObject;
-            if (n) n.dismiss();
-        }
-        notifModel.clear();
+        const timer = Qt.createQmlObject("import QtQuick; Timer { interval: 80; repeat: true }", root);
+        timer.triggered.connect(() => {
+            if (notifModel.count > 0) {
+                const n = notifModel.get(0).notifObject;
+                if (n) n.dismiss();
+                notifModel.remove(0);
+            } else {
+                timer.stop();
+                timer.destroy();
+            }
+        });
+        timer.start();
     }
 
     Rectangle {
@@ -106,7 +113,28 @@ PanelWindow {
                 spacing: 10
                 clip: true
                 model: notifModel
+                
+                remove: Transition {
+                    NumberAnimation { property: "x"; to: 400; duration: 300; easing.type: Theme.animEasing }
+                    NumberAnimation { property: "opacity"; to: 0; duration: 300 }
+                }
+                
+                removeDisplaced: Transition {
+                    NumberAnimation { properties: "y"; duration: 300; easing.type: Theme.animEasing }
+                }
+
+                add: Transition {
+                    from: "right"; to: ""; 
+                    NumberAnimation { property: "x"; from: 400; to: 0; duration: 300; easing.type: Theme.animEasing }
+                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 300 }
+                }
+
+                displaced: Transition {
+                    NumberAnimation { properties: "y"; duration: 300; easing.type: Theme.animEasing }
+                }
+
                 delegate: Rectangle {
+                    id: delegateRoot
                     width: ListView.view.width
                     height: 80; radius: 12
                     color: Theme.surface0

@@ -57,9 +57,9 @@ PanelWindow {
         opacity: root.active ? 1.0 : 0.0
         
         // Slide & Fade Animation
-        x: root.active ? 0 : 20
+        x: root.active ? 0 : 400
         Behavior on opacity { NumberAnimation { duration: 300 } }
-        Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
+        Behavior on x { NumberAnimation { duration: 300; easing.type: Theme.animEasing } }
 
         RowLayout {
             anchors.fill: parent
