@@ -10,6 +10,7 @@ Rectangle {
     property bool active: false
     property color activeColor: Theme.mauve
     property color inactiveIconColor: Theme.mauve
+    property int iconSize: 24
     signal clicked()
 
     width: 60
@@ -27,7 +28,7 @@ Rectangle {
 
     Item {
         anchors.centerIn: parent
-        width: 24; height: 24
+        width: root.iconSize; height: root.iconSize
 
         // SVG Path logic
         Image {
@@ -53,7 +54,7 @@ Rectangle {
             text: root.icon
             visible: !svgImg.visible
             font.family: "JetBrainsMono Nerd Font"
-            font.pixelSize: 24
+            font.pixelSize: root.iconSize
             color: root.active ? Theme.base : root.inactiveIconColor
             Behavior on color { ColorAnimation { duration: 250 } }
         }
