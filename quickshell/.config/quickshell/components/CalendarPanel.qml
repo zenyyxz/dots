@@ -29,17 +29,21 @@ PanelWindow {
     property bool isOpen: false
     visible: isOpen || container.opacity > 0
 
+    onIsOpenChanged: {
+        if (isOpen) {
+            viewDate = new Date();
+        }
+    }
+
     property date selectedDate: new Date()
     property date viewDate: new Date()
 
     function nextMonth() {
-        var d = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
-        viewDate = d;
+        root.viewDate = new Date(root.viewDate.getFullYear(), root.viewDate.getMonth() + 1, 1);
     }
 
     function prevMonth() {
-        var d = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
-        viewDate = d;
+        root.viewDate = new Date(root.viewDate.getFullYear(), root.viewDate.getMonth() - 1, 1);
     }
 
     Rectangle {
@@ -85,6 +89,8 @@ PanelWindow {
                     Rectangle {
                         width: 32; height: 32; radius: 16
                         color: prevMouse.containsMouse ? Theme.surface1 : Theme.surface0
+                        scale: prevMouse.pressed ? 0.9 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 100 } }
                         Text { anchors.centerIn: parent; text: "󰁍"; color: Theme.mauve; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16 }
                         MouseArea { id: prevMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.prevMonth() }
                     }
@@ -92,6 +98,8 @@ PanelWindow {
                     Rectangle {
                         width: 32; height: 32; radius: 16
                         color: nextMouse.containsMouse ? Theme.surface1 : Theme.surface0
+                        scale: nextMouse.pressed ? 0.9 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 100 } }
                         Text { anchors.centerIn: parent; text: "󰁔"; color: Theme.mauve; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16 }
                         MouseArea { id: nextMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.nextMonth() }
                     }
@@ -130,7 +138,7 @@ PanelWindow {
                     model: 42 // 6 weeks
                     delegate: Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 38 // Fixed height to avoid binding loops
+                        Layout.preferredHeight: 38
                         radius: 8
                         
                         property int dayNum: index - grid.firstDayOffset + 1

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../theme"
 
 // Parent Pill
@@ -18,6 +19,9 @@ Rectangle {
 
     property string timeStr: "--:--"
     property string dateStr: "---"
+    
+    // Reference to the calendar panel passed from shell.qml
+    property var calendar: null
 
     function updateTime() {
         const d = new Date();
@@ -43,7 +47,11 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: shellRoot.calendarPanel.isOpen = !shellRoot.calendarPanel.isOpen
+        onClicked: {
+            if (root.calendar) {
+                root.calendar.isOpen = !root.calendar.isOpen;
+            }
+        }
     }
 
     RowLayout {

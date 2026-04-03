@@ -12,7 +12,7 @@ import "theme"
 import "components"
 
 ShellRoot {
-    id: shellRoot
+    id: root
 
     PanelWindow {
         id: panel
@@ -69,6 +69,7 @@ ShellRoot {
         // Absolute Center Clock
         Clock {
             anchors.centerIn: parent
+            calendar: calendarPanel
         }
     }
 
@@ -223,7 +224,7 @@ ShellRoot {
         stdout: SplitParser {
             onRead: msg => {
                 const trimmedMsg = msg.trim();
-                if (trimmedMsg !== shellRoot.lastVolState && trimmedMsg.startsWith("Volume:")) {
+                if (trimmedMsg !== root.lastVolState && trimmedMsg.startsWith("Volume:")) {
                     const muted = trimmedMsg.indexOf("[MUTED]") !== -1;
                     const vol = parseFloat(trimmedMsg.split(/\s+/)[1]);
                     if (!isNaN(vol)) {
@@ -232,7 +233,7 @@ ShellRoot {
                         else if (vol < 0.66) icon = "󰖀";
                         globalOSD.show("volume", vol, icon, muted);
                     }
-                    shellRoot.lastVolState = trimmedMsg;
+                    root.lastVolState = trimmedMsg;
                 }
             }
         }
@@ -250,14 +251,14 @@ ShellRoot {
                     const max = parseInt(parts[0]);
                     const cur = parseInt(parts[1]);
                     const percent = cur / max;
-                    if (shellRoot.lastBrightness === -1.0) {
-                        shellRoot.lastBrightness = percent;
-                    } else if (Math.abs(percent - shellRoot.lastBrightness) > 0.001) {
+                    if (root.lastBrightness === -1.0) {
+                        root.lastBrightness = percent;
+                    } else if (Math.abs(percent - root.lastBrightness) > 0.001) {
                         let icon = "󰃠";
                         if (percent < 0.33) icon = "󰃞";
                         else if (percent < 0.66) icon = "󰃟";
                         globalOSD.show("brightness", percent, icon);
-                        shellRoot.lastBrightness = percent;
+                        root.lastBrightness = percent;
                     }
                 }
             }
