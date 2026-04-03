@@ -25,6 +25,32 @@ PanelWindow {
     property string query: ""
     property int selectedIndex: 0
 
+    function getIconPath(icon) {
+        if (!icon) return "";
+        
+        // Handle absolute paths correctly
+        if (icon.startsWith("/")) {
+            return "file://" + icon;
+        }
+        
+        // Strip common extensions for theme lookups (e.g., veracrypt.xpm -> veracrypt)
+        let iconName = icon;
+        if (iconName.includes(".")) {
+            const parts = iconName.split(".");
+            const ext = parts[parts.length - 1].toLowerCase();
+            if (["png", "svg", "xpm", "ico", "jpg"].includes(ext)) {
+                iconName = parts.slice(0, -1).join(".");
+            }
+        }
+        
+        // Standard resolution
+        const resolved = Quickshell.iconPath(iconName);
+        if (resolved) return resolved;
+        
+        // Fallback to icon provider
+        return "image://icon/" + iconName;
+    }
+
     onVisibleChanged: {
         if (visible) {
             searchField.forceActiveFocus();
@@ -221,14 +247,14 @@ PanelWindow {
                                 Image {
                                     anchors.fill: parent
                                     anchors.margins: 4
-                                    source: Quickshell.iconPath(modelData.icon) || ""
+                                    source: root.getIconPath(modelData.icon)
                                     sourceSize: Qt.size(64, 64)
                                     smooth: true
                                     
                                     // Fallback icon if image fails to load
                                     Text {
                                         anchors.centerIn: parent
-                                        visible: parent.status !== Image.Ready
+                                        visible: parent.status === Image.Error || parent.status === Image.Null
                                         text: "󰀻"
                                         color: Theme.mauve
                                         font.pixelSize: 20
