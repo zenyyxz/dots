@@ -42,7 +42,9 @@ ShellRoot {
                 spacing: 8
                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
-                DistroIcon { }
+                DistroIcon { 
+                    onClicked: appLauncher.visible = !appLauncher.visible
+                }
                 Workspaces { }
                 Media { }
                 // Title { }
