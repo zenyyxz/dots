@@ -245,7 +245,7 @@ PanelWindow {
                     spacing: 14
 
                     ControlCenterIconButton {
-                        icon: "󰤨"
+                        icon: root.wifiEnabled ? Quickshell.shellPath("assets/wifi-high-svgrepo-com.svg") : Quickshell.shellPath("assets/wifi-off-svgrepo-com.svg")
                         active: root.wifiEnabled
                         onClicked: {
                             Quickshell.execDetached(["nmcli", "radio", "wifi", root.wifiEnabled ? "off" : "on"]);
