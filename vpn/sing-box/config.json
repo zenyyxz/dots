@@ -1,7 +1,14 @@
 {
   "dns": {
+    "final": "dns-remote",
     "independent_cache": true,
     "rules": [
+      {
+        "domain": [
+          "sg.panel.zenyypriv.ggff.net"
+        ],
+        "server": "dns-bootstrap"
+      },
       {
         "query_type": [
           "A",
@@ -20,7 +27,12 @@
         "type": "https"
       },
       {
+        "tag": "dns-bootstrap",
+        "type": "local"
+      },
+      {
         "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18",
         "tag": "dns-fakeip",
         "type": "fakeip"
       }
@@ -34,9 +46,9 @@
       ],
       "auto_route": true,
       "interface_name": "tun0",
-      "mtu": 1500,
+      "mtu": 1400,
       "route_exclude_address": [
-        "161.118.248.52/32"
+        "127.0.0.0/8"
       ],
       "stack": "system",
       "strict_route": true,
@@ -57,7 +69,7 @@
   },
   "outbounds": [
     {
-      "server": "161.118.248.52",
+      "server": "sg.panel.zenyypriv.ggff.net",
       "server_port": 443,
       "tag": "proxy",
       "tls": {
@@ -75,6 +87,7 @@
   ],
   "route": {
     "auto_detect_interface": true,
+    "default_domain_resolver": "dns-bootstrap",
     "final": "proxy",
     "rules": [
       {
@@ -86,20 +99,22 @@
         "port": 53
       },
       {
+        "action": "route",
+        "domain": [
+          "sg.panel.zenyypriv.ggff.net"
+        ],
+        "outbound": "direct"
+      },
+      {
         "action": "sniff",
-        "inbound": "tun-in",
+        "inbound": [
+          "tun-in"
+        ],
         "protocol": [
           "http",
           "tls",
           "quic"
         ]
-      },
-      {
-        "action": "route",
-        "ip_cidr": [
-          "161.118.248.52/32"
-        ],
-        "outbound": "direct"
       }
     ]
   }

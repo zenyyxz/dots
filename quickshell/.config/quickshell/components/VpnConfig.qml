@@ -37,15 +37,17 @@ PanelWindow {
     
     Process {
         id: listProfilesProc
-        command: ["bash", "/home/zenyyxz/dotfiles/vpn/sing-box/manage_profiles.sh", "list"]
+        command: ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "list_profiles"]
         stdout: SplitParser {
-            onRead: (line) => {
-                const name = line.trim();
-                if (name !== "") profilesModel.append({ "name": name });
+            onRead: (msg) => {
+                try {
+                    const data = JSON.parse(msg);
+                    if (data.result && Array.isArray(data.result)) {
+                        profilesModel.clear();
+                        data.result.forEach(name => profilesModel.append({ "name": name }));
+                    }
+                } catch(e) {}
             }
-        }
-        onStarted: {
-            profilesModel.clear();
         }
         onExited: (exitCode) => {
             if (exitCode === 0) {
@@ -57,14 +59,14 @@ PanelWindow {
 
     Process {
         id: activeProfileProc
-        command: ["bash", "/home/zenyyxz/dotfiles/vpn/sing-box/manage_profiles.sh", "active"]
+        command: ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "active_profile"]
         stdout: SplitParser {
-            onRead: (line) => {
-                root.activeProfile = line.trim();
+            onRead: (msg) => {
+                try {
+                    const data = JSON.parse(msg);
+                    if (data.result !== undefined) root.activeProfile = data.result;
+                } catch(e) {}
             }
-        }
-        onStarted: {
-            root.activeProfile = "";
         }
     }
 
@@ -113,7 +115,7 @@ PanelWindow {
         root.statusMessage = "Adding profile...";
         root.isError = false;
         addProfileProc.running = false;
-        addProfileProc.command = ["bash", "/home/zenyyxz/dotfiles/vpn/sing-box/manage_profiles.sh", "add", content.trim()];
+        addProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "add_vless", JSON.stringify({"link": content.trim()})];
         addProfileProc.running = true;
     }
 
@@ -121,7 +123,7 @@ PanelWindow {
         root.statusMessage = "Applying " + name + "...";
         root.isError = false;
         applyProfileProc.running = false;
-        applyProfileProc.command = ["bash", "/home/zenyyxz/dotfiles/vpn/sing-box/manage_profiles.sh", "apply", name];
+        applyProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "apply_profile", JSON.stringify({"name": name})];
         applyProfileProc.running = true;
         root.activeProfile = name;
         root.statusMessage = "Success: Applied " + name;
@@ -129,7 +131,7 @@ PanelWindow {
 
     function deleteProfile(name) {
         deleteProfileProc.running = false;
-        deleteProfileProc.command = ["bash", "/home/zenyyxz/dotfiles/vpn/sing-box/manage_profiles.sh", "delete", name];
+        deleteProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "remove_profile", JSON.stringify({"name": name})];
         deleteProfileProc.running = true;
     }
 
