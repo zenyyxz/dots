@@ -471,7 +471,30 @@ PanelWindow {
                                 Text { text: model.summaryText; color: Theme.text; font.family: Theme.fontName; font.pixelSize: 13; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true }
                                 Text { text: model.bodyText; color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true; maximumLineCount: 1 }
                             }
-                            Text { text: "󰅖"; font.family: "JetBrainsMono Nerd Font"; color: Theme.surface2; MouseArea { anchors.fill: parent; onClicked: { const n = notifModel.get(index).notifObject; if (n) n.dismiss(); notifModel.remove(index); } } }
+                            Rectangle {
+                                width: 24; height: 24; radius: 6
+                                color: closeMouse.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.15) : "transparent"
+                                Behavior on color { ColorAnimation { duration: 200 } }
+
+                                Text { 
+                                    anchors.centerIn: parent
+                                    text: "󰅖"; 
+                                    font.family: "JetBrainsMono Nerd Font"; 
+                                    color: closeMouse.containsMouse ? Theme.red : Theme.surface2;
+                                    Behavior on color { ColorAnimation { duration: 200 } }
+                                }
+
+                                MouseArea { 
+                                    id: closeMouse
+                                    anchors.fill: parent; 
+                                    hoverEnabled: true;
+                                    onClicked: { 
+                                        const n = notifModel.get(index).notifObject; 
+                                        if (n) n.dismiss(); 
+                                        notifModel.remove(index); 
+                                    } 
+                                } 
+                            }
                         }
                     }
                 }

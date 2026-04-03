@@ -150,12 +150,23 @@ PanelWindow {
                         }
 
                         // Close Button
-                        Text {
-                            text: "󰅖"
-                            font.family: "JetBrainsMono Nerd Font"
-                            color: Theme.surface2
+                        Rectangle {
+                            width: 24; height: 24; radius: 6
+                            color: closeMouse.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.15) : "transparent"
+                            Behavior on color { ColorAnimation { duration: 200 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰅖"
+                                font.family: "JetBrainsMono Nerd Font"
+                                color: closeMouse.containsMouse ? Theme.red : Theme.surface2
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
+
                             MouseArea {
+                                id: closeMouse
                                 anchors.fill: parent
+                                hoverEnabled: true
                                 onClicked: {
                                     const n = notifModel.get(index).notifObject;
                                     if (n) n.dismiss();

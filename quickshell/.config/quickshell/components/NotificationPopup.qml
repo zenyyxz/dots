@@ -99,14 +99,24 @@ PanelWindow {
             }
 
             // Dismiss Button
-            MouseArea {
-                Layout.preferredWidth: 20; Layout.preferredHeight: 20
-                onClicked: root.active = false
+            Rectangle {
+                width: 24; height: 24; radius: 6
+                color: dismissMouse.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.15) : "transparent"
+                Behavior on color { ColorAnimation { duration: 200 } }
+
                 Text {
                     anchors.centerIn: parent
                     text: "󰅖"
                     font.family: "JetBrainsMono Nerd Font"
-                    color: Theme.surface2
+                    color: dismissMouse.containsMouse ? Theme.red : Theme.surface2
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+
+                MouseArea {
+                    id: dismissMouse
+                    anchors.fill: parent
+                    onClicked: root.active = false
+                    hoverEnabled: true
                 }
             }
         }
