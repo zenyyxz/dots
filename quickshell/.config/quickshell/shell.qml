@@ -83,6 +83,7 @@ ShellRoot {
         }
     }
     NotificationPopup { id: notifPopup }
+    CalendarPanel { id: calendarPanel }
     Launcher { id: appLauncher; visible: false }
     Clipboard { id: clipboardMenu; visible: false }
     ScreenSnip { id: screenSnip; visible: false }
@@ -139,7 +140,7 @@ ShellRoot {
             left: true
             right: true
         }
-        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.isOpen || vpnConfig.isOpen
+        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.isOpen || vpnConfig.isOpen || calendarPanel.isOpen
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "click-away"
@@ -154,6 +155,7 @@ ShellRoot {
                 screenSnip.visible = false;
                 chatWidget.isOpen = false;
                 vpnConfig.isOpen = false;
+                calendarPanel.isOpen = false;
             }
         }
     }

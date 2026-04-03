@@ -6,10 +6,12 @@ import "../theme"
 Rectangle {
     id: root
     
-    color: Theme.mantle
+    color: mouseArea.containsMouse ? Theme.surface0 : Theme.mantle
     radius: Theme.radius
-    border.color: Theme.borderColor
+    border.color: mouseArea.containsMouse ? Theme.mauve : Theme.borderColor
     border.width: 1
+    Behavior on color { ColorAnimation { duration: 200 } }
+    Behavior on border.color { ColorAnimation { duration: 200 } }
     
     implicitWidth: mainLayout.implicitWidth + 20
     implicitHeight: 32
@@ -35,6 +37,13 @@ Rectangle {
         repeat: true
         running: true
         onTriggered: updateTime()
+    }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        onClicked: root.Shell.root.calendarPanel.isOpen = !root.Shell.root.calendarPanel.isOpen
     }
 
     RowLayout {
