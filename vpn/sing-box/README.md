@@ -1,45 +1,31 @@
-# Sing-box VLESS "Zero Data" VPN Client
+# Sing-box "Zero Data" VPN Core (C++)
 
-This directory contains a high-performance transparent proxy client built with `sing-box`. It is specifically optimized for **Zero Data environments** using SNI spoofing and VLESS.
+This directory contains a high-performance transparent proxy client built with a custom C++ core wrapper around `sing-box`. It is specifically optimized for **Zero Data environments** using SNI spoofing and VLESS.
 
-## The "Zero Data" Strategy
-To connect without a data balance, we implemented three key pillars:
-1.  **Direct IP Bootstrapping:** We use the server's raw IP (`161.118.248.52`) instead of a domain. This allows the proxy to start without needing a working DNS connection.
-2.  **SNI Spoofing:** We use `aka.ms` (or Zoom/CDN domains) in the `server_name` field. This tricks the ISP firewall into thinking the traffic is part of a free/educational data package.
-3.  **Fake-IP DNS:** Instead of waiting for a slow or blocked remote DNS, `sing-box` gives apps an instant "Fake IP" (`198.18.x.x`). The real resolution happens later, safely inside the tunnel.
+## Features
+- **Unified C++ Core**: Manages `sing-box` lifecycle, configuration generation, and profile storage.
+- **Zero Data Bootstrap**: Uses a specialized DNS sequence (`dns-bootstrap`) to resolve server domains via ISP "free" lanes before the tunnel starts.
+- **JSON-RPC API**: Exposes a Unix Socket API (`/tmp/vpn-core.sock`) for control.
+- **Native VLESS Parser**: Automatically converts `vless://` links into optimized configurations.
+- **Zombie Prevention**: Built-in PID locking and signal cleanup.
 
----
+## The "Zero Data" Logic
+To bypass ISP data blocks, the core generates a config with:
+1.  **SNI Spoofing**: Forces `aka.ms` (or other free SNIs) at the TLS layer.
+2.  **Bootstrap DNS**: Directs DNS queries for the VPN server to the system's local DNS *outside* the tunnel.
+3.  **Loop Prevention**: Explicitly routes VPN server traffic through the `direct` outbound to prevent the tunnel from trying to encapsulate its own traffic.
 
-## Configuration Breakdown (`config.json`)
+## Architecture
+- **`core/`**: C++ Source code and build files.
+- **`core/vpn-cli.py`**: A lightweight Python helper to talk to the C++ core.
+- **`config.json`**: Managed by the core (do not edit manually unless you know what you are doing).
+- **`profiles.json`**: Stores your VLESS profiles.
 
-### 1. DNS Section
-*   **`dns-remote` (Type: `https`)**: Uses Google DNS (`1.1.1.1`) over HTTPS (DoH). This ensures your ISP cannot see or hijack your DNS queries. It is routed through the `detour: proxy` (the VLESS tunnel).
-*   **`dns-fakeip` (Type: `fakeip`)**: Enables the Fake-IP engine. It maps domains to the `198.18.0.0/15` range.
-*   **`rules`**: Specifically tells `sing-box` to use the `fakeip` server for all `A` and `AAAA` (IPv4/IPv6) record queries.
+## Usage (Manual)
+1.  **Build**: `cd core/build && cmake .. && make`
+2.  **Start Core**: `sudo ./core/build/vpn-core`
+3.  **Toggle VPN**: `python3 core/vpn-cli.py start` / `stop`
+4.  **Add Profile**: `python3 core/vpn-cli.py add_vless '<link>'`
 
-### 2. Inbounds Section
-*   **`tun-in` (Type: `tun`)**: Creates a virtual network card (`tun0`).
-    *   **`auto_route: true`**: Automatically sets up system routing tables.
-    *   **`strict_route: true`**: Forces all system traffic into the tunnel and prevents leaks.
-    *   **`route_exclude_address`**: Excludes the server IP to prevent a routing loop.
-*   **`dns-in` (Type: `direct`)**: Listens on `127.0.0.1:53`. This allows the system to send standard DNS queries directly into `sing-box`.
-
-### 3. Outbounds Section
-*   **`proxy` (Type: `vless`)**: The main encrypted tunnel.
-    *   **`uuid`**: Your private authentication key.
-    *   **`tls.enabled`**: Encrypts the connection to look like standard web traffic.
-    *   **`tls.server_name`**: The "Spoofed" domain used to bypass the ISP.
-*   **`direct`**: A bypass used for the server's own IP address.
-
-### 4. Route Section (Modern 1.13+ Syntax)
-*   **`hijack-dns`**: Intercepts any outgoing DNS packets and redirects them to the internal DNS engine.
-*   **`sniff` (Action)**: **CRITICAL.** This looks inside the traffic going to "Fake IPs" to see the actual domain name (HTTP/TLS SNI). This is how `sing-box` knows where to actually send your browser's request.
-*   **`ip_cidr` rule**: Ensures traffic destined for the server IP itself is sent `direct` rather than through the tunnel.
-
----
-
-## The "1.13 Migration" Fixes
-During development, we encountered several `FATAL` crashes because the binary was newer than the configuration format.
-1.  **Nested Sniffing:** Moved `sniff` from the `inbound` block to a standalone `action` in `route.rules`.
-2.  **Typed DNS Servers:** Switched from simple address strings to the new `type: "https"` and `type: "fakeip"` object formats.
-3.  **Atomic Status:** Updated the toggle script to use `printf` and pipe-separation to ensure the UI and system state stay perfectly synchronized.
+## Integration
+The system is integrated into the **Quickshell** side panel for easy one-click toggling and profile management.
