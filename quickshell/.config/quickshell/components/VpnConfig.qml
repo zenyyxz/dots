@@ -37,7 +37,7 @@ PanelWindow {
     
     Process {
         id: listProfilesProc
-        command: ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "list_profiles"]
+        command: ["/home/zenyyxz/dotfiles/vpn/arch-vpn/vpn-cli.py", "list_profiles"]
         stdout: SplitParser {
             onRead: (msg) => {
                 try {
@@ -59,7 +59,7 @@ PanelWindow {
 
     Process {
         id: activeProfileProc
-        command: ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "active_profile"]
+        command: ["/home/zenyyxz/dotfiles/vpn/arch-vpn/vpn-cli.py", "active_profile"]
         stdout: SplitParser {
             onRead: (msg) => {
                 try {
@@ -115,7 +115,7 @@ PanelWindow {
         root.statusMessage = "Adding profile...";
         root.isError = false;
         addProfileProc.running = false;
-        addProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "add_vless", JSON.stringify({"link": content.trim()})];
+        addProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/arch-vpn/vpn-cli.py", "add_vless", JSON.stringify({"link": content.trim()})];
         addProfileProc.running = true;
     }
 
@@ -123,7 +123,7 @@ PanelWindow {
         root.statusMessage = "Applying " + name + "...";
         root.isError = false;
         applyProfileProc.running = false;
-        applyProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "apply_profile", JSON.stringify({"name": name})];
+        applyProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/arch-vpn/vpn-cli.py", "apply_profile", JSON.stringify({"name": name})];
         applyProfileProc.running = true;
         root.activeProfile = name;
         root.statusMessage = "Success: Applied " + name;
@@ -131,12 +131,12 @@ PanelWindow {
 
     function deleteProfile(name) {
         deleteProfileProc.running = false;
-        deleteProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py", "remove_profile", JSON.stringify({"name": name})];
+        deleteProfileProc.command = ["/home/zenyyxz/dotfiles/vpn/arch-vpn/vpn-cli.py", "remove_profile", JSON.stringify({"name": name})];
         deleteProfileProc.running = true;
     }
 
     function openLogs() {
-        Quickshell.execDetached(["kitty", "tail", "-f", "/home/zenyyxz/dotfiles/vpn/sing-box/box.log"]);
+        Quickshell.execDetached(["kitty", "tail", "-f", "/home/zenyyxz/dotfiles/vpn/arch-vpn/box.log"]);
     }
 
     onIsOpenChanged: {

@@ -66,7 +66,7 @@ PanelWindow {
     // Unified Core Status Poller
     Process {
         id: vpnStatusProc
-        command: ["bash", "-c", "while true; do /home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py status | grep -q '\"running\": true' && echo 'on' || echo 'off'; sleep 2; done"]
+        command: ["bash", "-c", "while true; do /home/zenyyxz/dotfiles/vpn/arch-vpn/vpn-cli.py status | grep -q '\"running\": true' && echo 'on' || echo 'off'; sleep 2; done"]
         running: true
         stdout: SplitParser {
             onRead: msg => { 
@@ -83,7 +83,7 @@ PanelWindow {
 
     function toggleVpn() {
         if (vpnToggleProc.running) return;
-        const cliPath = "/home/zenyyxz/dotfiles/vpn/sing-box/core/vpn-cli.py";
+        const cliPath = "/home/zenyyxz/dotfiles/vpn/arch-vpn/vpn-cli.py";
         vpnToggleProc.command = ["pkexec", cliPath, root.vpnEnabled ? "stop" : "start"];
         vpnToggleProc.running = true;
     }
