@@ -45,7 +45,7 @@
         "172.19.0.1/30"
       ],
       "auto_route": true,
-      "interface_name": "tun0",
+      "interface_name": "zen-tun",
       "mtu": 1400,
       "route_exclude_address": [
         "127.0.0.0/8",

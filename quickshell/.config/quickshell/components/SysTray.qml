@@ -15,12 +15,15 @@ Rectangle {
     implicitWidth: visible ? (layout.implicitWidth + 20) : 0
     implicitHeight: 32
     
-    visible: trayRepeater.count > 0
+    // Always visible because our VpnTray is inside it now
+    visible: true
 
     RowLayout {
         id: layout
         anchors.centerIn: parent
         spacing: 4
+
+        VpnTray { }
 
         Repeater {
             id: trayRepeater
