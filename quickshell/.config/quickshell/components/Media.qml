@@ -207,7 +207,7 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     radius: 6
-                    color: Qt.rgba(255, 255, 255, 0.1)
+                    color: Qt.rgba(0, 0, 0, 0.15)
                     visible: prevMouse.containsMouse
                     opacity: prevMouse.containsMouse ? 1.0 : 0.0
                     Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -231,7 +231,7 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     radius: 6
-                    color: Qt.rgba(255, 255, 255, 0.15)
+                    color: Qt.rgba(0, 0, 0, 0.2)
                     visible: playMouse.containsMouse
                     opacity: playMouse.containsMouse ? 1.0 : 0.0
                     Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -253,7 +253,7 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     radius: 6
-                    color: Qt.rgba(255, 255, 255, 0.1)
+                    color: Qt.rgba(0, 0, 0, 0.15)
                     visible: nextMouse.containsMouse
                     opacity: nextMouse.containsMouse ? 1.0 : 0.0
                     Behavior on opacity { NumberAnimation { duration: 200 } }
