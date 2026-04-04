@@ -117,7 +117,7 @@ PanelWindow {
         command: ["pgrep", "hypridle"]
         running: true
         onExited: (exitCode) => {
-            root.idleInhibited = (exitCode === 0);
+            root.idleInhibited = (exitCode !== 0);
         }
     }
 
