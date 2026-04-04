@@ -40,7 +40,25 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         enabled: showPlayingUI
-        onClicked: (mouse) => { if (mouse.button === Qt.LeftButton) player?.togglePlaying(); }
+        
+        property int clickCount: 0
+        Timer {
+            id: clickTimer
+            interval: 250
+            onTriggered: {
+                if (mouseArea.clickCount === 1) player?.togglePlaying();
+                else if (mouseArea.clickCount === 2) player?.next();
+                else if (mouseArea.clickCount >= 3) player?.previous();
+                mouseArea.clickCount = 0;
+            }
+        }
+
+        onClicked: (mouse) => {
+            if (mouse.button === Qt.LeftButton) {
+                clickCount++;
+                clickTimer.restart();
+            }
+        }
     }
 
     RowLayout {
