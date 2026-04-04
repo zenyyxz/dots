@@ -58,6 +58,20 @@ PanelWindow {
     property bool vpnUpdating: vpnToggleProc.running
     property bool dndEnabled: false
     
+    // --- DND Persistence ---
+    Process {
+        id: readDnd
+        command: ["cat", "/tmp/quickshell_dnd"]
+        running: true
+        stdout: SplitParser {
+            onRead: msg => { root.dndEnabled = (msg.trim() === "1"); }
+        }
+    }
+
+    function saveDnd(enabled) {
+        Quickshell.execDetached(["bash", "-c", "echo '" + (enabled ? "1" : "0") + "' > /tmp/quickshell_dnd"]);
+    }
+    
     signal requestVpnConfig()
 
     property string currentPowerProfile: "balanced"
@@ -539,7 +553,13 @@ PanelWindow {
                             color: root.dndEnabled ? Theme.base : Theme.mauve
                             font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16 
                         }
-                        MouseArea { id: dndMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.dndEnabled = !root.dndEnabled }
+                        MouseArea { 
+                            id: dndMouse; anchors.fill: parent; hoverEnabled: true; 
+                            onClicked: {
+                                root.dndEnabled = !root.dndEnabled;
+                                root.saveDnd(root.dndEnabled);
+                            } 
+                        }
                     }
 
                     // Clear All
