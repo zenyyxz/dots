@@ -170,7 +170,7 @@ Rectangle {
         ColumnLayout {
             spacing: -2
             Layout.fillWidth: true
-            Layout.preferredWidth: 0 // Force the layout to treat this as the flexible element
+            Layout.preferredWidth: activeHover ? 0 : -1 // Only force shrink when controls are present
             Layout.minimumWidth: 0
             visible: showPlayingUI
             opacity: hasMedia ? 1.0 : 0.0
