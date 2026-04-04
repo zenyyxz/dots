@@ -117,7 +117,16 @@ PanelWindow {
         command: ["pgrep", "hypridle"]
         running: true
         onExited: (exitCode) => {
-            root.idleInhibited = (exitCode !== 0);
+            root.idleInhibited = (exitCode === 0);
+        }
+    }
+
+    Process {
+        id: checkNightLight
+        command: ["pgrep", "wlsunset"]
+        running: true
+        onExited: (exitCode) => {
+            root.nightLightEnabled = (exitCode === 0);
         }
     }
 
@@ -165,7 +174,7 @@ PanelWindow {
         }
     }
 
-    Timer { interval: 2000; repeat: true; running: root.isOpen; onTriggered: { stateUpdater.running = true; } }
+    Timer { interval: 2000; repeat: true; running: root.isOpen; onTriggered: { stateUpdater.running = true; checkIdle.running = true; checkNightLight.running = true; } }
 
     Rectangle {
         id: container
@@ -431,13 +440,23 @@ PanelWindow {
                         active: root.nightLightEnabled
                         activeColor: Theme.yellow
                         inactiveIconColor: Theme.yellow
-                        onClicked: root.nightLightEnabled = !root.nightLightEnabled
+                        onClicked: {
+                            if (root.nightLightEnabled) {
+                                Quickshell.execDetached(["pkill", "wlsunset"]);
+                                root.nightLightEnabled = false;
+                            } else {
+                                Quickshell.execDetached(["wlsunset", "-l", "7.29", "-L", "80.63", "-t", "3500"]);
+                                root.nightLightEnabled = true;
+                            }
+                        }
                     }
+
                 }
             }
 
             // --- Sliders Pill ---
             Rectangle {
+                id: slidersPill
                 Layout.fillWidth: true
                 height: 140
                 radius: 24
@@ -448,7 +467,7 @@ PanelWindow {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 20
-                    spacing: 10
+                    spacing: 15
 
                     ControlCenterSlider {
                         icon: root.muted ? "󰝟" : "󰕾"
