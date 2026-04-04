@@ -170,6 +170,8 @@ Rectangle {
         ColumnLayout {
             spacing: -2
             Layout.fillWidth: true
+            Layout.preferredWidth: 0 // Force the layout to treat this as the flexible element
+            Layout.minimumWidth: 0
             visible: showPlayingUI
             opacity: hasMedia ? 1.0 : 0.0
             Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
