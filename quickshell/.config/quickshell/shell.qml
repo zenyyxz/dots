@@ -8,6 +8,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
+import Quickshell.Services.Mpris
 import "theme"
 import "components"
 
@@ -77,7 +78,6 @@ ShellRoot {
 
     // Global Floating Elements
     Tooltip { }
-    MediaPopup { }
     OSD { id: globalOSD }
     SidePanel { 
         id: sidePanel
@@ -205,7 +205,6 @@ ShellRoot {
         }
     }
 
-    // Notification Server
     NotificationServer {
         id: notifServer
         onNotification: (n) => {
