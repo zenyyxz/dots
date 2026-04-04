@@ -365,18 +365,21 @@ PanelWindow {
 
                         Repeater {
                             model: [
-                                { icon: "󰓅", profile: "performance" },
-                                { icon: "󰾆", profile: "balanced" },
-                                { icon: "󰌪", profile: "power-saver" }
+                                { icon: "󰓅", profile: "performance", color: Theme.maroon },
+                                { icon: "󰾆", profile: "balanced", color: Theme.mauve },
+                                { icon: "󰌪", profile: "power-saver", color: Theme.green }
                             ]
                             delegate: Rectangle {
                                 Layout.fillWidth: true; Layout.preferredHeight: 43; radius: 12
-                                color: root.currentPowerProfile === modelData.profile ? Theme.mauve : (powerMouse.containsMouse ? Qt.rgba(255,255,255,0.05) : "transparent")
+                                color: root.currentPowerProfile === modelData.profile ? modelData.color : (powerMouse.containsMouse ? Qt.rgba(255,255,255,0.05) : "transparent")
+                                border.color: root.currentPowerProfile === modelData.profile ? "transparent" : Qt.rgba(modelData.color.r, modelData.color.g, modelData.color.b, 0.2)
+                                border.width: 1
                                 Behavior on color { ColorAnimation { duration: 200 } }
+                                Behavior on border.color { ColorAnimation { duration: 200 } }
                                 Text {
                                     anchors.centerIn: parent
                                     text: modelData.icon; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 18
-                                    color: root.currentPowerProfile === modelData.profile ? Theme.base : Theme.mauve
+                                    color: root.currentPowerProfile === modelData.profile ? Theme.base : modelData.color
                                     scale: powerMouse.pressed ? 0.9 : 1.0
                                     Behavior on scale { NumberAnimation { duration: 100 } }
                                 }
