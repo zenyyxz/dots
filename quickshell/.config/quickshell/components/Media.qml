@@ -32,8 +32,8 @@ Rectangle {
     border.width: showPlayingUI ? 1 : 0
     visible: showPlayingUI || width > 0
 
-    Behavior on implicitWidth { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
-    Behavior on color { ColorAnimation { duration: 300 } }
+    Behavior on implicitWidth { NumberAnimation { duration: 600; easing.type: Easing.OutQuart } }
+    Behavior on color { ColorAnimation { duration: 500; easing.type: Easing.OutCubic } }
 
     MouseArea {
         id: mouseArea
@@ -144,33 +144,64 @@ Rectangle {
             Layout.fillWidth: true
             visible: showPlayingUI
             opacity: hasMedia ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 300 } }
+            Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
             
             Text {
                 text: player?.trackTitle || "No Media"
                 color: Theme.base; font.family: Theme.fontName; font.pixelSize: 11; font.bold: true
                 elide: Text.ElideRight; Layout.fillWidth: true
+                Behavior on color { ColorAnimation { duration: 400 } }
             }
             Text {
                 text: player?.trackArtist || "Waiting..."
                 color: Qt.rgba(0,0,0,0.6); font.family: Theme.fontName; font.pixelSize: 9
                 elide: Text.ElideRight; Layout.fillWidth: true
+                Behavior on color { ColorAnimation { duration: 400 } }
             }
         }
 
         RowLayout {
-            spacing: 8
-            Layout.preferredWidth: mouseArea.containsMouse ? 60 : 0
+            id: controls
+            spacing: mouseArea.containsMouse ? 8 : 0
+            Layout.preferredWidth: mouseArea.containsMouse ? 70 : 0
             clip: true
             opacity: mouseArea.containsMouse ? 1.0 : 0.0
             visible: showPlayingUI
+            Layout.alignment: Qt.AlignVCenter
             
-            Behavior on Layout.preferredWidth { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
-            Behavior on opacity { NumberAnimation { duration: 250 } }
+            Behavior on Layout.preferredWidth { NumberAnimation { duration: 600; easing.type: Easing.OutQuart } }
+            Behavior on spacing { NumberAnimation { duration: 600; easing.type: Easing.OutQuart } }
+            Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
             
-            Text { text: "󰒮"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; color: Qt.rgba(0,0,0,0.5); MouseArea { anchors.fill: parent; onClicked: player?.previous() } }
-            Text { text: isPlaying ? "󰏤" : "󰐊"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16; color: Theme.base; MouseArea { anchors.fill: parent; onClicked: player?.togglePlaying() } }
-            Text { text: "󰒭"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; color: Qt.rgba(0,0,0,0.5); MouseArea { anchors.fill: parent; onClicked: player?.next() } }
+            Item {
+                Layout.preferredWidth: 18; Layout.preferredHeight: 18
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰒮"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14
+                    color: Qt.rgba(0,0,0,0.5); renderType: Text.NativeRendering
+                }
+                MouseArea { anchors.fill: parent; onClicked: player?.previous() }
+            }
+
+            Item {
+                Layout.preferredWidth: 20; Layout.preferredHeight: 20
+                Text {
+                    anchors.centerIn: parent
+                    text: isPlaying ? "󰏤" : "󰐊"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16
+                    color: Theme.base; renderType: Text.NativeRendering
+                }
+                MouseArea { anchors.fill: parent; onClicked: player?.togglePlaying() }
+            }
+
+            Item {
+                Layout.preferredWidth: 18; Layout.preferredHeight: 18
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰒭"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14
+                    color: Qt.rgba(0,0,0,0.5); renderType: Text.NativeRendering
+                }
+                MouseArea { anchors.fill: parent; onClicked: player?.next() }
+            }
         }
     }
 }
