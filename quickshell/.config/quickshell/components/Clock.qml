@@ -12,7 +12,7 @@ Rectangle {
     radius: Theme.radius
     
     // 2. Active Glow when dashboard is open (Safe implementation)
-    border.color: (calendar && calendar.isOpen) ? Theme.mauve : (mouseArea.containsMouse ? Theme.surface2 : Theme.borderColor)
+    border.color: (calendar && calendar.isOpen) ? Theme.sapphire : (mouseArea.containsMouse ? Theme.surface2 : Theme.borderColor)
     border.width: 1
     
     implicitWidth: mainLayout.implicitWidth + 24
@@ -79,7 +79,7 @@ Rectangle {
         anchors.rightMargin: 10
         height: 1
         width: (parent.width - 20) * root.minuteProgress
-        color: Theme.mauve
+        color: Theme.sapphire
         opacity: 0.6
     }
 
@@ -120,6 +120,7 @@ Rectangle {
                             ctx.stroke();
                             
                             ctx.lineCap = "round";
+                            ctx.strokeStyle = Theme.sapphire;
                             // Minute hand
                             ctx.beginPath();
                             ctx.moveTo(7, 7);

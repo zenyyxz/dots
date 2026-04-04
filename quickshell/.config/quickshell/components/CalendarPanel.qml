@@ -129,7 +129,7 @@ PanelWindow {
                                     color: prevMouse.containsMouse ? Theme.surface1 : "transparent"
                                     scale: prevMouse.pressed ? 0.9 : 1.0
                                     Behavior on scale { NumberAnimation { duration: 100 } }
-                                    Text { anchors.centerIn: parent; text: "󰁍"; color: Theme.mauve; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14 }
+                                    Text { anchors.centerIn: parent; text: "󰁍"; color: Theme.sapphire; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14 }
                                     MouseArea { id: prevMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.prevMonth() }
                                 }
                                 Rectangle {
@@ -137,7 +137,7 @@ PanelWindow {
                                     color: nextMouse.containsMouse ? Theme.surface1 : "transparent"
                                     scale: nextMouse.pressed ? 0.9 : 1.0
                                     Behavior on scale { NumberAnimation { duration: 100 } }
-                                    Text { anchors.centerIn: parent; text: "󰁔"; color: Theme.mauve; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14 }
+                                    Text { anchors.centerIn: parent; text: "󰁔"; color: Theme.sapphire; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14 }
                                     MouseArea { id: nextMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.nextMonth() }
                                 }
                             }
@@ -178,7 +178,7 @@ PanelWindow {
                                     var today = new Date();
                                     return isCurrentMonth && dayNum === today.getDate() && root.calViewDate.getMonth() === today.getMonth() && root.calViewDate.getFullYear() === today.getFullYear();
                                 }
-                                color: isToday ? Theme.mauve : (dayMouse.containsMouse && isCurrentMonth ? Theme.surface1 : "transparent")
+                                color: isToday ? Theme.sapphire : (dayMouse.containsMouse && isCurrentMonth ? Theme.surface1 : "transparent")
                                 opacity: isCurrentMonth ? 1.0 : 0.2
                                 Text {
                                     anchors.centerIn: parent
@@ -228,7 +228,7 @@ PanelWindow {
                             // 1. Progress Outer Ring (Seconds) - Using animated progressAngle
                             ctx.beginPath();
                             ctx.arc(centerX, centerY, radius + 8, -Math.PI/2, root.progressAngle * Math.PI / 180);
-                            ctx.strokeStyle = Qt.rgba(Theme.mauve.r, Theme.mauve.g, Theme.mauve.b, 0.2);
+                            ctx.strokeStyle = Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.2);
                             ctx.lineWidth = 2;
                             ctx.stroke();
 
@@ -242,7 +242,7 @@ PanelWindow {
                             for (var i = 1; i <= 12; i++) {
                                 var angle = (i * 30 - 90) * Math.PI / 180;
                                 var isHigh = (i === currentHourInt);
-                                ctx.strokeStyle = isHigh ? Theme.mauve : Theme.surface2;
+                                ctx.strokeStyle = isHigh ? Theme.sapphire : Theme.surface2;
                                 ctx.lineWidth = isHigh ? 3 : 2;
                                 var mLen = isHigh ? 12 : 8;
                                 ctx.beginPath();
@@ -288,7 +288,7 @@ PanelWindow {
                             // 5. Second Hand (No Shadow, Smooth Sweep)
                             ctx.shadowBlur = 0;
                             var secAngle = (seconds * 6 - 90) * Math.PI / 180;
-                            ctx.strokeStyle = Theme.mauve;
+                            ctx.strokeStyle = Theme.sapphire;
                             ctx.lineWidth = 2;
                             ctx.beginPath();
                             ctx.moveTo(centerX, centerY);
