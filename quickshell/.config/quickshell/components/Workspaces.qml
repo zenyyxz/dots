@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
+import Qt5Compat.GraphicalEffects
 import "../theme"
 
 Rectangle {
@@ -24,6 +25,21 @@ Rectangle {
     property real ghostX: -100
     property bool ghostScared: false
     property bool pacmanLeft: false
+
+    // Centralized Eating Logic: Check if Pacman overlaps any colored dot
+    readonly property bool isEating: {
+        if (pacmanX < 0 || pacmanX > root.width) return false;
+        for (let i = 0; i < repeater.count; i++) {
+            let dotItem = repeater.itemAt(i);
+            if (dotItem) {
+                let dotCenter = dotItem.x + row.x + dotItem.width/2;
+                if (Math.abs(pacmanX + 10 - dotCenter) < 16) {
+                    return dotItem.isActive || dotItem.isOccupied;
+                }
+            }
+        }
+        return false;
+    }
 
     SequentialAnimation {
         id: chaseAnimation
@@ -73,15 +89,12 @@ Rectangle {
             spacing: 8
 
             Repeater {
+                id: repeater
                 model: 10
                 delegate: Rectangle {
                     id: dot
                     readonly property int index_one: index + 1
                     readonly property bool isActive: root.activeWorkspace == index_one
-                    
-                    // Optimized Eating Logic: Only check if Pacman is active
-                    readonly property real absX: row.x + x
-                    readonly property bool isEaten: Math.abs(root.pacmanX - (absX + width/2)) < 15
                     
                     // Reactive property to check if workspace is occupied
                     readonly property bool isOccupied: {
@@ -139,20 +152,31 @@ Rectangle {
             color: root.ghostScared ? Theme.blue : Theme.red
             z: 10
             Behavior on color { ColorAnimation { duration: 200 } }
+            // Horizontal flip only - Fix: Use xScale instead of x
+            transform: Scale { origin.x: 9; origin.y: 9; xScale: root.pacmanLeft ? -1 : 1 }
             // Manual edge fade-out (Software Clip)
             opacity: (x < 0 || x > parent.width - 20) ? 0.0 : 1.0
             Behavior on opacity { NumberAnimation { duration: 100 } }
         }
 
-        Text {
+        Image {
             id: pacman
             x: root.pacmanX; y: parent.height/2 - height/2
-            text: root.pacmanLeft ? "󰚁" : "󰚀"
-            font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20
+            width: 20; height: 20
+            source: root.isEating ? Quickshell.shellPath("assets/pacman-eating.svg") : Quickshell.shellPath("assets/pacman.svg")
+            visible: false
+            z: 11
+        }
+
+        ColorOverlay {
+            anchors.fill: pacman
+            source: pacman
             color: Theme.yellow
             z: 11
-            // Manual edge fade-out (Software Clip)
-            opacity: (x < 0 || x > parent.width - 20) ? 0.0 : 1.0
+            // Horizontal flip only - Fix: Use xScale instead of x
+            transform: Scale { origin.x: 10; origin.y: 10; xScale: root.pacmanLeft ? -1 : 1 }
+            // Manual edge fade-out (Software Clip) - Using root.width for safety
+            opacity: (pacman.x < 0 || pacman.x > root.width - 20) ? 0.0 : 1.0
             Behavior on opacity { NumberAnimation { duration: 100 } }
         }
     }
