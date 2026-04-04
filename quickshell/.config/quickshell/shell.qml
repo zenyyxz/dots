@@ -76,6 +76,36 @@ ShellRoot {
         }
     }
 
+    // Click-away listener (Closes panel when clicking outside)
+    // MUST BE DEFINED BEFORE INTERACTIVE PANELS TO BE STACKED UNDERNEATH ON THE OVERLAY LAYER
+    PanelWindow {
+        id: clickAway
+        anchors {
+            top: true
+            bottom: true
+            left: true
+            right: true
+        }
+        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.isOpen || vpnConfig.isOpen || calendarPanel.isOpen
+        exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.layer: WlrLayer.Top // Below Overlay where panels live
+        WlrLayershell.namespace: "click-away"
+        color: "transparent"
+        
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                sidePanel.isOpen = false;
+                appLauncher.visible = false;
+                clipboardMenu.visible = false;
+                screenSnip.visible = false;
+                chatWidget.isOpen = false;
+                vpnConfig.isOpen = false;
+                calendarPanel.isOpen = false;
+            }
+        }
+    }
+
     // Global Floating Elements
     Tooltip { }
     OSD { id: globalOSD }
@@ -131,35 +161,6 @@ ShellRoot {
         description: "Toggles the AI Chat widget"
         onPressed: {
             chatWidget.isOpen = !chatWidget.isOpen;
-        }
-    }
-
-    // Click-away listener (Closes panel when clicking outside)
-    PanelWindow {
-        id: clickAway
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
-        visible: sidePanel.isOpen || appLauncher.visible || clipboardMenu.visible || screenSnip.visible || chatWidget.isOpen || vpnConfig.isOpen || calendarPanel.isOpen
-        exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "click-away"
-        color: "transparent"
-        
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                sidePanel.isOpen = false;
-                appLauncher.visible = false;
-                clipboardMenu.visible = false;
-                screenSnip.visible = false;
-                chatWidget.isOpen = false;
-                vpnConfig.isOpen = false;
-                calendarPanel.isOpen = false;
-            }
         }
     }
 
