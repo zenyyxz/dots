@@ -142,18 +142,31 @@ PanelWindow {
 
     Process {
         id: stateUpdater
-        command: ["bash", "-c", "printf '%s|%s|%s|%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep -q 'Powered: yes' && echo 'yes' || echo 'no')\" \"$(rfkill list | grep -q 'Soft blocked: no' && echo 'unblocked' || echo 'blocked')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\" \"$(powerprofilesctl get)\" \"$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)\""]
+        command: ["bash", "-c", "printf '%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep -q 'Powered: yes' && echo 'yes' || echo 'no')\" \"$(rfkill list | grep -q 'Soft blocked: no' && echo 'unblocked' || echo 'blocked')\" \"$(powerprofilesctl get)\""]
         running: true
         stdout: SplitParser {
             onRead: msg => {
                 const parts = msg.trim().split("|");
-                if (parts.length >= 7) {
+                if (parts.length >= 4) {
                     root.wifiEnabled = (parts[0] === "enabled");
                     root.bluetoothEnabled = (parts[1] === "yes");
                     root.flightMode = (parts[2] === "blocked");
-                    
+                    root.currentPowerProfile = parts[3].trim();
+                }
+            }
+        }
+    }
+
+    Process {
+        id: fastUpdater
+        command: ["bash", "-c", "printf '%s|%s|%s\\n' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)\""]
+        running: true
+        stdout: SplitParser {
+            onRead: msg => {
+                const parts = msg.trim().split("|");
+                if (parts.length >= 3) {
                     if (!root.isMovingVolume) {
-                        const volPart = parts[3];
+                        const volPart = parts[0];
                         root.muted = volPart.includes("[MUTED]");
                         const volMatch = volPart.match(/[0-9.]+/);
                         if (volMatch) {
@@ -163,18 +176,18 @@ PanelWindow {
                     }
                     
                     if (!root.isMovingBrightness) {
-                        const b = parseFloat(parts[4]);
+                        const b = parseFloat(parts[1]);
                         if (!isNaN(b)) root.brightness = b / 100.0;
                     }
                     
-                    root.currentPowerProfile = parts[5].trim();
-                    root.micMuted = parts[6].includes("[MUTED]");
+                    root.micMuted = parts[2].includes("[MUTED]");
                 }
             }
         }
     }
 
     Timer { interval: 2000; repeat: true; running: root.isOpen; onTriggered: { stateUpdater.running = true; checkIdle.running = true; checkNightLight.running = true; } }
+    Timer { interval: 100; repeat: true; running: root.isOpen; onTriggered: fastUpdater.running = true }
 
     Rectangle {
         id: container
@@ -379,7 +392,7 @@ PanelWindow {
                                 { icon: "󰌪", profile: "power-saver", color: Theme.green }
                             ]
                             delegate: Rectangle {
-                                Layout.fillWidth: true; Layout.preferredHeight: 43; radius: 12
+                                Layout.fillWidth: true; Layout.fillHeight: true; radius: 12
                                 color: root.currentPowerProfile === modelData.profile ? modelData.color : (powerMouse.containsMouse ? Qt.rgba(255,255,255,0.05) : "transparent")
                                 border.color: root.currentPowerProfile === modelData.profile ? "transparent" : Qt.rgba(modelData.color.r, modelData.color.g, modelData.color.b, 0.2)
                                 border.width: 1
@@ -450,7 +463,6 @@ PanelWindow {
                             }
                         }
                     }
-
                 }
             }
 
@@ -473,11 +485,18 @@ PanelWindow {
                         icon: root.muted ? "󰝟" : "󰕾"
                         value: root.volume
                         color: Theme.mauve
+                        muted: root.muted
                         onPressed: root.isMovingVolume = true
                         onReleased: root.isMovingVolume = false
                         onMoved: (val) => {
                             root.volume = val;
                             Quickshell.execDetached(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", val.toFixed(2)]);
+                        }
+                        onIconClicked: {
+                            Quickshell.execDetached(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"]);
+                            root.muted = !root.muted; // Instant visual feedback
+                            // Trigger a quick refresh to sync with system
+                            Qt.callLater(() => { stateUpdater.running = true; });
                         }
                     }
 

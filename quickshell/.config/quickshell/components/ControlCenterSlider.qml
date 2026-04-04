@@ -8,9 +8,11 @@ RowLayout {
     property string icon: ""
     property real value: 0.0
     property color color: Theme.mauve
+    property bool muted: false
     signal moved(real val)
     signal pressed()
     signal released()
+    signal iconClicked()
 
     spacing: 15
 
@@ -21,7 +23,12 @@ RowLayout {
             anchors.centerIn: parent
             text: root.icon
             font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 20
-            color: root.color
+            color: root.muted ? Theme.surface2 : root.color
+            Behavior on color { ColorAnimation { duration: 200 } }
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.iconClicked()
         }
     }
 
@@ -41,7 +48,9 @@ RowLayout {
             radius: 3; color: Theme.base
             Rectangle {
                 width: control.visualPosition * parent.width; height: parent.height
-                color: root.color; radius: 3
+                color: root.muted ? Theme.surface2 : root.color
+                radius: 3
+                Behavior on color { ColorAnimation { duration: 200 } }
             }
         }
 
