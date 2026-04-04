@@ -26,14 +26,21 @@ Rectangle {
     property bool ghostScared: false
     property bool pacmanLeft: false
 
-    // Centralized Eating Logic: Check if Pacman overlaps any colored dot
+    // Centralized Eating Logic: Check if Pacman's mouth overlaps any colored dot
     readonly property bool isEating: {
-        if (pacmanX < 0 || pacmanX > root.width) return false;
+        if (pacmanX < -30 || pacmanX > root.width + 30) return false;
+        
+        // High-Response Detection: Mouth leading edge
+        let mouthX = pacmanLeft ? (pacmanX - 2) : (pacmanX + 22);
+        
         for (let i = 0; i < repeater.count; i++) {
             let dotItem = repeater.itemAt(i);
             if (dotItem) {
                 let dotCenter = dotItem.x + row.x + dotItem.width/2;
-                if (Math.abs(pacmanX + 10 - dotCenter) < 16) {
+                // Dynamic Threshold: Half the dot width + 2px buffer
+                // This ensures a 'blink' (mouth close) in the gaps between dots
+                let threshold = (dotItem.width / 2) + 2;
+                if (Math.abs(mouthX - dotCenter) < threshold) {
                     return dotItem.isActive || dotItem.isOccupied;
                 }
             }
