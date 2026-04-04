@@ -125,17 +125,20 @@ PanelWindow {
     property bool muted: false
     property bool isMovingVolume: false
     
+    property bool micMuted: false
+    property bool nightLightEnabled: false
+    
     property real brightness: 1.0
     property bool isMovingBrightness: false
 
     Process {
         id: stateUpdater
-        command: ["bash", "-c", "printf '%s|%s|%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep -q 'Powered: yes' && echo 'yes' || echo 'no')\" \"$(rfkill list | grep -q 'Soft blocked: no' && echo 'unblocked' || echo 'blocked')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\" \"$(powerprofilesctl get)\""]
+        command: ["bash", "-c", "printf '%s|%s|%s|%s|%s|%s|%s\\n' \"$(nmcli radio wifi)\" \"$(bluetoothctl show | grep -q 'Powered: yes' && echo 'yes' || echo 'no')\" \"$(rfkill list | grep -q 'Soft blocked: no' && echo 'unblocked' || echo 'blocked')\" \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@)\" \"$(brightnessctl -m | cut -d, -f4 | tr -d '%')\" \"$(powerprofilesctl get)\" \"$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)\""]
         running: true
         stdout: SplitParser {
             onRead: msg => {
                 const parts = msg.trim().split("|");
-                if (parts.length >= 6) {
+                if (parts.length >= 7) {
                     root.wifiEnabled = (parts[0] === "enabled");
                     root.bluetoothEnabled = (parts[1] === "yes");
                     root.flightMode = (parts[2] === "blocked");
@@ -156,6 +159,7 @@ PanelWindow {
                     }
                     
                     root.currentPowerProfile = parts[5].trim();
+                    root.micMuted = parts[6].includes("[MUTED]");
                 }
             }
         }
@@ -339,48 +343,92 @@ PanelWindow {
                 }
             }
 
-            // --- Power Modes Pill ---
-            Rectangle {
+            // --- Utilities Row (Power + Tools) ---
+            RowLayout {
                 Layout.fillWidth: true
-                height: 90
-                radius: 24
-                color: Theme.surface0
-                border.color: Theme.surface1
-                border.width: 1
+                Layout.preferredHeight: 55
+                spacing: 12
 
+                // Power Profiles Unified Pill
+                Rectangle {
+                    Layout.preferredWidth: 180
+                    Layout.preferredHeight: 55
+                    radius: 16
+                    color: Theme.surface0
+                    border.color: Theme.surface1
+                    border.width: 1
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        spacing: 6
+
+                        Repeater {
+                            model: [
+                                { icon: "󰓅", profile: "performance" },
+                                { icon: "󰾆", profile: "balanced" },
+                                { icon: "󰌪", profile: "power-saver" }
+                            ]
+                            delegate: Rectangle {
+                                Layout.fillWidth: true; Layout.preferredHeight: 43; radius: 12
+                                color: root.currentPowerProfile === modelData.profile ? Theme.mauve : (powerMouse.containsMouse ? Qt.rgba(255,255,255,0.05) : "transparent")
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.icon; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 18
+                                    color: root.currentPowerProfile === modelData.profile ? Theme.base : Theme.mauve
+                                    scale: powerMouse.pressed ? 0.9 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: 100 } }
+                                }
+                                MouseArea {
+                                    id: powerMouse; anchors.fill: parent; hoverEnabled: true
+                                    onClicked: {
+                                        Quickshell.execDetached(["powerprofilesctl", "set", modelData.profile]);
+                                        root.currentPowerProfile = modelData.profile;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Separator or just spacing
+                Item { Layout.fillWidth: true }
+
+                // Tool Buttons
                 RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 10
                     spacing: 10
-
-                    PowerModeButton {
-                        icon: "󰓅"
-                        label: "Performance"
-                        active: root.currentPowerProfile === "performance"
+                    ControlCenterIconButton {
+                        implicitWidth: 55; implicitHeight: 55
+                        radius: 16
+                        icon: root.micMuted ? "󰍭" : "󰍬"
+                        active: !root.micMuted
+                        activeColor: Theme.red
+                        inactiveIconColor: Theme.red
                         onClicked: {
-                            Quickshell.execDetached(["powerprofilesctl", "set", "performance"]);
-                            root.currentPowerProfile = "performance";
+                            Quickshell.execDetached(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"]);
+                            root.micMuted = !root.micMuted;
                         }
                     }
 
-                    PowerModeButton {
-                        icon: "󰾆"
-                        label: "Balanced"
-                        active: root.currentPowerProfile === "balanced"
-                        onClicked: {
-                            Quickshell.execDetached(["powerprofilesctl", "set", "balanced"]);
-                            root.currentPowerProfile = "balanced";
-                        }
+                    ControlCenterIconButton {
+                        implicitWidth: 55; implicitHeight: 55
+                        radius: 16
+                        icon: "󰈋"
+                        active: false
+                        activeColor: Theme.sapphire
+                        inactiveIconColor: Theme.sapphire
+                        onClicked: Quickshell.execDetached(["hyprpicker", "-a"])
                     }
 
-                    PowerModeButton {
-                        icon: "󰌪"
-                        label: "Power Saver"
-                        active: root.currentPowerProfile === "power-saver"
-                        onClicked: {
-                            Quickshell.execDetached(["powerprofilesctl", "set", "power-saver"]);
-                            root.currentPowerProfile = "power-saver";
-                        }
+                    ControlCenterIconButton {
+                        implicitWidth: 55; implicitHeight: 55
+                        radius: 16
+                        icon: "󰖔"
+                        active: root.nightLightEnabled
+                        activeColor: Theme.yellow
+                        inactiveIconColor: Theme.yellow
+                        onClicked: root.nightLightEnabled = !root.nightLightEnabled
                     }
                 }
             }

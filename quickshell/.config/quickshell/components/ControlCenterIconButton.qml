@@ -13,8 +13,10 @@ Rectangle {
     property int iconSize: 24
     signal clicked()
 
-    width: 60
-    height: 60
+    implicitWidth: 60
+    implicitHeight: 60
+    width: implicitWidth
+    height: implicitHeight
     radius: 16
     
     color: active ? activeColor : Theme.surface0
