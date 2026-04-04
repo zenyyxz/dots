@@ -24,7 +24,17 @@ Rectangle {
         return art;
     }
 
-    implicitWidth: showPlayingUI ? (mouseArea.containsMouse ? 280 : 220) : 0
+    readonly property bool isHovered: mouseArea.containsMouse || prevMouse.containsMouse || playMouse.containsMouse || nextMouse.containsMouse
+    property bool activeHover: false
+    Timer {
+        id: hoverDebounce
+        interval: 50
+        running: true
+        repeat: true
+        onTriggered: activeHover = isHovered
+    }
+
+    implicitWidth: showPlayingUI ? (activeHover ? 280 : 220) : 0
     implicitHeight: 32
     radius: Theme.radius
     color: showPlayingUI ? Theme.sapphire : Theme.base
@@ -180,10 +190,10 @@ Rectangle {
 
         RowLayout {
             id: controls
-            spacing: mouseArea.containsMouse ? 8 : 0
-            Layout.preferredWidth: mouseArea.containsMouse ? 70 : 0
+            spacing: activeHover ? 8 : 0
+            Layout.preferredWidth: activeHover ? 70 : 0
             clip: true
-            opacity: mouseArea.containsMouse ? 1.0 : 0.0
+            opacity: activeHover ? 1.0 : 0.0
             visible: showPlayingUI
             Layout.alignment: Qt.AlignVCenter
             
@@ -192,33 +202,73 @@ Rectangle {
             Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
             
             Item {
-                Layout.preferredWidth: 18; Layout.preferredHeight: 18
+                Layout.preferredWidth: 22; Layout.preferredHeight: 22
+                
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 6
+                    color: Qt.rgba(255, 255, 255, 0.1)
+                    visible: prevMouse.containsMouse
+                    opacity: prevMouse.containsMouse ? 1.0 : 0.0
+                    Behavior on opacity { NumberAnimation { duration: 200 } }
+                }
+
                 Text {
                     anchors.centerIn: parent
                     text: "󰒮"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14
-                    color: Qt.rgba(0,0,0,0.5); renderType: Text.NativeRendering
+                    color: prevMouse.containsMouse ? Theme.base : Qt.rgba(0,0,0,0.5)
+                    renderType: Text.NativeRendering
+                    scale: prevMouse.containsMouse ? 1.1 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                    Behavior on color { ColorAnimation { duration: 200 } }
                 }
-                MouseArea { anchors.fill: parent; onClicked: player?.previous() }
+                MouseArea { id: prevMouse; anchors.fill: parent; hoverEnabled: true; onClicked: player?.previous() }
             }
 
             Item {
-                Layout.preferredWidth: 20; Layout.preferredHeight: 20
+                Layout.preferredWidth: 24; Layout.preferredHeight: 24
+                
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 6
+                    color: Qt.rgba(255, 255, 255, 0.15)
+                    visible: playMouse.containsMouse
+                    opacity: playMouse.containsMouse ? 1.0 : 0.0
+                    Behavior on opacity { NumberAnimation { duration: 200 } }
+                }
+
                 Text {
                     anchors.centerIn: parent
                     text: isPlaying ? "󰏤" : "󰐊"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16
                     color: Theme.base; renderType: Text.NativeRendering
+                    scale: playMouse.containsMouse ? 1.1 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                 }
-                MouseArea { anchors.fill: parent; onClicked: player?.togglePlaying() }
+                MouseArea { id: playMouse; anchors.fill: parent; hoverEnabled: true; onClicked: player?.togglePlaying() }
             }
 
             Item {
-                Layout.preferredWidth: 18; Layout.preferredHeight: 18
+                Layout.preferredWidth: 22; Layout.preferredHeight: 22
+                
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 6
+                    color: Qt.rgba(255, 255, 255, 0.1)
+                    visible: nextMouse.containsMouse
+                    opacity: nextMouse.containsMouse ? 1.0 : 0.0
+                    Behavior on opacity { NumberAnimation { duration: 200 } }
+                }
+
                 Text {
                     anchors.centerIn: parent
                     text: "󰒭"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14
-                    color: Qt.rgba(0,0,0,0.5); renderType: Text.NativeRendering
+                    color: nextMouse.containsMouse ? Theme.base : Qt.rgba(0,0,0,0.5)
+                    renderType: Text.NativeRendering
+                    scale: nextMouse.containsMouse ? 1.1 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                    Behavior on color { ColorAnimation { duration: 200 } }
                 }
-                MouseArea { anchors.fill: parent; onClicked: player?.next() }
+                MouseArea { id: nextMouse; anchors.fill: parent; hoverEnabled: true; onClicked: player?.next() }
             }
         }
     }
