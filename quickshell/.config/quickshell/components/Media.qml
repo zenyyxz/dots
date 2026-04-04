@@ -9,7 +9,7 @@ Rectangle {
     
     // 1. Reactive Player Selection
     readonly property MprisPlayer player: Mpris.activePlayer || (Mpris.players.values.length > 0 ? Mpris.players.values[0] : null)
-    readonly property bool isPlaying: player && player.playbackState === Mpris.Playing
+    readonly property bool isPlaying: player && (player.playbackState === Mpris.Playing || player.playbackState === 1)
     readonly property bool hasMedia: player !== null
     
     // Stability Grace Period
@@ -64,27 +64,41 @@ Rectangle {
                 onStatusChanged: if (status === Image.Ready) vinylCanvas.requestPaint()
             }
 
-            Canvas {
-                id: vinylCanvas
+            Item {
+                id: vinylRotationWrapper
                 anchors.fill: parent
-                rotation: rotationAngle
-                property real rotationAngle: 0
-                RotationAnimation on rotationAngle { 
-                    from: 0; to: 360; duration: 8000; 
-                    running: isPlaying; loops: Animation.Infinite 
+                
+                RotationAnimation on rotation {
+                    from: 0; to: 360; duration: 12000;
+                    running: root.isPlaying; loops: Animation.Infinite
+                    direction: RotationAnimation.Clockwise
                 }
-                onRotationAngleChanged: requestPaint()
 
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.reset();
-                    ctx.save();
-                    ctx.beginPath(); ctx.arc(width/2, height/2, width/2 - 1, 0, 2 * Math.PI); ctx.clip();
-                    ctx.fillStyle = Theme.mantle; ctx.fill();
-                    if (albumArtSource.status === Image.Ready) {
-                        ctx.drawImage(albumArtSource, 0, 0, width, height);
+                Canvas {
+                    id: vinylCanvas
+                    anchors.fill: parent
+                    
+                    // Force repaint on rotation for some drivers
+                    onRotationChanged: requestPaint()
+
+                    onPaint: {
+                        var ctx = getContext("2d");
+                        ctx.reset();
+                        ctx.save();
+                        
+                        // Draw main circle / Art
+                        ctx.beginPath(); ctx.arc(width/2, height/2, width/2 - 1, 0, 2 * Math.PI); ctx.clip();
+                        ctx.fillStyle = Theme.mantle; ctx.fill();
+                        if (albumArtSource.status === Image.Ready) {
+                            ctx.drawImage(albumArtSource, 0, 0, width, height);
+                        }
+                        
+                        // Draw center hole
+                        ctx.beginPath(); ctx.arc(width/2, height/2, 2, 0, 2 * Math.PI);
+                        ctx.fillStyle = Theme.base; ctx.fill();
+                        
+                        ctx.restore();
                     }
-                    ctx.restore();
                 }
             }
 
