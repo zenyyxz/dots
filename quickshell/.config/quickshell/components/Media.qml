@@ -160,9 +160,14 @@ Rectangle {
 
         RowLayout {
             spacing: 8
-            visible: showPlayingUI && mouseArea.containsMouse
-            opacity: visible ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 200 } }
+            Layout.preferredWidth: mouseArea.containsMouse ? 60 : 0
+            clip: true
+            opacity: mouseArea.containsMouse ? 1.0 : 0.0
+            visible: showPlayingUI
+            
+            Behavior on Layout.preferredWidth { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+            Behavior on opacity { NumberAnimation { duration: 250 } }
+            
             Text { text: "󰒮"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; color: Qt.rgba(0,0,0,0.5); MouseArea { anchors.fill: parent; onClicked: player?.previous() } }
             Text { text: isPlaying ? "󰏤" : "󰐊"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16; color: Theme.base; MouseArea { anchors.fill: parent; onClicked: player?.togglePlaying() } }
             Text { text: "󰒭"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; color: Qt.rgba(0,0,0,0.5); MouseArea { anchors.fill: parent; onClicked: player?.next() } }
