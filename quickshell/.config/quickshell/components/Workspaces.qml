@@ -30,17 +30,24 @@ Rectangle {
     readonly property bool isEating: {
         if (pacmanX < -30 || pacmanX > root.width + 30) return false;
         
-        // High-Response Detection: Mouth leading edge
+        // High-Response Directional Detection
+        // Right: Mouth is at pacmanX + 20. We look slightly ahead (+2)
+        // Left: Mouth is at pacmanX. We look slightly ahead (-2)
         let mouthX = pacmanLeft ? (pacmanX - 2) : (pacmanX + 22);
         
         for (let i = 0; i < repeater.count; i++) {
             let dotItem = repeater.itemAt(i);
             if (dotItem) {
                 let dotCenter = dotItem.x + row.x + dotItem.width/2;
-                // Dynamic Threshold: Half the dot width + 2px buffer
-                // This ensures a 'blink' (mouth close) in the gaps between dots
-                let threshold = (dotItem.width / 2) + 2;
-                if (Math.abs(mouthX - dotCenter) < threshold) {
+                let dist = mouthX - dotCenter;
+                
+                // Direction-Aware Thresholding
+                // We only care about dots we are REACHING, not leaving.
+                // If moving Right: dist should be negative (mouth is before center)
+                // If moving Left: dist should be positive (mouth is after center)
+                let isApproaching = pacmanLeft ? (dist > 0 && dist < 12) : (dist < 0 && dist > -12);
+                
+                if (isApproaching) {
                     return dotItem.isActive || dotItem.isOccupied;
                 }
             }
@@ -102,6 +109,9 @@ Rectangle {
                     id: dot
                     readonly property int index_one: index + 1
                     readonly property bool isActive: root.activeWorkspace == index_one
+                    
+                    // Dimming Logic: Check if Pacman's CENTER is over the dot
+                    readonly property bool isEaten: Math.abs(root.pacmanX + 10 - (x + row.x + width/2)) < 15
                     
                     // Reactive property to check if workspace is occupied
                     readonly property bool isOccupied: {
