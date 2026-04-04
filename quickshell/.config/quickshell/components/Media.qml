@@ -24,12 +24,13 @@ Rectangle {
         return art;
     }
 
-    implicitWidth: showPlayingUI ? (mouseArea.containsMouse ? 280 : 220) : 100
+    implicitWidth: showPlayingUI ? (mouseArea.containsMouse ? 280 : 220) : 0
     implicitHeight: 32
     radius: Theme.radius
     color: showPlayingUI ? Theme.sapphire : Theme.base
     border.color: isPlaying ? Qt.darker(Theme.sapphire, 1.2) : Theme.borderColor
-    border.width: 1
+    border.width: showPlayingUI ? 1 : 0
+    visible: showPlayingUI || width > 0
 
     Behavior on implicitWidth { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
     Behavior on color { ColorAnimation { duration: 300 } }
@@ -38,6 +39,7 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
+        enabled: showPlayingUI
         onClicked: (mouse) => { if (mouse.button === Qt.LeftButton) player?.togglePlaying(); }
     }
 
@@ -47,10 +49,13 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width - 24
         spacing: 12
+        visible: showPlayingUI
 
         // --- VINYL STACK ---
         Item {
             width: 26; height: 26
+            opacity: hasMedia ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 300 } }
             
             Image {
                 id: albumArtSource
@@ -143,13 +148,6 @@ Rectangle {
             Text { text: "󰒮"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; color: Qt.rgba(0,0,0,0.5); MouseArea { anchors.fill: parent; onClicked: player?.previous() } }
             Text { text: isPlaying ? "󰏤" : "󰐊"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 16; color: Theme.base; MouseArea { anchors.fill: parent; onClicked: player?.togglePlaying() } }
             Text { text: "󰒭"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; color: Qt.rgba(0,0,0,0.5); MouseArea { anchors.fill: parent; onClicked: player?.next() } }
-        }
-        
-        RowLayout {
-            visible: !showPlayingUI
-            spacing: 8
-            Text { text: "󰝚"; font.family: "JetBrainsMono Nerd Font"; font.pixelSize: 14; color: Theme.subtext0 }
-            Text { text: "No Media"; font.family: Theme.fontName; font.pixelSize: 11; color: Theme.subtext0 }
         }
     }
 }
