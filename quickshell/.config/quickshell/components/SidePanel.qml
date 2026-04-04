@@ -441,12 +441,13 @@ PanelWindow {
                         implicitWidth: 55; implicitHeight: 55
                         radius: 16
                         icon: root.micMuted ? "󰍭" : "󰍬"
-                        active: !root.micMuted
+                        active: root.micMuted // Highlight red when MUTED as a warning
                         activeColor: Theme.red
                         inactiveIconColor: Theme.red
                         onClicked: {
                             Quickshell.execDetached(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"]);
-                            root.micMuted = !root.micMuted;
+                            root.micMuted = !root.micMuted; // Instant visual feedback
+                            Qt.callLater(() => { fastUpdater.running = true; });
                         }
                     }
 
