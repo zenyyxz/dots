@@ -68,10 +68,14 @@ Rectangle {
                 id: vinylRotationWrapper
                 anchors.fill: parent
                 
-                RotationAnimation on rotation {
+                RotationAnimation {
+                    target: vinylRotationWrapper
+                    property: "rotation"
                     from: 0; to: 360; duration: 12000;
-                    running: root.isPlaying; loops: Animation.Infinite
+                    loops: Animation.Infinite
                     direction: RotationAnimation.Clockwise
+                    running: root.hasMedia
+                    paused: !root.isPlaying
                 }
 
                 Canvas {
