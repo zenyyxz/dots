@@ -82,11 +82,15 @@ PanelWindow {
         border.width: 1
         clip: true
         
+        // --- Squeeze Animation Properties ---
+        transformOrigin: Item.Top
+        scale: root.isOpen ? 1.0 : 0.0
         opacity: root.isOpen ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 300 } }
-        
-        y: root.isOpen ? 0 : -20
-        Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
+        y: root.isOpen ? 0 : -100
+
+        Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
+        Behavior on y { NumberAnimation { duration: 500; easing.type: Easing.OutQuint } }
+        Behavior on opacity { NumberAnimation { duration: 400 } }
 
         RowLayout {
             anchors.fill: parent
