@@ -24,16 +24,106 @@ public:
 
     void init() {
         const char* sql = 
-            "CREATE TABLE IF NOT EXISTS subjects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE);"
+            "CREATE TABLE IF NOT EXISTS subjects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, rating INTEGER DEFAULT 0);"
             "CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY AUTOINCREMENT, subject_id INTEGER, name TEXT, display_order INTEGER, FOREIGN KEY(subject_id) REFERENCES subjects(id));"
             "CREATE TABLE IF NOT EXISTS progress (topic_id INTEGER PRIMARY KEY, c1 BOOLEAN DEFAULT 0, c2 BOOLEAN DEFAULT 0, c3 BOOLEAN DEFAULT 0, c4 BOOLEAN DEFAULT 0, FOREIGN KEY(topic_id) REFERENCES topics(id));"
-            "CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, completed BOOLEAN DEFAULT 0, display_order INTEGER);";
+            "CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, completed BOOLEAN DEFAULT 0, display_order INTEGER);"
+            "CREATE TABLE IF NOT EXISTS study_history (date TEXT PRIMARY KEY, seconds INTEGER DEFAULT 0);";
         
         char* errMsg = nullptr;
         if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
             std::string err = errMsg;
             sqlite3_free(errMsg);
             throw std::runtime_error("SQL error during init: " + err);
+        }
+        // Migration for existing databases
+        sqlite3_exec(db, "ALTER TABLE subjects ADD COLUMN rating INTEGER DEFAULT 0;", nullptr, nullptr, nullptr);
+    }
+
+    json getDashboardStats() {
+        json result;
+        
+        // 1. Subject Stats
+        const char* subSql = 
+            "SELECT s.id, s.name, s.rating, "
+            "  (SELECT COUNT(*) FROM topics t JOIN progress p ON t.id = p.topic_id WHERE t.subject_id = s.id AND p.c1 = 1) as completed, "
+            "  (SELECT COUNT(*) FROM topics t WHERE t.subject_id = s.id) as total "
+            "FROM subjects s;";
+        
+        sqlite3_stmt* stmt;
+        result["subjects"] = json::array();
+        if (sqlite3_prepare_v2(db, subSql, -1, &stmt, nullptr) == SQLITE_OK) {
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                json sub;
+                sub["id"] = sqlite3_column_int(stmt, 0);
+                sub["name"] = (const char*)sqlite3_column_text(stmt, 1);
+                sub["rating"] = sqlite3_column_int(stmt, 2);
+                sub["completed"] = sqlite3_column_int(stmt, 3);
+                sub["total"] = sqlite3_column_int(stmt, 4);
+                result["subjects"].push_back(sub);
+            }
+            sqlite3_finalize(stmt);
+        }
+
+        // 2. 7-Day History
+        result["history"] = json::array();
+        for (int i = 6; i >= 0; --i) {
+            const char* histSql = "SELECT seconds FROM study_history WHERE date = date('now', 'localtime', ?);";
+            if (sqlite3_prepare_v2(db, histSql, -1, &stmt, nullptr) == SQLITE_OK) {
+                std::string offset = "-" + std::to_string(i) + " days";
+                sqlite3_bind_text(stmt, 1, offset.c_str(), -1, SQLITE_STATIC);
+                
+                int seconds = 0;
+                if (sqlite3_step(stmt) == SQLITE_ROW) {
+                    seconds = sqlite3_column_int(stmt, 0);
+                }
+                
+                json day;
+                // Get day name for UI
+                const char* dayNameSql = "SELECT strftime('%w', 'now', 'localtime', ?);";
+                sqlite3_stmt* nameStmt;
+                std::string dayName = "?";
+                if (sqlite3_prepare_v2(db, dayNameSql, -1, &nameStmt, nullptr) == SQLITE_OK) {
+                    sqlite3_bind_text(nameStmt, 1, offset.c_str(), -1, SQLITE_STATIC);
+                    if (sqlite3_step(nameStmt) == SQLITE_ROW) {
+                        int dayIdx = sqlite3_column_int(nameStmt, 0);
+                        const char* days[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+                        dayName = days[dayIdx];
+                    }
+                    sqlite3_finalize(nameStmt);
+                }
+
+                day["day"] = dayName;
+                day["seconds"] = seconds;
+                result["history"].push_back(day);
+                sqlite3_finalize(stmt);
+            }
+        }
+        
+        return result;
+    }
+
+    void updateRating(int subjectId, int rating) {
+        const char* sql = "UPDATE subjects SET rating = ? WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, rating);
+            sqlite3_bind_int(stmt, 2, subjectId);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    void logStudyTime(int seconds) {
+        const char* checkSql = "INSERT OR IGNORE INTO study_history (date, seconds) VALUES (date('now', 'localtime'), 0);";
+        sqlite3_exec(db, checkSql, nullptr, nullptr, nullptr);
+
+        const char* sql = "UPDATE study_history SET seconds = seconds + ? WHERE date = date('now', 'localtime');";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, seconds);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
         }
     }
 
@@ -294,6 +384,14 @@ int main(int argc, char* argv[]) {
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         } else if (cmd == "delete_todo" && argc == 3) {
             sdb.deleteTodo(std::stoi(argv[2]));
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "get_dashboard_stats" && argc == 2) {
+            std::cout << sdb.getDashboardStats().dump() << std::endl;
+        } else if (cmd == "update_rating" && argc == 4) {
+            sdb.updateRating(std::stoi(argv[2]), std::stoi(argv[3]));
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "log_study_time" && argc == 3) {
+            sdb.logStudyTime(std::stoi(argv[2]));
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         }
     } catch (const std::exception& e) {

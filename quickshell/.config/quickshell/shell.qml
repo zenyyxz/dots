@@ -149,7 +149,34 @@ ShellRoot {
     ScreenSnip { id: screenSnip; visible: false }
     ChatWidget { id: chatWidget; isOpen: false }
     VpnConfig { id: vpnConfig; isOpen: false }
-    TodoList { id: todoList; visible: false } // Hidden by default if you want, but I'll put it in a background panel
+    TodoList { id: todoList; visible: false }
+
+    // --- Study Dashboard (Static Bottom-Right Panel) ---
+    PanelWindow {
+        id: studyDashboardPanel
+        anchors {
+            bottom: true
+            right: true
+        }
+        
+        visible: root.studyVisible
+        WlrLayershell.layer: WlrLayer.Bottom // Background layer
+        WlrLayershell.namespace: "study-dashboard-static"
+        WlrLayershell.keyboardFocus: WlrLayershell.None // NEVER steal focus
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        
+        width: 1000
+        height: 500
+        margins {
+            bottom: 10
+            right: 10
+        }
+
+        StudyDashboard {
+            anchors.fill: parent
+        }
+    }
 
     // --- Todo List Panel (Top Right) ---
     PanelWindow {
@@ -367,7 +394,7 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
-        implicitWidth: 450
+        implicitWidth: 530
         margins {
             top: 56 
             left: 470 // mathsTracker (450) + margin (10) + gap (10)

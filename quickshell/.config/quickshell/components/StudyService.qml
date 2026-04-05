@@ -271,4 +271,71 @@ function deleteTodo(todoId, callback) {
     obj.finishedCallback = callback;
     obj.running = true;
 }
+
+// --- Dashboard & History ---
+
+function getDashboardStats(callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "get_dashboard_stats"]
+            stdout: SplitParser {
+                property string output: ""
+                onRead: msg => output += msg
+            }
+            onExited: status => {
+                if (status === 0) {
+                    try {
+                        const data = JSON.parse(stdout.output);
+                        if (finishedCallback) finishedCallback(data);
+                    } catch (e) { console.error("Stats parse error:", e); }
+                }
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
 }
+
+function updateRating(subjectId, rating, callback) {
+    const qml = `
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "update_rating", "${subjectId}", "${rating}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function logStudyTime(seconds, callback) {
+    const qml = `
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "log_study_time", "${seconds}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+}
+
