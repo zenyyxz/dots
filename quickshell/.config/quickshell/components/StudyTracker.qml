@@ -31,18 +31,29 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 15
 
-            TextInput {
-                text: trackerRoot.subjectName
-                color: Theme.mauve
-                font.family: Theme.fontName
-                font.pixelSize: 22 
-                font.bold: true
+            Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                enabled: trackerRoot.authenticated
-                selectByMouse: true
-                onTextEdited: trackerRoot.subjectName = text
+                height: 32
+                color: "transparent"
+                radius: 4
+                border.color: subjectInput.activeFocus ? "white" : "transparent"
+                border.width: 1
+
+                TextInput {
+                    id: subjectInput
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    text: trackerRoot.subjectName
+                    color: Theme.mauve
+                    font.family: Theme.fontName
+                    font.pixelSize: 22 
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                    enabled: trackerRoot.authenticated
+                    selectByMouse: true
+                    onTextEdited: trackerRoot.subjectName = text
+                }
             }
 
             Button {
@@ -78,23 +89,34 @@ Rectangle {
             spacing: 10
             Layout.fillWidth: true
             
-            Text { text: "Lesson"; color: Theme.lavender; font.family: Theme.fontName; font.pixelSize: 13; Layout.preferredWidth: 150 }
+            Text { text: "Lesson"; color: Theme.lavender; font.family: Theme.fontName; font.pixelSize: 13; Layout.preferredWidth: 180 }
             
             Repeater {
                 model: trackerRoot.columnTitles.length
-                delegate: TextInput {
-                    text: trackerRoot.columnTitles[index]
-                    color: Theme.lavender
-                    font.family: Theme.fontName
-                    font.pixelSize: 13
+                delegate: Rectangle {
                     Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                    enabled: trackerRoot.authenticated
-                    selectByMouse: true
-                    onTextEdited: {
-                        let titles = trackerRoot.columnTitles;
-                        titles[index] = text;
-                        trackerRoot.columnTitles = titles;
+                    height: 24
+                    color: "transparent"
+                    radius: 4
+                    border.color: titleInput.activeFocus ? "white" : "transparent"
+                    border.width: 1
+
+                    TextInput {
+                        id: titleInput
+                        anchors.fill: parent
+                        anchors.margins: 2
+                        text: trackerRoot.columnTitles[index]
+                        color: Theme.lavender
+                        font.family: Theme.fontName
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        enabled: trackerRoot.authenticated
+                        selectByMouse: true
+                        onTextEdited: {
+                            let titles = trackerRoot.columnTitles;
+                            titles[index] = text;
+                            trackerRoot.columnTitles = titles;
+                        }
                     }
                 }
             }
@@ -114,18 +136,29 @@ Rectangle {
                 spacing: 10
                 Layout.fillWidth: true
                 
-                TextInput {
-                    text: trackerRoot.topics[index]
-                    color: Theme.text
-                    font.family: Theme.fontName
-                    font.pixelSize: 13
-                    Layout.preferredWidth: 150
-                    enabled: trackerRoot.authenticated
-                    selectByMouse: true
-                    onTextEdited: {
-                        let t = trackerRoot.topics;
-                        t[index] = text;
-                        trackerRoot.topics = t;
+                Rectangle {
+                    Layout.preferredWidth: 180
+                    height: 24
+                    color: "transparent"
+                    radius: 4
+                    border.color: topicInput.activeFocus ? "white" : "transparent"
+                    border.width: 1
+
+                    TextInput {
+                        id: topicInput
+                        anchors.fill: parent
+                        anchors.margins: 2
+                        text: trackerRoot.topics[index]
+                        color: Theme.text
+                        font.family: Theme.fontName
+                        font.pixelSize: 13
+                        enabled: trackerRoot.authenticated
+                        selectByMouse: true
+                        onTextEdited: {
+                            let t = trackerRoot.topics;
+                            t[index] = text;
+                            trackerRoot.topics = t;
+                        }
                     }
                 }
 
