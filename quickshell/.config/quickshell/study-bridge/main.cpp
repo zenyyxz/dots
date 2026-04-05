@@ -77,7 +77,6 @@ public:
     }
 
     void updateProgress(int topicId, int colIdx, bool val) {
-        // Ensure row exists
         const char* insertSql = "INSERT OR IGNORE INTO progress (topic_id) VALUES (?);";
         sqlite3_stmt* stmt;
         sqlite3_prepare_v2(db, insertSql, -1, &stmt, nullptr);
@@ -96,7 +95,6 @@ public:
     }
 
     void addTopic(const std::string& subjectName, const std::string& topicName) {
-        // Get or create subject
         const char* subSql = "INSERT OR IGNORE INTO subjects (name) VALUES (?);";
         sqlite3_stmt* stmt;
         sqlite3_prepare_v2(db, subSql, -1, &stmt, nullptr);
@@ -111,7 +109,6 @@ public:
         int subjectId = sqlite3_column_int(stmt, 0);
         sqlite3_finalize(stmt);
 
-        // Get max order
         const char* orderSql = "SELECT COUNT(*) FROM topics WHERE subject_id = ?;";
         sqlite3_prepare_v2(db, orderSql, -1, &stmt, nullptr);
         sqlite3_bind_int(stmt, 1, subjectId);
@@ -119,12 +116,21 @@ public:
         int order = sqlite3_column_int(stmt, 0);
         sqlite3_finalize(stmt);
 
-        // Insert topic
         const char* insTopicSql = "INSERT INTO topics (subject_id, name, display_order) VALUES (?, ?, ?);";
         sqlite3_prepare_v2(db, insTopicSql, -1, &stmt, nullptr);
         sqlite3_bind_int(stmt, 1, subjectId);
         sqlite3_bind_text(stmt, 2, topicName.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_int(stmt, 3, order);
+        sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+    }
+
+    void renameTopic(int topicId, const std::string& newName) {
+        const char* sql = "UPDATE topics SET name = ? WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+        sqlite3_bind_text(stmt, 1, newName.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 2, topicId);
         sqlite3_step(stmt);
         sqlite3_finalize(stmt);
     }
@@ -149,6 +155,9 @@ int main(int argc, char* argv[]) {
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         } else if (cmd == "add" && argc == 4) {
             sdb.addTopic(argv[2], argv[3]);
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "rename" && argc == 4) {
+            sdb.renameTopic(std::stoi(argv[2]), argv[3]);
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         }
     } catch (const std::exception& e) {

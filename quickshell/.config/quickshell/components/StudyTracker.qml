@@ -14,14 +14,11 @@ Rectangle {
     // Service Instance
     StudyService { id: service }
 
-    ListModel { id: topicsModel }
+    property var topicsData: []
 
     function refresh() {
         service.getSubjectData(subjectName, (data) => {
-            topicsModel.clear();
-            for (let item of data) {
-                topicsModel.append(item);
-            }
+            topicsData = data;
         });
     }
 
@@ -118,9 +115,16 @@ Rectangle {
 
                 // Data Rows
                 Repeater {
-                    model: topicsModel
+                    model: trackerRoot.topicsData
                     delegate: Row {
+                        id: rowDelegate
                         spacing: -1
+                        
+                        readonly property var itemData: modelData
+                        readonly property int topicId: itemData.id
+                        readonly property string topicName: itemData.name
+                        readonly property var checkedArray: itemData.checked
+
                         Rectangle {
                             width: trackerRoot.colIndexWidth; height: trackerRoot.cellHeight
                             color: "transparent"; border.color: Theme.surface1; border.width: 1
@@ -129,9 +133,27 @@ Rectangle {
                         Rectangle {
                             width: trackerRoot.colLessonWidth; height: trackerRoot.cellHeight
                             color: "transparent"; border.color: Theme.surface1; border.width: 1
-                            Text { 
+                            
+                            TextInput { 
                                 anchors.left: parent.left; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter
-                                text: model.name; color: Theme.text; font.family: Theme.fontName; font.pixelSize: 13 
+                                anchors.right: parent.right; anchors.rightMargin: 10
+                                text: rowDelegate.topicName
+                                color: Theme.text; font.family: Theme.fontName; font.pixelSize: 13 
+                                enabled: trackerRoot.authenticated
+                                selectByMouse: true
+                                clip: true
+                                
+                                onEditingFinished: {
+                                    if (text !== rowDelegate.topicName) {
+                                        service.renameTopic(rowDelegate.topicId, text);
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.bottom: parent.bottom; anchors.bottomMargin: -2
+                                    width: parent.width; height: 1
+                                    color: "white"; visible: parent.activeFocus
+                                }
                             }
                         }
                         Repeater {
@@ -141,11 +163,56 @@ Rectangle {
                                 color: "transparent"; border.color: Theme.surface1; border.width: 1
                                 StudyCheckBox { 
                                     anchors.centerIn: parent
-                                    topicId: model.id
+                                    topicId: rowDelegate.topicId
                                     columnIdx: index
                                     service: service
-                                    checked: model.checked.get(index)
+                                    checked: rowDelegate.checkedArray ? rowDelegate.checkedArray[index] : false
                                     enabled: trackerRoot.authenticated
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- Add New Row ---
+                Row {
+                    spacing: -1
+                    Rectangle {
+                        width: trackerRoot.colIndexWidth + trackerRoot.colLessonWidth + (trackerRoot.colCheckWidth * 4) - 3
+                        height: trackerRoot.cellHeight
+                        color: addMouseArea.containsMouse ? Theme.surface0 : "transparent"
+                        border.color: Theme.surface1; border.width: 1
+                        opacity: trackerRoot.authenticated ? 1.0 : 0.5
+                        
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        
+                        RowLayout {
+                            anchors.fill: parent; anchors.leftMargin: 10; spacing: 8
+                            Text { 
+                                text: trackerRoot.authenticated ? "＋" : "󰌾"
+                                color: Theme.subtext0
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 14 
+                            }
+                            Text { 
+                                text: trackerRoot.authenticated ? "New Lesson" : "Unlock to Add Lesson"
+                                color: Theme.subtext0
+                                font.family: Theme.fontName
+                                font.pixelSize: 13 
+                            }
+                        }
+                        
+                        MouseArea {
+                            id: addMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: trackerRoot.authenticated ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: {
+                                if (trackerRoot.authenticated) {
+                                    let newName = "Topic " + (trackerRoot.topicsData.length + 1);
+                                    service.addTopic(trackerRoot.subjectName, newName, () => {
+                                        trackerRoot.refresh();
+                                    });
                                 }
                             }
                         }
@@ -154,7 +221,7 @@ Rectangle {
 
                 // Empty State / Init
                 Rectangle {
-                    visible: topicsModel.count === 0
+                    visible: trackerRoot.topicsData.length === 0
                     width: trackerRoot.colIndexWidth + trackerRoot.colLessonWidth + (trackerRoot.colCheckWidth * 4) - 3
                     height: 100
                     color: "transparent"

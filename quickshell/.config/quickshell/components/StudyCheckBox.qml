@@ -9,7 +9,7 @@ CheckBox {
     property int columnIdx: -1
     property var service: null
 
-    onCheckedChanged: {
+    onToggled: {
         if (service && topicId !== -1) {
             service.updateProgress(topicId, columnIdx, checked);
         }
