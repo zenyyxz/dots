@@ -132,9 +132,13 @@ Rectangle {
                         }
                         Rectangle {
                             width: trackerRoot.colLessonWidth; height: trackerRoot.cellHeight
-                            color: "transparent"; border.color: Theme.surface1; border.width: 1
+                            color: topicInput.activeFocus ? Qt.rgba(Theme.mauve.r, Theme.mauve.g, Theme.mauve.b, 0.1) : "transparent"
+                            border.color: topicInput.activeFocus ? Theme.mauve : Theme.surface1
+                            border.width: topicInput.activeFocus ? 2 : 1
+                            z: topicInput.activeFocus ? 1 : 0
                             
                             TextInput { 
+                                id: topicInput
                                 anchors.left: parent.left; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter
                                 anchors.right: parent.right; anchors.rightMargin: 10
                                 text: rowDelegate.topicName
@@ -148,20 +152,19 @@ Rectangle {
                                         service.renameTopic(rowDelegate.topicId, text);
                                     }
                                 }
-
-                                Rectangle {
-                                    anchors.bottom: parent.bottom; anchors.bottomMargin: -2
-                                    width: parent.width; height: 1
-                                    color: "white"; visible: parent.activeFocus
-                                }
                             }
                         }
                         Repeater {
                             model: 4
                             delegate: Rectangle {
                                 width: trackerRoot.colCheckWidth; height: trackerRoot.cellHeight
-                                color: "transparent"; border.color: Theme.surface1; border.width: 1
+                                color: check.activeFocus ? Qt.rgba(Theme.mauve.r, Theme.mauve.g, Theme.mauve.b, 0.1) : "transparent"
+                                border.color: check.activeFocus ? Theme.mauve : Theme.surface1
+                                border.width: check.activeFocus ? 2 : 1
+                                z: check.activeFocus ? 1 : 0
+
                                 StudyCheckBox { 
+                                    id: check
                                     anchors.centerIn: parent
                                     topicId: rowDelegate.topicId
                                     columnIdx: index
