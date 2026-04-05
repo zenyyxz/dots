@@ -57,16 +57,54 @@ Rectangle {
 
             // Sync/Refresh Button
             Button {
+                id: refreshButton
                 padding: 8
-                background: null
-                contentItem: Text { text: "󰑐"; font.family: "JetBrainsMono Nerd Font"; color: Theme.subtext0; font.pixelSize: 20 }
-                onClicked: trackerRoot.refresh()
+                background: Rectangle {
+                    radius: 6
+                    color: refreshButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                    border.color: refreshButton.pressed ? Theme.mauve : "transparent"
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+                
+                contentItem: Text { 
+                    text: "󰑐"
+                    font.family: "JetBrainsMono Nerd Font"
+                    color: refreshButton.hovered ? Theme.text : Theme.subtext0
+                    font.pixelSize: 20
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    
+                    rotation: 0
+                    RotationAnimation on rotation {
+                        id: rotateAnim
+                        from: 0; to: 360
+                        duration: 500
+                        running: false
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                
+                scale: pressed ? 0.9 : 1.0
+                Behavior on scale { NumberAnimation { duration: 100 } }
+                
+                onClicked: {
+                    rotateAnim.restart();
+                    trackerRoot.refresh();
+                }
             }
 
             Button {
                 id: authButton
                 padding: 8
-                background: null
+                background: Rectangle {
+                    radius: 6
+                    color: authButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                    border.color: authButton.pressed ? Theme.mauve : "transparent"
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+                
                 contentItem: Image {
                     source: trackerRoot.authenticated ? "../assets/unlock.svg" : "../assets/lock.svg"
                     sourceSize: Qt.size(20, 20)
@@ -75,7 +113,12 @@ Rectangle {
                     layer.effect: ColorOverlay {
                         color: trackerRoot.authenticated ? Theme.green : Theme.red
                     }
+                    opacity: authButton.hovered ? 1.0 : 0.8
                 }
+                
+                scale: pressed ? 0.9 : 1.0
+                Behavior on scale { NumberAnimation { duration: 100 } }
+                
                 onClicked: trackerRoot.authenticated = !trackerRoot.authenticated
             }
         }
