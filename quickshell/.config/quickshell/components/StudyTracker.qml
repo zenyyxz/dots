@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 import "../theme"
 
 Rectangle {
@@ -54,11 +55,17 @@ Rectangle {
                     border.width: 1
                     visible: authButton.hovered
                 }
-                contentItem: Text {
-                    text: trackerRoot.authenticated ? "󰌾" : "󰌿"
-                    color: trackerRoot.authenticated ? Theme.green : Theme.red
-                    font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 18
+                contentItem: Image {
+                    source: trackerRoot.authenticated ? "../assets/unlock.svg" : "../assets/lock.svg"
+                    sourceSize: Qt.size(20, 20)
+                    fillMode: Image.PreserveAspectFit
+                    antialiasing: true
+                    
+                    // Use a ShaderEffect to color the SVG to match the theme
+                    layer.enabled: true
+                    layer.effect: ColorOverlay {
+                        color: trackerRoot.authenticated ? Theme.green : Theme.red
+                    }
                 }
                 onClicked: trackerRoot.authenticated = !trackerRoot.authenticated
                 ToolTip.visible: hovered
