@@ -15,6 +15,8 @@ import "components"
 ShellRoot {
     id: root
 
+    property bool authenticated: false
+
     PanelWindow {
         id: panel
 
@@ -171,8 +173,8 @@ ShellRoot {
             top: true
             left: true
         }
-        width: 10
-        height: 10
+        implicitWidth: 10
+        implicitHeight: 10
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
@@ -192,8 +194,8 @@ ShellRoot {
             top: true
             right: true
         }
-        width: 10
-        height: 10
+        implicitWidth: 10
+        implicitHeight: 10
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
@@ -292,16 +294,22 @@ ShellRoot {
             spacing: 30
 
             StudyTracker {
+                authenticated: root.authenticated
+                onAuthenticatedChanged: root.authenticated = authenticated
                 subjectName: "Physics"
                 topics: ["Measurement", "Mechanics", "Oscillations", "Thermal Phys", "Gravitational Fields", "Electrostatic", "Magnetic Fields", "Current Elec", "Electronics", "Radiation"]
             }
 
             StudyTracker {
+                authenticated: root.authenticated
+                onAuthenticatedChanged: root.authenticated = authenticated
                 subjectName: "Chemistry"
                 topics: ["Atomic Struct", "Bonding", "Energetics", "Kinetics", "Equilibrium", "Acids & Bases", "Redox", "Inorganic", "Organic", "Industrial", "Polymer"]
             }
 
             StudyTracker {
+                authenticated: root.authenticated
+                onAuthenticatedChanged: root.authenticated = authenticated
                 subjectName: "Combined Maths"
                 topics: ["Pure: Algebra", "Pure: Trig", "Pure: Calculus", "Pure: Geometry", "Pure: Vectors", "Applied: Statics", "Applied: Dynamics", "Applied: Prob", "Applied: Stats", "Applied: Integration"]
             }
