@@ -14,7 +14,6 @@ QtObject {
                 property string subject: ""
                 property var finishedCallback: null
                 command: ["${bridgePath}", "get", subject]
-                running: true
                 stdout: SplitParser {
                     property string output: ""
                     onRead: msg => output += msg
@@ -35,6 +34,7 @@ QtObject {
         const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
         obj.subject = subjectName;
         obj.finishedCallback = callback;
+        obj.running = true; // Start only after properties are set
     }
 
     function updateProgress(topicId, colIdx, value) {
@@ -46,7 +46,6 @@ QtObject {
                 property string cIdx: ""
                 property string val: ""
                 command: ["${bridgePath}", "update", tId, cIdx, val]
-                running: true
                 onExited: status => this.destroy()
             }
         `;
@@ -54,6 +53,7 @@ QtObject {
         obj.tId = topicId.toString();
         obj.cIdx = colIdx.toString();
         obj.val = valStr;
+        obj.running = true;
     }
 
     function addTopic(subjectName, topicName, callback) {
@@ -64,7 +64,6 @@ QtObject {
                 property string topic: ""
                 property var finishedCallback: null
                 command: ["${bridgePath}", "add", subject, topic]
-                running: true
                 onExited: status => {
                     if (status === 0 && finishedCallback) finishedCallback();
                     this.destroy();
@@ -75,6 +74,7 @@ QtObject {
         obj.subject = subjectName;
         obj.topic = topicName;
         obj.finishedCallback = callback;
+        obj.running = true;
     }
 
     function renameTopic(topicId, newName) {
@@ -84,12 +84,12 @@ QtObject {
                 property string tId: ""
                 property string name: ""
                 command: ["${bridgePath}", "rename", tId, name]
-                running: true
                 onExited: status => this.destroy()
             }
         `;
         const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
         obj.tId = topicId.toString();
         obj.name = newName;
+        obj.running = true;
     }
 }
