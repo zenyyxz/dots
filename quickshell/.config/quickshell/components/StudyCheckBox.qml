@@ -6,16 +6,16 @@ CheckBox {
     id: control
     
     indicator: Rectangle {
-        implicitWidth: 18
-        implicitHeight: 18
-        radius: 4
+        implicitWidth: 14 // Smaller
+        implicitHeight: 14 // Smaller
+        radius: 3
         color: control.checked ? Theme.mauve : "transparent"
         border.color: control.checked ? Theme.mauve : Theme.surface1
         border.width: Theme.borderWidth
 
         Rectangle {
-            width: 10
-            height: 10
+            width: 8
+            height: 8
             anchors.centerIn: parent
             radius: 2
             color: Theme.crust

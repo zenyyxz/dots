@@ -269,11 +269,42 @@ ShellRoot {
         }
     }
 
+    // Dedicated Panel for Combined Maths (Top Left)
     PanelWindow {
-        id: studyTrackerLayer
+        id: mathsTracker
+        anchors {
+            top: true
+            left: true
+            bottom: true
+        }
+        
+        WlrLayershell.layer: WlrLayer.Bottom
+        WlrLayershell.namespace: "study-tracker"
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        
+        implicitWidth: 450
+        margins {
+            top: 56 
+            left: 10
+            bottom: 8
+        }
+
+        StudyTracker {
+            anchors.fill: parent
+            authenticated: root.authenticated
+            onAuthenticatedChanged: root.authenticated = authenticated
+            subjectName: "Combined Maths"
+            maxHeight: 0
+            topics: Array.from({length: 53}, (_, i) => "Topic " + (i + 1))
+        }
+    }
+
+    // Panel for Physics and Chemistry (Bottom Right)
+    PanelWindow {
+        id: scienceTrackers
         anchors {
             bottom: true
-            left: true
             right: true
         }
         
@@ -282,15 +313,16 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
-        implicitHeight: 600
+        implicitHeight: 500
+        implicitWidth: 1000
         margins {
-            bottom: 60
-            left: 20
+            bottom: 40
             right: 20
         }
 
         RowLayout {
-            anchors.centerIn: parent
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
             spacing: 30
 
             StudyTracker {
@@ -305,13 +337,6 @@ ShellRoot {
                 onAuthenticatedChanged: root.authenticated = authenticated
                 subjectName: "Chemistry"
                 topics: ["Atomic Struct", "Bonding", "Energetics", "Kinetics", "Equilibrium", "Acids & Bases", "Redox", "Inorganic", "Organic", "Industrial", "Polymer"]
-            }
-
-            StudyTracker {
-                authenticated: root.authenticated
-                onAuthenticatedChanged: root.authenticated = authenticated
-                subjectName: "Combined Maths"
-                topics: ["Pure: Algebra", "Pure: Trig", "Pure: Calculus", "Pure: Geometry", "Pure: Vectors", "Applied: Statics", "Applied: Dynamics", "Applied: Prob", "Applied: Stats", "Applied: Integration"]
             }
         }
     }
