@@ -89,6 +89,7 @@ Rectangle {
             spacing: 10
             Layout.fillWidth: true
             
+            Text { text: "#"; color: Theme.lavender; font.family: Theme.fontName; font.pixelSize: 13; Layout.preferredWidth: 25 }
             Text { text: "Lesson"; color: Theme.lavender; font.family: Theme.fontName; font.pixelSize: 13; Layout.preferredWidth: 180 }
             
             Repeater {
@@ -136,6 +137,15 @@ Rectangle {
                 spacing: 10
                 Layout.fillWidth: true
                 
+                Text {
+                    text: (index + 1).toString()
+                    color: Theme.subtext0
+                    font.family: Theme.fontName
+                    font.pixelSize: 13
+                    Layout.preferredWidth: 25
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
                 Rectangle {
                     Layout.preferredWidth: 180
                     height: 24
