@@ -11,8 +11,9 @@ QtObject {
         const qml = `
             import Quickshell.Io
             Process {
+                property string subject: ""
                 property var finishedCallback: null
-                command: ["${bridgePath}", "get", "${subjectName}"]
+                command: ["${bridgePath}", "get", subject]
                 running: true
                 stdout: SplitParser {
                     property string output: ""
@@ -32,27 +33,37 @@ QtObject {
             }
         `;
         const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+        obj.subject = subjectName;
         obj.finishedCallback = callback;
     }
 
     function updateProgress(topicId, colIdx, value) {
+        const valStr = value ? "true" : "false";
         const qml = `
             import Quickshell.Io
             Process {
-                command: ["${bridgePath}", "update", "${topicId}", "${colIdx}", "${value}"]
+                property string tId: ""
+                property string cIdx: ""
+                property string val: ""
+                command: ["${bridgePath}", "update", tId, cIdx, val]
                 running: true
                 onExited: status => this.destroy()
             }
         `;
-        Qt.createQmlObject(qml, service, "dynamicProcess");
+        const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+        obj.tId = topicId.toString();
+        obj.cIdx = colIdx.toString();
+        obj.val = valStr;
     }
 
     function addTopic(subjectName, topicName, callback) {
         const qml = `
             import Quickshell.Io
             Process {
+                property string subject: ""
+                property string topic: ""
                 property var finishedCallback: null
-                command: ["${bridgePath}", "add", "${subjectName}", "${topicName}"]
+                command: ["${bridgePath}", "add", subject, topic]
                 running: true
                 onExited: status => {
                     if (status === 0 && finishedCallback) finishedCallback();
@@ -61,6 +72,8 @@ QtObject {
             }
         `;
         const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+        obj.subject = subjectName;
+        obj.topic = topicName;
         obj.finishedCallback = callback;
     }
 
@@ -68,11 +81,15 @@ QtObject {
         const qml = `
             import Quickshell.Io
             Process {
-                command: ["${bridgePath}", "rename", "${topicId}", "${newName}"]
+                property string tId: ""
+                property string name: ""
+                command: ["${bridgePath}", "rename", tId, name]
                 running: true
                 onExited: status => this.destroy()
             }
         `;
-        Qt.createQmlObject(qml, service, "dynamicProcess");
+        const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+        obj.tId = topicId.toString();
+        obj.name = newName;
     }
 }
