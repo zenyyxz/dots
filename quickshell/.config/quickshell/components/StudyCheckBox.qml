@@ -52,22 +52,31 @@ Item {
     Rectangle {
         id: indicator
         anchors.centerIn: parent
-        width: 16
-        height: 16
-        radius: 3
+        width: 18
+        height: 18
+        radius: 4
         color: control.checked ? control.checkedColor : "transparent"
         border.color: control.checked ? control.checkedColor : Theme.surface1
-        border.width: Theme.borderWidth
+        border.width: 1.5
         
-        opacity: control.updating ? 0.5 : 1.0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        opacity: control.updating ? 0.6 : 1.0
+        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on border.color { ColorAnimation { duration: 200 } }
 
-        // Optional: Add a checkmark icon or dot when checked
-        Rectangle {
+        Text {
             anchors.centerIn: parent
-            width: 8; height: 8; radius: 2
+            text: ""
+            font.family: "JetBrainsMono Nerd Font"
+            font.pixelSize: 10
             color: Theme.base
             visible: control.checked && !control.updating
+        }
+
+        // Loading spinner when updating
+        RotationAnimation on rotation {
+            from: 0; to: 360; duration: 1000
+            running: control.updating
+            loops: Animation.Infinite
         }
     }
 }
