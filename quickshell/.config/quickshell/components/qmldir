@@ -33,3 +33,5 @@ VpnTray 1.0 VpnTray.qml
 StudyService 1.0 StudyService.qml
 StudyTracker 1.0 StudyTracker.qml
 StudyCheckBox 1.0 StudyCheckBox.qml
+TodoList 1.0 TodoList.qml
+TodoCheckBox 1.0 TodoCheckBox.qml

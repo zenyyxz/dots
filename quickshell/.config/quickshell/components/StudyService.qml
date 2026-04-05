@@ -135,25 +135,140 @@ QtObject {
         const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
         obj.running = true;
     }
-
-    function deleteTopic(topicId, callback) {
-        const qml = `
-            import Quickshell.Io
-            Process {
-                property var finishedCallback: null
-                running: false
-                command: ["${bridgePath}", "delete", "${topicId}"]
-                stderr: SplitParser {
-                    onRead: msg => console.error("Bridge Error (deleteTopic):", msg.trim())
-                }
-                onExited: status => {
-                    if (status === 0 && finishedCallback) finishedCallback();
-                    this.destroy();
-                }
+function deleteTopic(topicId, callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "delete", "${topicId}"]
+            stderr: SplitParser {
+                onRead: msg => logToFile("[Bridge STDERR (deleteTopic)]: " + msg.trim())
             }
-        `;
-        const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
-        obj.finishedCallback = callback;
-        obj.running = true;
-    }
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+// --- Todo Management ---
+
+function getTodos(callback) {
+    logToFile("[StudyService] Fetching Todos");
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "get_todos"]
+
+            function logToFile(msg) {
+                const timestamp = new Date().toISOString();
+                const fullMsg = \`[\${timestamp}] \${msg}\`;
+                Quickshell.execDetached(["bash", "-c", \`echo '\${fullMsg}' >> /tmp/quickshell_study.log\`]);
+            }
+
+            stdout: SplitParser {
+                property string output: ""
+                onRead: msg => output += msg
+            }
+            stderr: SplitParser {
+                onRead: msg => logToFile("[Bridge STDERR (get_todos)]: " + msg.trim())
+            }
+            onExited: status => {
+                if (status === 0) {
+                    try {
+                        const data = JSON.parse(stdout.output);
+                        if (finishedCallback) finishedCallback(data);
+                    } catch (e) {
+                        logToFile("Todo Parse error: " + e);
+                    }
+                }
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function addTodo(task, callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "add_todo", "${task}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function updateTodo(todoId, completed, callback) {
+    const valStr = completed ? "true" : "false";
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "update_todo", "${todoId}", "${valStr}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function renameTodo(todoId, newTask) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            running: false
+            command: ["${bridgePath}", "rename_todo", "${todoId}", "${newTask}"]
+            onExited: status => this.destroy()
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.running = true;
+}
+
+function deleteTodo(todoId, callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "delete_todo", "${todoId}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
 }

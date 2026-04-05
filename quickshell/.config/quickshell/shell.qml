@@ -122,6 +122,32 @@ ShellRoot {
     ScreenSnip { id: screenSnip; visible: false }
     ChatWidget { id: chatWidget; isOpen: false }
     VpnConfig { id: vpnConfig; isOpen: false }
+    TodoList { id: todoList; visible: false } // Hidden by default if you want, but I'll put it in a background panel
+
+    // --- Todo List Panel (Top Right) ---
+    PanelWindow {
+        id: todoPanel
+        anchors {
+            top: true
+            right: true
+        }
+        
+        WlrLayershell.layer: WlrLayer.Bottom
+        WlrLayershell.namespace: "study-tracker-todo"
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        
+        implicitWidth: 390
+        implicitHeight: 500 // Half-screen height
+        margins {
+            top: 56 
+            right: 10
+        }
+
+        TodoList {
+            anchors.fill: parent
+        }
+    }
 
     // Global Shortcuts
     GlobalShortcut {

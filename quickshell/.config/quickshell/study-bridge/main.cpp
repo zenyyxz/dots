@@ -26,13 +26,86 @@ public:
         const char* sql = 
             "CREATE TABLE IF NOT EXISTS subjects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE);"
             "CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY AUTOINCREMENT, subject_id INTEGER, name TEXT, display_order INTEGER, FOREIGN KEY(subject_id) REFERENCES subjects(id));"
-            "CREATE TABLE IF NOT EXISTS progress (topic_id INTEGER PRIMARY KEY, c1 BOOLEAN DEFAULT 0, c2 BOOLEAN DEFAULT 0, c3 BOOLEAN DEFAULT 0, c4 BOOLEAN DEFAULT 0, FOREIGN KEY(topic_id) REFERENCES topics(id));";
+            "CREATE TABLE IF NOT EXISTS progress (topic_id INTEGER PRIMARY KEY, c1 BOOLEAN DEFAULT 0, c2 BOOLEAN DEFAULT 0, c3 BOOLEAN DEFAULT 0, c4 BOOLEAN DEFAULT 0, FOREIGN KEY(topic_id) REFERENCES topics(id));"
+            "CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, completed BOOLEAN DEFAULT 0, display_order INTEGER);";
         
         char* errMsg = nullptr;
         if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
             std::string err = errMsg;
             sqlite3_free(errMsg);
             throw std::runtime_error("SQL error during init: " + err);
+        }
+    }
+
+    json getTodos() {
+        const char* sql = "SELECT id, task, completed FROM todos ORDER BY display_order;";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+            std::cerr << "Prepare error: " << sqlite3_errmsg(db) << std::endl;
+            return json::array();
+        }
+
+        json result = json::array();
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            json todo;
+            todo["id"] = sqlite3_column_int(stmt, 0);
+            todo["task"] = (const char*)sqlite3_column_text(stmt, 1);
+            todo["completed"] = (bool)sqlite3_column_int(stmt, 2);
+            result.push_back(todo);
+        }
+        sqlite3_finalize(stmt);
+        return result;
+    }
+
+    void addTodo(const std::string& task) {
+        const char* orderSql = "SELECT COUNT(*) FROM todos;";
+        sqlite3_stmt* stmt;
+        int order = 0;
+        if (sqlite3_prepare_v2(db, orderSql, -1, &stmt, nullptr) == SQLITE_OK) {
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                order = sqlite3_column_int(stmt, 0);
+            }
+            sqlite3_finalize(stmt);
+        }
+
+        const char* sql = "INSERT INTO todos (task, display_order) VALUES (?, ?);";
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, task.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 2, order);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    void updateTodo(int id, bool completed) {
+        const char* sql = "UPDATE todos SET completed = ? WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, completed ? 1 : 0);
+            sqlite3_bind_int(stmt, 2, id);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    void renameTodo(int id, const std::string& newTask) {
+        const char* sql = "UPDATE todos SET task = ? WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, newTask.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 2, id);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    void deleteTodo(int id) {
+        const char* sql = "DELETE FROM todos WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, id);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
         }
     }
 
@@ -207,6 +280,20 @@ int main(int argc, char* argv[]) {
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         } else if (cmd == "delete" && argc == 3) {
             sdb.deleteTopic(std::stoi(argv[2]));
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "get_todos" && argc == 2) {
+            std::cout << sdb.getTodos().dump() << std::endl;
+        } else if (cmd == "add_todo" && argc == 3) {
+            sdb.addTodo(argv[2]);
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "update_todo" && argc == 4) {
+            sdb.updateTodo(std::stoi(argv[2]), std::string(argv[3]) == "true");
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "rename_todo" && argc == 4) {
+            sdb.renameTodo(std::stoi(argv[2]), argv[3]);
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "delete_todo" && argc == 3) {
+            sdb.deleteTodo(std::stoi(argv[2]));
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         }
     } catch (const std::exception& e) {
