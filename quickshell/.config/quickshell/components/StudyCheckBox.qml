@@ -27,14 +27,5 @@ CheckBox {
         color: control.checked ? control.checkedColor : "transparent"
         border.color: control.checked ? control.checkedColor : Theme.surface1
         border.width: Theme.borderWidth
-
-        Rectangle {
-            width: 8
-            height: 8
-            anchors.centerIn: parent
-            radius: 2
-            color: Theme.crust
-            visible: control.checked
-        }
     }
 }
