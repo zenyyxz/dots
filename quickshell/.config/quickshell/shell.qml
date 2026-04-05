@@ -298,4 +298,50 @@ ShellRoot {
             subjectName: "Combined Maths"
         }
     }
+
+    // --- Study Cockpit: Physics and ICT ---
+    PanelWindow {
+        id: scienceTrackers
+        anchors {
+            top: true
+            left: true
+            bottom: true
+        }
+        
+        WlrLayershell.layer: WlrLayer.Bottom
+        WlrLayershell.namespace: "study-tracker-science"
+        WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        
+        implicitWidth: 450
+        margins {
+            top: 56 
+            left: 470 // mathsTracker (450) + margin (10) + gap (10)
+            bottom: 8
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 15
+
+            StudyTracker {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                authenticated: root.authenticated
+                onAuthenticatedChanged: root.authenticated = authenticated
+                subjectName: "Physics"
+                initTopicCount: 10
+            }
+
+            StudyTracker {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                authenticated: root.authenticated
+                onAuthenticatedChanged: root.authenticated = authenticated
+                subjectName: "ICT"
+                initTopicCount: 10
+            }
+        }
+    }
 }

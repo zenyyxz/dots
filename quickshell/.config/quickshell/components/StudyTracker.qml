@@ -11,6 +11,7 @@ Rectangle {
     property string subjectName: "Subject"
     property var columnTitles: ["T", "R", "PP", "MP"]
     readonly property var columnColors: [Theme.mauve, Theme.lavender, Theme.sapphire, Theme.teal]
+    property int initTopicCount: 10
     
     // Service Instance
     StudyService { id: service }
@@ -131,10 +132,11 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            
+            ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+
             Column {
                 id: tableGrid
-                width: parent.width
+                width: trackerRoot.implicitWidth
                 spacing: -1
 
                 // Header
@@ -148,14 +150,25 @@ Rectangle {
                     Rectangle {
                         width: trackerRoot.colLessonWidth; height: trackerRoot.cellHeight
                         color: Theme.surface0; border.color: Theme.surface1; border.width: 1
-                        Text { anchors.centerIn: parent; text: "Topic Name"; color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 12; font.bold: true }
+                        Text { 
+                            anchors.centerIn: parent
+                            text: "Topic Name"
+                            color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 12; font.bold: true 
+                        }
                     }
                     Repeater {
                         model: trackerRoot.columnTitles.length
                         delegate: Rectangle {
                             width: trackerRoot.colCheckWidth; height: trackerRoot.cellHeight
                             color: Theme.surface0; border.color: Theme.surface1; border.width: 1
-                            Text { anchors.centerIn: parent; text: trackerRoot.columnTitles[index]; color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 11; font.bold: true }
+                            Text { 
+                                anchors.centerIn: parent
+                                text: trackerRoot.columnTitles[index]
+                                color: trackerRoot.columnColors[index]
+                                font.family: Theme.fontName
+                                font.pixelSize: 11
+                                font.bold: true 
+                            }
                         }
                     }
                 }
@@ -306,10 +319,10 @@ Rectangle {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            // Quick init for the 53 topics
-                            for (let i = 1; i <= 53; i++) {
+                            // Quick init for topics
+                            for (let i = 1; i <= trackerRoot.initTopicCount; i++) {
                                 service.addTopic(trackerRoot.subjectName, "Topic " + i, () => {
-                                    if (i === 53) trackerRoot.refresh();
+                                    if (i === trackerRoot.initTopicCount) trackerRoot.refresh();
                                 });
                             }
                         }
