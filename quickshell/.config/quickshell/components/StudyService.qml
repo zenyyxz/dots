@@ -92,4 +92,23 @@ QtObject {
         obj.name = newName;
         obj.running = true;
     }
+
+    function deleteTopic(topicId, callback) {
+        const qml = `
+            import Quickshell.Io
+            Process {
+                property string tId: ""
+                property var finishedCallback: null
+                command: ["${bridgePath}", "delete", tId]
+                onExited: status => {
+                    if (status === 0 && finishedCallback) finishedCallback();
+                    this.destroy();
+                }
+            }
+        `;
+        const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+        obj.tId = topicId.toString();
+        obj.finishedCallback = callback;
+        obj.running = true;
+    }
 }

@@ -175,7 +175,28 @@ Rectangle {
                         Rectangle {
                             width: trackerRoot.colIndexWidth; height: trackerRoot.cellHeight
                             color: "transparent"; border.color: Theme.surface1; border.width: 1
-                            Text { anchors.centerIn: parent; text: (index + 1).toString(); color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 11 }
+                            
+                            Text { 
+                                anchors.centerIn: parent
+                                text: (indexMouseArea.containsMouse && trackerRoot.authenticated) ? "󰆴" : (index + 1).toString()
+                                color: (indexMouseArea.containsMouse && trackerRoot.authenticated) ? Theme.red : Theme.subtext0 
+                                font.family: (indexMouseArea.containsMouse && trackerRoot.authenticated) ? "JetBrainsMono Nerd Font" : Theme.fontName
+                                font.pixelSize: (indexMouseArea.containsMouse && trackerRoot.authenticated) ? 14 : 11 
+                            }
+
+                            MouseArea {
+                                id: indexMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: trackerRoot.authenticated ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onClicked: {
+                                    if (trackerRoot.authenticated) {
+                                        service.deleteTopic(rowDelegate.topicId, () => {
+                                            trackerRoot.refresh();
+                                        });
+                                    }
+                                }
+                            }
                         }
                         Rectangle {
                             width: trackerRoot.colLessonWidth; height: trackerRoot.cellHeight

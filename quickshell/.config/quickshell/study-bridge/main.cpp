@@ -135,6 +135,22 @@ public:
         sqlite3_finalize(stmt);
     }
 
+    void deleteTopic(int topicId) {
+        const char* sql1 = "DELETE FROM progress WHERE topic_id = ?;";
+        const char* sql2 = "DELETE FROM topics WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        
+        sqlite3_prepare_v2(db, sql1, -1, &stmt, nullptr);
+        sqlite3_bind_int(stmt, 1, topicId);
+        sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+
+        sqlite3_prepare_v2(db, sql2, -1, &stmt, nullptr);
+        sqlite3_bind_int(stmt, 1, topicId);
+        sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+    }
+
 private:
     sqlite3* db;
 };
@@ -158,6 +174,9 @@ int main(int argc, char* argv[]) {
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         } else if (cmd == "rename" && argc == 4) {
             sdb.renameTopic(std::stoi(argv[2]), argv[3]);
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "delete" && argc == 3) {
+            sdb.deleteTopic(std::stoi(argv[2]));
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         }
     } catch (const std::exception& e) {
