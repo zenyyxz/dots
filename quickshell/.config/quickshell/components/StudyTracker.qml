@@ -10,15 +10,19 @@ Rectangle {
     property bool authenticated: false
     property string subjectName: "Subject"
     property var columnTitles: ["T", "R", "PP", "MP"]
+    readonly property var columnColors: [Theme.mauve, Theme.lavender, Theme.sapphire, Theme.teal]
     
     // Service Instance
     StudyService { id: service }
 
     property var topicsData: []
+    property bool loading: false
 
     function refresh() {
+        loading = true;
         service.getSubjectData(subjectName, (data) => {
             topicsData = data;
+            loading = false;
         });
     }
 
@@ -212,6 +216,7 @@ Rectangle {
                                     topicId: rowDelegate.topicId
                                     columnIdx: index
                                     service: service
+                                    checkedColor: trackerRoot.columnColors[index]
                                     checked: rowDelegate.checkedArray ? rowDelegate.checkedArray[index] : false
                                     enabled: trackerRoot.authenticated
                                 }
@@ -267,7 +272,7 @@ Rectangle {
 
                 // Empty State / Init
                 Rectangle {
-                    visible: trackerRoot.topicsData.length === 0
+                    visible: !trackerRoot.loading && trackerRoot.topicsData.length === 0
                     width: trackerRoot.colIndexWidth + trackerRoot.colLessonWidth + (trackerRoot.colCheckWidth * 4) - 3
                     height: 100
                     color: "transparent"

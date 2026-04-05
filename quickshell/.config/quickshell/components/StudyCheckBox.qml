@@ -5,9 +5,14 @@ import "../theme"
 CheckBox {
     id: control
     
+    padding: 0
+    implicitWidth: indicator.implicitWidth
+    implicitHeight: indicator.implicitHeight
+
     property int topicId: -1
     property int columnIdx: -1
     property var service: null
+    property color checkedColor: Theme.mauve
 
     onToggled: {
         if (service && topicId !== -1) {
@@ -19,8 +24,8 @@ CheckBox {
         implicitWidth: 14
         implicitHeight: 14
         radius: 3
-        color: control.checked ? Theme.mauve : "transparent"
-        border.color: control.checked ? Theme.mauve : Theme.surface1
+        color: control.checked ? control.checkedColor : "transparent"
+        border.color: control.checked ? control.checkedColor : Theme.surface1
         border.width: Theme.borderWidth
 
         Rectangle {
