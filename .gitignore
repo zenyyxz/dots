@@ -1,0 +1,5 @@
+.env
+*.log
+quickshell/.config/quickshell/study-bridge/build/
+quickshell/.config/quickshell/study.db
+node_modules/

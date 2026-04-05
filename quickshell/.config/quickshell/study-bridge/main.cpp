@@ -28,7 +28,9 @@ public:
             "CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY AUTOINCREMENT, subject_id INTEGER, name TEXT, display_order INTEGER, FOREIGN KEY(subject_id) REFERENCES subjects(id));"
             "CREATE TABLE IF NOT EXISTS progress (topic_id INTEGER PRIMARY KEY, c1 BOOLEAN DEFAULT 0, c2 BOOLEAN DEFAULT 0, c3 BOOLEAN DEFAULT 0, c4 BOOLEAN DEFAULT 0, FOREIGN KEY(topic_id) REFERENCES topics(id));"
             "CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, completed BOOLEAN DEFAULT 0, display_order INTEGER);"
-            "CREATE TABLE IF NOT EXISTS study_history (date TEXT PRIMARY KEY, seconds INTEGER DEFAULT 0);";
+            "CREATE TABLE IF NOT EXISTS study_history (date TEXT PRIMARY KEY, seconds INTEGER DEFAULT 0);"
+            "CREATE TABLE IF NOT EXISTS study_history_subjects (date TEXT, subject_id INTEGER, seconds INTEGER DEFAULT 0, PRIMARY KEY(date, subject_id));"
+            "CREATE TABLE IF NOT EXISTS deadlines (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, date TEXT, subject_id INTEGER);";
         
         char* errMsg = nullptr;
         if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
@@ -60,12 +62,31 @@ public:
                 sub["rating"] = sqlite3_column_int(stmt, 2);
                 sub["completed"] = sqlite3_column_int(stmt, 3);
                 sub["total"] = sqlite3_column_int(stmt, 4);
+
+                // Add per-subject history for last 7 days
+                sub["history"] = json::array();
+                for (int i = 6; i >= 0; --i) {
+                    const char* hSql = "SELECT seconds FROM study_history_subjects WHERE subject_id = ? AND date = date('now', 'localtime', ?);";
+                    sqlite3_stmt* hStmt;
+                    int hSeconds = 0;
+                    if (sqlite3_prepare_v2(db, hSql, -1, &hStmt, nullptr) == SQLITE_OK) {
+                        sqlite3_bind_int(hStmt, 1, sub["id"]);
+                        std::string offset = "-" + std::to_string(i) + " days";
+                        sqlite3_bind_text(hStmt, 2, offset.c_str(), -1, SQLITE_STATIC);
+                        if (sqlite3_step(hStmt) == SQLITE_ROW) {
+                            hSeconds = sqlite3_column_int(hStmt, 0);
+                        }
+                        sqlite3_finalize(hStmt);
+                    }
+                    sub["history"].push_back(hSeconds);
+                }
+
                 result["subjects"].push_back(sub);
             }
             sqlite3_finalize(stmt);
         }
 
-        // 2. 7-Day History
+        // 2. Global 7-Day History
         result["history"] = json::array();
         for (int i = 6; i >= 0; --i) {
             const char* histSql = "SELECT seconds FROM study_history WHERE date = date('now', 'localtime', ?);";
@@ -79,7 +100,6 @@ public:
                 }
                 
                 json day;
-                // Get day name for UI
                 const char* dayNameSql = "SELECT strftime('%w', 'now', 'localtime', ?);";
                 sqlite3_stmt* nameStmt;
                 std::string dayName = "?";
@@ -99,6 +119,20 @@ public:
                 sqlite3_finalize(stmt);
             }
         }
+
+        // 3. Lifetime Stats
+        const char* lifetimeSql = "SELECT AVG(seconds), SUM(seconds), COUNT(*) FROM study_history;";
+        if (sqlite3_prepare_v2(db, lifetimeSql, -1, &stmt, nullptr) == SQLITE_OK) {
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                result["lifetime_avg"] = sqlite3_column_double(stmt, 0);
+                result["total_seconds"] = sqlite3_column_int(stmt, 1);
+                result["total_days"] = sqlite3_column_int(stmt, 2);
+            }
+            sqlite3_finalize(stmt);
+        }
+
+        // 4. Deadlines
+        result["deadlines"] = getDeadlines();
         
         return result;
     }
@@ -114,7 +148,8 @@ public:
         }
     }
 
-    void logStudyTime(int seconds) {
+    void logStudyTime(int seconds, int subjectId) {
+        // Global history
         const char* checkSql = "INSERT OR IGNORE INTO study_history (date, seconds) VALUES (date('now', 'localtime'), 0);";
         sqlite3_exec(db, checkSql, nullptr, nullptr, nullptr);
 
@@ -122,6 +157,66 @@ public:
         sqlite3_stmt* stmt;
         if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
             sqlite3_bind_int(stmt, 1, seconds);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+
+        // Per-subject history
+        if (subjectId != -1) {
+            const char* subCheckSql = "INSERT OR IGNORE INTO study_history_subjects (date, subject_id, seconds) VALUES (date('now', 'localtime'), ?, 0);";
+            if (sqlite3_prepare_v2(db, subCheckSql, -1, &stmt, nullptr) == SQLITE_OK) {
+                sqlite3_bind_int(stmt, 1, subjectId);
+                sqlite3_step(stmt);
+                sqlite3_finalize(stmt);
+            }
+
+            const char* subUpdateSql = "UPDATE study_history_subjects SET seconds = seconds + ? WHERE date = date('now', 'localtime') AND subject_id = ?;";
+            if (sqlite3_prepare_v2(db, subUpdateSql, -1, &stmt, nullptr) == SQLITE_OK) {
+                sqlite3_bind_int(stmt, 1, seconds);
+                sqlite3_bind_int(stmt, 2, subjectId);
+                sqlite3_step(stmt);
+                sqlite3_finalize(stmt);
+            }
+        }
+    }
+
+    json getDeadlines() {
+        const char* sql = "SELECT d.id, d.task, d.date, s.name FROM deadlines d LEFT JOIN subjects s ON d.subject_id = s.id ORDER BY d.date ASC;";
+        sqlite3_stmt* stmt;
+        json result = json::array();
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                json d;
+                d["id"] = sqlite3_column_int(stmt, 0);
+                d["task"] = (const char*)sqlite3_column_text(stmt, 1);
+                d["date"] = (const char*)sqlite3_column_text(stmt, 2);
+                const char* subName = (const char*)sqlite3_column_text(stmt, 3);
+                d["subject"] = subName ? subName : "General";
+                result.push_back(d);
+            }
+            sqlite3_finalize(stmt);
+        }
+        return result;
+    }
+
+    void addDeadline(const std::string& task, const std::string& date, int subjectId) {
+        const char* sql = "INSERT INTO deadlines (task, date, subject_id) VALUES (?, ?, ?);";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, task.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 2, date.c_str(), -1, SQLITE_STATIC);
+            if (subjectId == -1) sqlite3_bind_null(stmt, 3);
+            else sqlite3_bind_int(stmt, 3, subjectId);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    void deleteDeadline(int id) {
+        const char* sql = "DELETE FROM deadlines WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, id);
             sqlite3_step(stmt);
             sqlite3_finalize(stmt);
         }
@@ -326,6 +421,22 @@ public:
         }
     }
 
+    json getSubjects() {
+        const char* sql = "SELECT id, name FROM subjects;";
+        sqlite3_stmt* stmt;
+        json result = json::array();
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                json s;
+                s["id"] = sqlite3_column_int(stmt, 0);
+                s["name"] = (const char*)sqlite3_column_text(stmt, 1);
+                result.push_back(s);
+            }
+            sqlite3_finalize(stmt);
+        }
+        return result;
+    }
+
     void deleteTopic(int topicId) {
         const char* sql1 = "DELETE FROM progress WHERE topic_id = ?;";
         const char* sql2 = "DELETE FROM topics WHERE id = ?;";
@@ -390,8 +501,18 @@ int main(int argc, char* argv[]) {
         } else if (cmd == "update_rating" && argc == 4) {
             sdb.updateRating(std::stoi(argv[2]), std::stoi(argv[3]));
             std::cout << "{\"status\":\"ok\"}" << std::endl;
-        } else if (cmd == "log_study_time" && argc == 3) {
-            sdb.logStudyTime(std::stoi(argv[2]));
+        } else if (cmd == "log_study_time" && argc >= 3) {
+            int seconds = std::stoi(argv[2]);
+            int subjectId = (argc == 4) ? std::stoi(argv[3]) : -1;
+            sdb.logStudyTime(seconds, subjectId);
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "get_subjects" && argc == 2) {
+            std::cout << sdb.getSubjects().dump() << std::endl;
+        } else if (cmd == "add_deadline" && argc == 5) {
+            sdb.addDeadline(argv[2], argv[3], std::stoi(argv[4]));
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "delete_deadline" && argc == 3) {
+            sdb.deleteDeadline(std::stoi(argv[2]));
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         }
     } catch (const std::exception& e) {

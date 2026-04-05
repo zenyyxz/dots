@@ -11,7 +11,18 @@ Rectangle {
     property bool running: false
     property string mode: "focus" // focus, short, long
     
-    signal finished(int totalSeconds)
+    property int selectedSubjectId: -1
+    property var subjects: []
+    StudyService { id: service }
+
+    Component.onCompleted: {
+        service.getSubjects((data) => {
+            subjects = data;
+            if (data.length > 0) selectedSubjectId = data[0].id;
+        });
+    }
+
+    signal finished(int totalSeconds, int subjectId)
     
     radius: Theme.radius
     color: Theme.surface0
@@ -19,7 +30,7 @@ Rectangle {
     border.width: 1
     
     implicitWidth: 300
-    implicitHeight: 350
+    implicitHeight: 380
 
     function setMode(newMode) {
         root.running = false;
@@ -46,7 +57,7 @@ Rectangle {
             } else {
                 root.running = false;
                 if (root.mode === "focus") {
-                    root.finished(25 * 60);
+                    root.finished(25 * 60, root.selectedSubjectId);
                 }
             }
         }
@@ -55,7 +66,7 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
-        spacing: 20
+        spacing: 15
 
         Text {
             text: "Pomodoro"
@@ -64,6 +75,43 @@ Rectangle {
             font.pixelSize: 20
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
+        }
+
+        // Subject Selector
+        ScrollView {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 35
+            clip: true
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            
+            RowLayout {
+                spacing: 8
+                Repeater {
+                    model: root.subjects
+                    delegate: Rectangle {
+                        height: 25
+                        implicitWidth: subLabel.implicitWidth + 20
+                        radius: 12
+                        color: root.selectedSubjectId === modelData.id ? Theme.mauve : Theme.surface1
+                        border.color: root.selectedSubjectId === modelData.id ? Theme.mauve : "transparent"
+                        
+                        Text {
+                            id: subLabel
+                            anchors.centerIn: parent
+                            text: modelData.name
+                            color: root.selectedSubjectId === modelData.id ? Theme.crust : Theme.text
+                            font.family: Theme.fontName
+                            font.pixelSize: 10
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.selectedSubjectId = modelData.id
+                        }
+                    }
+                }
+            }
         }
 
         RowLayout {
@@ -107,11 +155,11 @@ Rectangle {
 
         Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: 140
+            Layout.preferredHeight: 120
             
             Rectangle {
                 anchors.centerIn: parent
-                width: 140; height: 140; radius: 70
+                width: 120; height: 120; radius: 60
                 color: "transparent"
                 border.color: root.mode === "focus" ? Theme.mauve : (root.mode === "short" ? Theme.green : Theme.blue)
                 border.width: 4
@@ -123,7 +171,7 @@ Rectangle {
                 text: root.formatTime(root.secondsRemaining)
                 color: Theme.text
                 font.family: Theme.fontName
-                font.pixelSize: 42
+                font.pixelSize: 36
                 font.bold: true
             }
         }
@@ -134,7 +182,7 @@ Rectangle {
 
             Button {
                 id: startBtn
-                padding: 12
+                padding: 10
                 background: Rectangle {
                     radius: 8
                     color: startBtn.hovered ? Theme.surface1 : "transparent"
@@ -144,7 +192,7 @@ Rectangle {
                 contentItem: Text {
                     text: root.running ? "󰏤" : "󰐊"
                     font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 24
+                    font.pixelSize: 22
                     color: Theme.mauve
                 }
                 onClicked: root.running = !root.running
@@ -152,7 +200,7 @@ Rectangle {
 
             Button {
                 id: resetBtn
-                padding: 12
+                padding: 10
                 background: Rectangle {
                     radius: 8
                     color: resetBtn.hovered ? Theme.surface1 : "transparent"
@@ -162,7 +210,7 @@ Rectangle {
                 contentItem: Text {
                     text: "󰑐"
                     font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 24
+                    font.pixelSize: 22
                     color: Theme.subtext0
                 }
                 onClicked: root.setMode(root.mode)

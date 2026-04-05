@@ -166,7 +166,7 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
-        width: 1000
+        width: 800
         height: 500
         margins {
             bottom: 10

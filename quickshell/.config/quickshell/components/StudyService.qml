@@ -320,13 +320,79 @@ function updateRating(subjectId, rating, callback) {
     obj.running = true;
 }
 
-function logStudyTime(seconds, callback) {
+function logStudyTime(seconds, subjectId, callback) {
+    const sId = subjectId !== undefined ? subjectId : -1;
     const qml = `
         import Quickshell.Io
         Process {
             property var finishedCallback: null
             running: false
-            command: ["${bridgePath}", "log_study_time", "${seconds}"]
+            command: ["${bridgePath}", "log_study_time", "${seconds}", "${sId}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function getSubjects(callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "get_subjects"]
+            stdout: SplitParser {
+                property string output: ""
+                onRead: msg => output += msg
+            }
+            onExited: status => {
+                if (status === 0) {
+                    try {
+                        const data = JSON.parse(stdout.output);
+                        if (finishedCallback) finishedCallback(data);
+                    } catch (e) { console.error("Subjects parse error:", e); }
+                }
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function addDeadline(task, date, subjectId, callback) {
+    const sId = subjectId !== undefined ? subjectId : -1;
+    const qml = `
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "add_deadline", "${task}", "${date}", "${sId}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function deleteDeadline(id, callback) {
+    const qml = `
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "delete_deadline", "${id}"]
             onExited: status => {
                 if (status === 0 && finishedCallback) finishedCallback();
                 this.destroy();
