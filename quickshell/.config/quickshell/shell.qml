@@ -15,8 +15,6 @@ import "components"
 ShellRoot {
     id: root
 
-    property bool authenticated: false
-
     PanelWindow {
         id: panel
 
@@ -293,8 +291,6 @@ ShellRoot {
 
         StudyTracker {
             anchors.fill: parent
-            authenticated: root.authenticated
-            onAuthenticatedChanged: root.authenticated = authenticated
             subjectName: "Combined Maths"
         }
     }
@@ -328,8 +324,6 @@ ShellRoot {
             StudyTracker {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                authenticated: root.authenticated
-                onAuthenticatedChanged: root.authenticated = authenticated
                 subjectName: "Physics"
                 initTopicCount: 10
             }
@@ -337,8 +331,6 @@ ShellRoot {
             StudyTracker {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                authenticated: root.authenticated
-                onAuthenticatedChanged: root.authenticated = authenticated
                 subjectName: "ICT"
                 initTopicCount: 10
             }
