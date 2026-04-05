@@ -15,70 +15,60 @@ Rectangle {
     // Max height for the widget before scrolling kicks in
     property int maxHeight: 0 // 0 means fill parent
 
-    implicitWidth: Math.min(mainLayout.implicitWidth + 24, 450)
+    // Table Geometry Constants
+    readonly property int colIndexWidth: 40
+    readonly property int colLessonWidth: 240
+    readonly property int colCheckWidth: 60
+    readonly property int cellHeight: 34
+    readonly property color borderColor: Qt.rgba(Theme.surface2.r / 255, Theme.surface1.g / 255, Theme.surface1.b / 255, 0.3)
+
+    implicitWidth: colIndexWidth + colLessonWidth + (colCheckWidth * 4) + 2 
     implicitHeight: maxHeight > 0 ? Math.min(mainLayout.implicitHeight + 24, maxHeight) : 1000 
     
-    // Force fill if maxHeight is 0
     anchors.fill: (maxHeight === 0 && parent) ? parent : undefined
     color: Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.85)
     radius: Theme.radius
     border.color: Theme.surface0
-    border.width: Theme.borderWidth
+    border.width: 1
 
     ColumnLayout {
         id: mainLayout
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.fill: parent
         anchors.margins: 12
-        spacing: 8
+        spacing: 15
 
+        // --- Notion-style Header Title ---
         RowLayout {
-            id: headerArea
             Layout.fillWidth: true
-            spacing: 15
+            spacing: 10
 
-            Rectangle {
-                Layout.alignment: Qt.AlignVCenter
+            TextInput {
+                id: subjectInput
+                text: trackerRoot.subjectName
+                color: Theme.text
+                font.family: Theme.fontName
+                font.pixelSize: 24
+                font.bold: true
                 Layout.fillWidth: true
-                height: 32
-                color: "transparent"
-                radius: 4
-                border.color: subjectInput.activeFocus ? "white" : "transparent"
-                border.width: 1
-
-                TextInput {
-                    id: subjectInput
-                    anchors.fill: parent
-                    anchors.margins: 4
-                    text: trackerRoot.subjectName
-                    color: Theme.mauve
-                    font.family: Theme.fontName
-                    font.pixelSize: 20 // Smaller 
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    enabled: trackerRoot.authenticated
-                    selectByMouse: true
-                    onTextEdited: trackerRoot.subjectName = text
+                enabled: trackerRoot.authenticated
+                selectByMouse: true
+                onTextEdited: trackerRoot.subjectName = text
+                
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    width: parent.width; height: 1
+                    color: "white"; visible: parent.activeFocus
                 }
             }
 
             Button {
                 id: authButton
-                padding: 6
-                background: Rectangle {
-                    color: "transparent"
-                    radius: 4
-                    border.color: Theme.surface1
-                    border.width: 1
-                    visible: authButton.hovered
-                }
+                padding: 8
+                background: null
                 contentItem: Image {
                     source: trackerRoot.authenticated ? "../assets/unlock.svg" : "../assets/lock.svg"
-                    sourceSize: Qt.size(18, 18) // Smaller
+                    sourceSize: Qt.size(20, 20)
                     fillMode: Image.PreserveAspectFit
-                    antialiasing: true
-                    
                     layer.enabled: true
                     layer.effect: ColorOverlay {
                         color: trackerRoot.authenticated ? Theme.green : Theme.red
@@ -90,131 +80,150 @@ Rectangle {
             }
         }
 
-        // Table Header
-        RowLayout {
-            spacing: 8
-            Layout.fillWidth: true
-            
-            Text { text: "#"; color: Theme.lavender; font.family: Theme.fontName; font.pixelSize: 12; Layout.preferredWidth: 20 }
-            Text { text: "Lesson"; color: Theme.lavender; font.family: Theme.fontName; font.pixelSize: 12; Layout.preferredWidth: 120 }
-            
-            Repeater {
-                model: trackerRoot.columnTitles.length
-                delegate: Rectangle {
-                    Layout.preferredWidth: 40
-                    height: 20
-                    color: "transparent"
-                    radius: 4
-                    border.color: titleInput.activeFocus ? "white" : "transparent"
-                    border.width: 1
-
-                    TextInput {
-                        id: titleInput
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        text: trackerRoot.columnTitles[index]
-                        color: Theme.lavender
-                        font.family: Theme.fontName
-                        font.pixelSize: 12
-                        horizontalAlignment: Text.AlignHCenter
-                        enabled: trackerRoot.authenticated
-                        selectByMouse: true
-                        onTextEdited: {
-                            let titles = trackerRoot.columnTitles;
-                            titles[index] = text;
-                            trackerRoot.columnTitles = titles;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Horizontal Line
-        Rectangle {
-            id: separator
-            Layout.fillWidth: true
-            height: 1
-            color: Theme.surface1
-        }
-
+        // --- The Table ---
         ScrollView {
             id: scrollView
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
             
-            ColumnLayout {
-                id: rowsLayout
+            Column {
+                id: tableGrid
                 width: scrollView.width
-                spacing: 4 // Compact
+                spacing: -1 // Overlap borders for single-line look
 
-                // Rows
-                Repeater {
-                    model: trackerRoot.topics.length
-                    delegate: RowLayout {
-                        spacing: 8
-                        Layout.fillWidth: true
-                        
-                        Text {
-                            text: (index + 1).toString()
-                            color: Theme.subtext0
-                            font.family: Theme.fontName
-                            font.pixelSize: 11
-                            Layout.preferredWidth: 20
-                            horizontalAlignment: Text.AlignHCenter
+                // --- Header Row ---
+                Row {
+                    spacing: -1
+                    
+                    // #
+                    Rectangle {
+                        width: trackerRoot.colIndexWidth; height: trackerRoot.cellHeight
+                        color: Theme.surface0; border.color: Theme.surface1; border.width: 1
+                        Text { anchors.centerIn: parent; text: "#"; color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 12 }
+                    }
+                    
+                    // Name
+                    Rectangle {
+                        width: trackerRoot.colLessonWidth; height: trackerRoot.cellHeight
+                        color: Theme.surface0; border.color: Theme.surface1; border.width: 1
+                        RowLayout {
+                            anchors.fill: parent; anchors.leftMargin: 10; spacing: 8
+                            Text { text: "Aa"; color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 12 }
+                            Text { text: "Name"; color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 12; font.bold: true }
                         }
-                        Rectangle {
-                            Layout.preferredWidth: 120
-                            height: 18 // Compact
-                            color: "transparent"
-                            radius: 4
-                            border.color: topicInput.activeFocus ? "white" : "transparent"
-                            border.width: 1
-
-                            Text {
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                text: trackerRoot.topics[index]
-                                color: Theme.text
-                                font.family: Theme.fontName
-                                font.pixelSize: 11
-                                verticalAlignment: Text.AlignVCenter
-                                elide: Text.ElideRight
-                                visible: !topicInput.activeFocus
-                            }
-
+                    }
+                    
+                    // Columns
+                    Repeater {
+                        model: trackerRoot.columnTitles.length
+                        delegate: Rectangle {
+                            width: trackerRoot.colCheckWidth; height: trackerRoot.cellHeight
+                            color: Theme.surface0; border.color: Theme.surface1; border.width: 1
                             TextInput {
-                                id: topicInput
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                text: trackerRoot.topics[index]
-                                color: Theme.text
+                                id: titleInput
+                                anchors.centerIn: parent
+                                text: trackerRoot.columnTitles[index]
+                                color: Theme.subtext0
                                 font.family: Theme.fontName
                                 font.pixelSize: 11
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
                                 enabled: trackerRoot.authenticated
                                 selectByMouse: true
-                                visible: topicInput.activeFocus || (trackerRoot.authenticated && mouseArea.containsMouse)
                                 onTextEdited: {
-                                    let t = trackerRoot.topics;
+                                    let t = trackerRoot.columnTitles;
                                     t[index] = text;
-                                    trackerRoot.topics = t;
+                                    trackerRoot.columnTitles = t;
                                 }
                             }
+                        }
+                    }
+                }
+
+                // --- Data Rows ---
+                Repeater {
+                    model: trackerRoot.topics.length
+                    delegate: Row {
+                        spacing: -1
+                        
+                        // Index
+                        Rectangle {
+                            width: trackerRoot.colIndexWidth; height: trackerRoot.cellHeight
+                            color: "transparent"; border.color: Theme.surface1; border.width: 1
+                            Text { anchors.centerIn: parent; text: (index + 1).toString(); color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 11 }
+                        }
+
+                        // Lesson Name
+                        Rectangle {
+                            width: trackerRoot.colLessonWidth; height: trackerRoot.cellHeight
+                            color: "transparent"; border.color: Theme.surface1; border.width: 1
                             
-                            MouseArea {
-                                id: mouseArea
-                                anchors.fill: parent
-                                enabled: trackerRoot.authenticated && !topicInput.activeFocus
-                                hoverEnabled: true
-                                onClicked: topicInput.forceActiveFocus()
+                            RowLayout {
+                                anchors.fill: parent; anchors.leftMargin: 10; spacing: 8
+                                Text { text: "󰈙"; font.family: "JetBrainsMono Nerd Font"; color: Theme.subtext0; font.pixelSize: 14 }
+                                
+                                TextInput {
+                                    id: topicInput
+                                    Layout.fillWidth: true
+                                    text: trackerRoot.topics[index]
+                                    color: Theme.text
+                                    font.family: Theme.fontName
+                                    font.pixelSize: 13
+                                    enabled: trackerRoot.authenticated
+                                    selectByMouse: true
+                                    clip: true
+                                    onTextEdited: {
+                                        let t = trackerRoot.topics;
+                                        t[index] = text;
+                                        trackerRoot.topics = t;
+                                    }
+                                }
+                            }
+                            Rectangle {
+                                anchors.fill: parent; color: "transparent"; border.color: "white"; border.width: 1; visible: topicInput.activeFocus
                             }
                         }
 
-                        StudyCheckBox { Layout.alignment: Qt.AlignCenter; Layout.preferredWidth: 40; enabled: trackerRoot.authenticated }
-                        StudyCheckBox { Layout.alignment: Qt.AlignCenter; Layout.preferredWidth: 40; enabled: trackerRoot.authenticated }
-                        StudyCheckBox { Layout.alignment: Qt.AlignCenter; Layout.preferredWidth: 40; enabled: trackerRoot.authenticated }
-                        StudyCheckBox { Layout.alignment: Qt.AlignCenter; Layout.preferredWidth: 40; enabled: trackerRoot.authenticated }
+                        // Checkboxes
+                        Repeater {
+                            model: 4
+                            delegate: Rectangle {
+                                width: trackerRoot.colCheckWidth; height: trackerRoot.cellHeight
+                                color: "transparent"; border.color: Theme.surface1; border.width: 1
+                                StudyCheckBox { 
+                                    anchors.centerIn: parent
+                                    enabled: trackerRoot.authenticated 
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- Add New Row ---
+                Row {
+                    visible: trackerRoot.authenticated
+                    spacing: -1
+                    Rectangle {
+                        width: trackerRoot.colIndexWidth + trackerRoot.colLessonWidth + (trackerRoot.colCheckWidth * 4) - 3
+                        height: trackerRoot.cellHeight
+                        color: "transparent"; border.color: Theme.surface1; border.width: 1
+                        
+                        RowLayout {
+                            anchors.fill: parent; anchors.leftMargin: 10; spacing: 8
+                            Text { text: "＋"; color: Theme.subtext0; font.pixelSize: 14 }
+                            Text { text: "New Lesson"; color: Theme.subtext0; font.family: Theme.fontName; font.pixelSize: 13 }
+                        }
+                        
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                let t = trackerRoot.topics;
+                                t.push("New Topic " + (t.length + 1));
+                                trackerRoot.topics = t;
+                            }
+                        }
                     }
                 }
             }
