@@ -30,5 +30,6 @@ ScreenSnip 1.0 ScreenSnip.qml
 ChatWidget 1.0 ChatWidget.qml
 VpnConfig 1.0 VpnConfig.qml
 VpnTray 1.0 VpnTray.qml
+StudyService 1.0 StudyService.qml
 StudyTracker 1.0 StudyTracker.qml
 StudyCheckBox 1.0 StudyCheckBox.qml

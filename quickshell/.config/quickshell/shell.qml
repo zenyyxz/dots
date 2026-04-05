@@ -269,7 +269,7 @@ ShellRoot {
         }
     }
 
-    // Dedicated Panel for Combined Maths (Top Left)
+    // --- Study Cockpit: Combined Maths ---
     PanelWindow {
         id: mathsTracker
         anchors {
@@ -280,6 +280,7 @@ ShellRoot {
         
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.namespace: "study-tracker"
+        WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
@@ -295,49 +296,6 @@ ShellRoot {
             authenticated: root.authenticated
             onAuthenticatedChanged: root.authenticated = authenticated
             subjectName: "Combined Maths"
-            maxHeight: 0
-            topics: Array.from({length: 53}, (_, i) => "Topic " + (i + 1))
-        }
-    }
-
-    // Panel for Physics and Chemistry (Bottom Right)
-    PanelWindow {
-        id: scienceTrackers
-        anchors {
-            bottom: true
-            right: true
-        }
-        
-        WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "study-tracker"
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        
-        implicitHeight: 500
-        implicitWidth: 1000
-        margins {
-            bottom: 40
-            right: 20
-        }
-
-        RowLayout {
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            spacing: 30
-
-            StudyTracker {
-                authenticated: root.authenticated
-                onAuthenticatedChanged: root.authenticated = authenticated
-                subjectName: "Physics"
-                topics: ["Measurement", "Mechanics", "Oscillations", "Thermal Phys", "Gravitational Fields", "Electrostatic", "Magnetic Fields", "Current Elec", "Electronics", "Radiation"]
-            }
-
-            StudyTracker {
-                authenticated: root.authenticated
-                onAuthenticatedChanged: root.authenticated = authenticated
-                subjectName: "Chemistry"
-                topics: ["Atomic Struct", "Bonding", "Energetics", "Kinetics", "Equilibrium", "Acids & Bases", "Redox", "Inorganic", "Organic", "Industrial", "Polymer"]
-            }
         }
     }
 }
