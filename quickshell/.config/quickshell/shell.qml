@@ -134,6 +134,7 @@ ShellRoot {
         
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.namespace: "study-tracker-todo"
+        WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
