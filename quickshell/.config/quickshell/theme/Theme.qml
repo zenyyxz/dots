@@ -40,7 +40,7 @@ QtObject {
     readonly property int borderWidth: 1
     readonly property color borderColor: surface0
     
-    readonly property string fontName: "JetBrains Mono"
+    readonly property string fontName: "JetBrains Mono, FreeSerif, LKLUG, serif"
     readonly property int fontSize: 11
 
     // Animations
