@@ -14,6 +14,7 @@ public:
         if (sqlite3_open(path.c_str(), &db) != SQLITE_OK) {
             throw std::runtime_error("Cannot open database: " + std::string(sqlite3_errmsg(db)));
         }
+        sqlite3_busy_timeout(db, 5000); // 5s timeout
         init();
     }
 
@@ -38,7 +39,10 @@ public:
     json getSubjectData(const std::string& subjectName) {
         const char* sql = "SELECT id FROM subjects WHERE name = ?;";
         sqlite3_stmt* stmt;
-        sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+            std::cerr << "Prepare error: " << sqlite3_errmsg(db) << std::endl;
+            return json::array();
+        }
         sqlite3_bind_text(stmt, 1, subjectName.c_str(), -1, SQLITE_STATIC);
 
         int subjectId = -1;
@@ -56,7 +60,10 @@ public:
             "WHERE t.subject_id = ? "
             "ORDER BY t.display_order;";
 
-        sqlite3_prepare_v2(db, query, -1, &stmt, nullptr);
+        if (sqlite3_prepare_v2(db, query, -1, &stmt, nullptr) != SQLITE_OK) {
+            std::cerr << "Prepare error: " << sqlite3_errmsg(db) << std::endl;
+            return json::array();
+        }
         sqlite3_bind_int(stmt, 1, subjectId);
 
         json result = json::array();
@@ -79,60 +86,81 @@ public:
     void updateProgress(int topicId, int colIdx, bool val) {
         const char* insertSql = "INSERT OR IGNORE INTO progress (topic_id) VALUES (?);";
         sqlite3_stmt* stmt;
-        sqlite3_prepare_v2(db, insertSql, -1, &stmt, nullptr);
-        sqlite3_bind_int(stmt, 1, topicId);
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
+        if (sqlite3_prepare_v2(db, insertSql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, topicId);
+            if (sqlite3_step(stmt) != SQLITE_DONE) {
+                std::cerr << "Insert error: " << sqlite3_errmsg(db) << std::endl;
+            }
+            sqlite3_finalize(stmt);
+        } else {
+            std::cerr << "Prepare error: " << sqlite3_errmsg(db) << std::endl;
+        }
 
         std::string colName = "c" + std::to_string(colIdx + 1);
         std::string updateSql = "UPDATE progress SET " + colName + " = ? WHERE topic_id = ?;";
         
-        sqlite3_prepare_v2(db, updateSql.c_str(), -1, &stmt, nullptr);
-        sqlite3_bind_int(stmt, 1, val ? 1 : 0);
-        sqlite3_bind_int(stmt, 2, topicId);
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
+        if (sqlite3_prepare_v2(db, updateSql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, val ? 1 : 0);
+            sqlite3_bind_int(stmt, 2, topicId);
+            if (sqlite3_step(stmt) != SQLITE_DONE) {
+                std::cerr << "Update error: " << sqlite3_errmsg(db) << std::endl;
+            }
+            sqlite3_finalize(stmt);
+        } else {
+            std::cerr << "Prepare error: " << sqlite3_errmsg(db) << std::endl;
+        }
     }
 
     void addTopic(const std::string& subjectName, const std::string& topicName) {
         const char* subSql = "INSERT OR IGNORE INTO subjects (name) VALUES (?);";
         sqlite3_stmt* stmt;
-        sqlite3_prepare_v2(db, subSql, -1, &stmt, nullptr);
-        sqlite3_bind_text(stmt, 1, subjectName.c_str(), -1, SQLITE_STATIC);
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
+        if (sqlite3_prepare_v2(db, subSql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, subjectName.c_str(), -1, SQLITE_STATIC);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
 
         const char* getIdSql = "SELECT id FROM subjects WHERE name = ?;";
-        sqlite3_prepare_v2(db, getIdSql, -1, &stmt, nullptr);
-        sqlite3_bind_text(stmt, 1, subjectName.c_str(), -1, SQLITE_STATIC);
-        sqlite3_step(stmt);
-        int subjectId = sqlite3_column_int(stmt, 0);
-        sqlite3_finalize(stmt);
+        int subjectId = -1;
+        if (sqlite3_prepare_v2(db, getIdSql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, subjectName.c_str(), -1, SQLITE_STATIC);
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                subjectId = sqlite3_column_int(stmt, 0);
+            }
+            sqlite3_finalize(stmt);
+        }
+
+        if (subjectId == -1) return;
 
         const char* orderSql = "SELECT COUNT(*) FROM topics WHERE subject_id = ?;";
-        sqlite3_prepare_v2(db, orderSql, -1, &stmt, nullptr);
-        sqlite3_bind_int(stmt, 1, subjectId);
-        sqlite3_step(stmt);
-        int order = sqlite3_column_int(stmt, 0);
-        sqlite3_finalize(stmt);
+        int order = 0;
+        if (sqlite3_prepare_v2(db, orderSql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, subjectId);
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                order = sqlite3_column_int(stmt, 0);
+            }
+            sqlite3_finalize(stmt);
+        }
 
         const char* insTopicSql = "INSERT INTO topics (subject_id, name, display_order) VALUES (?, ?, ?);";
-        sqlite3_prepare_v2(db, insTopicSql, -1, &stmt, nullptr);
-        sqlite3_bind_int(stmt, 1, subjectId);
-        sqlite3_bind_text(stmt, 2, topicName.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 3, order);
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
+        if (sqlite3_prepare_v2(db, insTopicSql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, subjectId);
+            sqlite3_bind_text(stmt, 2, topicName.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 3, order);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
     }
 
     void renameTopic(int topicId, const std::string& newName) {
         const char* sql = "UPDATE topics SET name = ? WHERE id = ?;";
         sqlite3_stmt* stmt;
-        sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
-        sqlite3_bind_text(stmt, 1, newName.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 2, topicId);
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, newName.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 2, topicId);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
     }
 
     void deleteTopic(int topicId) {
@@ -140,15 +168,17 @@ public:
         const char* sql2 = "DELETE FROM topics WHERE id = ?;";
         sqlite3_stmt* stmt;
         
-        sqlite3_prepare_v2(db, sql1, -1, &stmt, nullptr);
-        sqlite3_bind_int(stmt, 1, topicId);
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
+        if (sqlite3_prepare_v2(db, sql1, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, topicId);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
 
-        sqlite3_prepare_v2(db, sql2, -1, &stmt, nullptr);
-        sqlite3_bind_int(stmt, 1, topicId);
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
+        if (sqlite3_prepare_v2(db, sql2, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, topicId);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
     }
 
 private:

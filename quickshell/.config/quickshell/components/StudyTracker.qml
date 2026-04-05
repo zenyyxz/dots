@@ -14,14 +14,14 @@ Rectangle {
     property int initTopicCount: 10
     
     // Service Instance
-    StudyService { id: service }
+    StudyService { id: trackerService }
 
     property var topicsData: []
     property bool loading: false
 
     function refresh() {
         loading = true;
-        service.getSubjectData(subjectName, (data) => {
+        trackerService.getSubjectData(subjectName, (data) => {
             topicsData = data;
             loading = false;
         });
@@ -204,7 +204,7 @@ Rectangle {
                                 cursorShape: trackerRoot.authenticated ? Qt.PointingHandCursor : Qt.ArrowCursor
                                 onClicked: {
                                     if (trackerRoot.authenticated) {
-                                        service.deleteTopic(rowDelegate.topicId, () => {
+                                        trackerService.deleteTopic(rowDelegate.topicId, () => {
                                             trackerRoot.refresh();
                                         });
                                     }
@@ -230,7 +230,7 @@ Rectangle {
                                 
                                 onEditingFinished: {
                                     if (text !== rowDelegate.topicName) {
-                                        service.renameTopic(rowDelegate.topicId, text);
+                                        trackerService.renameTopic(rowDelegate.topicId, text);
                                     }
                                 }
                             }
@@ -239,20 +239,21 @@ Rectangle {
                             model: 4
                             delegate: Rectangle {
                                 width: trackerRoot.colCheckWidth; height: trackerRoot.cellHeight
-                                color: check.activeFocus ? Qt.rgba(Theme.mauve.r, Theme.mauve.g, Theme.mauve.b, 0.1) : "transparent"
-                                border.color: check.activeFocus ? Theme.mauve : Theme.surface1
-                                border.width: check.activeFocus ? 2 : 1
-                                z: check.activeFocus ? 1 : 0
+                                color: check.hovered ? Qt.rgba(Theme.mauve.r, Theme.mauve.g, Theme.mauve.b, 0.1) : "transparent"
+                                border.color: check.hovered ? Theme.mauve : Theme.surface1
+                                border.width: check.hovered ? 2 : 1
+                                z: check.hovered ? 1 : 0
 
                                 StudyCheckBox { 
                                     id: check
-                                    anchors.centerIn: parent
+                                    anchors.fill: parent
                                     topicId: rowDelegate.topicId
                                     columnIdx: index
-                                    service: service
+                                    service: trackerService
                                     checkedColor: trackerRoot.columnColors[index]
-                                    checked: rowDelegate.checkedArray ? rowDelegate.checkedArray[index] : false
-                                    enabled: trackerRoot.authenticated
+                                    initialChecked: rowDelegate.checkedArray ? rowDelegate.checkedArray[index] : false
+                                    studyEnabled: trackerRoot.authenticated
+                                    onToggled: trackerRoot.refresh()
                                 }
                             }
                         }
@@ -295,7 +296,7 @@ Rectangle {
                             onClicked: {
                                 if (trackerRoot.authenticated) {
                                     let newName = "Topic " + (trackerRoot.topicsData.length + 1);
-                                    service.addTopic(trackerRoot.subjectName, newName, () => {
+                                    trackerService.addTopic(trackerRoot.subjectName, newName, () => {
                                         trackerRoot.refresh();
                                     });
                                 }
@@ -321,7 +322,7 @@ Rectangle {
                         onClicked: {
                             // Quick init for topics
                             for (let i = 1; i <= trackerRoot.initTopicCount; i++) {
-                                service.addTopic(trackerRoot.subjectName, "Topic " + i, () => {
+                                trackerService.addTopic(trackerRoot.subjectName, "Topic " + i, () => {
                                     if (i === trackerRoot.initTopicCount) trackerRoot.refresh();
                                 });
                             }
