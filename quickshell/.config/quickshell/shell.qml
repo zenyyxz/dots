@@ -266,4 +266,45 @@ ShellRoot {
             }
         }
     }
+
+    PanelWindow {
+        id: studyTrackerLayer
+        anchors {
+            bottom: true
+            left: true
+            right: true
+        }
+        
+        WlrLayershell.layer: WlrLayer.Bottom
+        WlrLayershell.namespace: "study-tracker"
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        
+        implicitHeight: 600
+        margins {
+            bottom: 60
+            left: 20
+            right: 20
+        }
+
+        RowLayout {
+            anchors.centerIn: parent
+            spacing: 30
+
+            StudyTracker {
+                subjectName: "Physics"
+                topics: ["Measurement", "Mechanics", "Oscillations", "Thermal Phys", "Gravitational Fields", "Electrostatic", "Magnetic Fields", "Current Elec", "Electronics", "Radiation"]
+            }
+
+            StudyTracker {
+                subjectName: "Chemistry"
+                topics: ["Atomic Struct", "Bonding", "Energetics", "Kinetics", "Equilibrium", "Acids & Bases", "Redox", "Inorganic", "Organic", "Industrial", "Polymer"]
+            }
+
+            StudyTracker {
+                subjectName: "Combined Maths"
+                topics: ["Pure: Algebra", "Pure: Trig", "Pure: Calculus", "Pure: Geometry", "Pure: Vectors", "Applied: Statics", "Applied: Dynamics", "Applied: Prob", "Applied: Stats", "Applied: Integration"]
+            }
+        }
+    }
 }
