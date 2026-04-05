@@ -8,6 +8,7 @@ Rectangle {
     id: trackerRoot
     
     property bool authenticated: false
+    property bool isShowing: true
     property string subjectName: "Subject"
     property var columnTitles: ["T", "R", "PP", "MP"]
     readonly property var columnColors: [Theme.mauve, Theme.lavender, Theme.sapphire, Theme.teal]
@@ -41,6 +42,10 @@ Rectangle {
     border.color: Theme.surface0
     border.width: 1
 
+    // Window Ghost Mode
+    opacity: trackerRoot.isShowing ? 1.0 : 0.2
+    Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
@@ -58,12 +63,22 @@ Rectangle {
                 font.pixelSize: 24
                 font.bold: true
                 Layout.fillWidth: true
+                
+                // Ghost Fade
+                opacity: trackerRoot.isShowing ? 1.0 : 0.0
+                Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
             }
 
             // Sync/Refresh Button
             Button {
                 id: refreshButton
                 padding: 8
+                
+                // Ghost Fade
+                opacity: trackerRoot.isShowing ? 1.0 : 0.0
+                enabled: trackerRoot.isShowing
+                Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+
                 background: Rectangle {
                     radius: 6
                     color: refreshButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
@@ -99,9 +114,33 @@ Rectangle {
                 }
             }
 
+            // Local Eye Toggle (Always Visible in Ghost Mode)
+            Button {
+                id: eyeButton
+                padding: 8
+                background: Rectangle {
+                    radius: 6
+                    color: eyeButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                }
+                contentItem: Image {
+                    source: trackerRoot.isShowing ? "../assets/eye-svgrepo-com.svg" : "../assets/eye-slash-svgrepo-com.svg"
+                    sourceSize: Qt.size(20, 20)
+                    fillMode: Image.PreserveAspectFit
+                    layer.enabled: true
+                    layer.effect: ColorOverlay { color: trackerRoot.isShowing ? Theme.mauve : Theme.subtext0 }
+                }
+                onClicked: trackerRoot.isShowing = !trackerRoot.isShowing
+            }
+
             Button {
                 id: authButton
                 padding: 8
+                
+                // Ghost Fade
+                opacity: trackerRoot.isShowing ? 1.0 : 0.0
+                enabled: trackerRoot.isShowing
+                Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+
                 background: Rectangle {
                     radius: 6
                     color: authButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
@@ -132,6 +171,11 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            
+            // Ghost Fade
+            opacity: trackerRoot.isShowing ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+            
             ScrollBar.horizontal.policy: ScrollBar.AsNeeded
 
             Column {
@@ -313,7 +357,7 @@ Rectangle {
                     color: "transparent"
                     Text {
                         anchors.centerIn: parent
-                        text: "No topics found.\nClick to initialize Combined Maths topics."
+                        text: "No topics found.\nClick to initialize subjects topics."
                         horizontalAlignment: Text.AlignHCenter
                         color: Theme.subtext0
                     }

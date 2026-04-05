@@ -8,6 +8,7 @@ Rectangle {
     id: todoRoot
     
     property bool authenticated: false
+    property bool isShowing: true
     
     // Service Instance
     StudyService { id: trackerService }
@@ -37,6 +38,10 @@ Rectangle {
     border.color: Theme.surface0
     border.width: 1
 
+    // Window Ghost Mode
+    opacity: todoRoot.isShowing ? 1.0 : 0.2
+    Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+
     // Sapphire Tint Overlay
     Rectangle {
         anchors.fill: parent
@@ -62,12 +67,22 @@ Rectangle {
                 font.pixelSize: 24
                 font.bold: true
                 Layout.fillWidth: true
+                
+                // Ghost Fade
+                opacity: todoRoot.isShowing ? 1.0 : 0.0
+                Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
             }
 
             // Sync/Refresh Button
             Button {
                 id: refreshButton
                 padding: 8
+                
+                // Ghost Fade
+                opacity: todoRoot.isShowing ? 1.0 : 0.0
+                enabled: todoRoot.isShowing
+                Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+
                 background: Rectangle {
                     radius: 8
                     color: refreshButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
@@ -96,10 +111,34 @@ Rectangle {
                 }
             }
 
+            // Local Eye Toggle (Always Visible in Ghost Mode)
+            Button {
+                id: eyeButton
+                padding: 8
+                background: Rectangle {
+                    radius: 8
+                    color: eyeButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                }
+                contentItem: Image {
+                    source: todoRoot.isShowing ? "../assets/eye-svgrepo-com.svg" : "../assets/eye-slash-svgrepo-com.svg"
+                    sourceSize: Qt.size(20, 20)
+                    fillMode: Image.PreserveAspectFit
+                    layer.enabled: true
+                    layer.effect: ColorOverlay { color: todoRoot.isShowing ? Theme.sapphire : Theme.subtext0 }
+                }
+                onClicked: todoRoot.isShowing = !todoRoot.isShowing
+            }
+
             // Auth Button (Consistency with Subject Trackers)
             Button {
                 id: authButton
                 padding: 8
+                
+                // Ghost Fade
+                opacity: todoRoot.isShowing ? 1.0 : 0.0
+                enabled: todoRoot.isShowing
+                Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+
                 background: Rectangle {
                     radius: 8
                     color: authButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
@@ -127,6 +166,10 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 8
             visible: todosData.length > 0
+            
+            // Ghost Fade
+            opacity: todoRoot.isShowing ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
             
             property int completedCount: {
                 let count = 0;
@@ -178,6 +221,11 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            
+            // Ghost Fade
+            opacity: todoRoot.isShowing ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+            
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
             Column {

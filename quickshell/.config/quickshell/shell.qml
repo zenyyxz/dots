@@ -3,17 +3,21 @@
 //@ pragma IconTheme "breeze-dark"
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import Quickshell.Services.Mpris
+import Qt5Compat.GraphicalEffects
 import "theme"
 import "components"
 
 ShellRoot {
     id: root
+
+    property bool studyVisible: true
 
     PanelWindow {
         id: panel
@@ -47,6 +51,29 @@ ShellRoot {
                     onClicked: appLauncher.visible = !appLauncher.visible
                 }
                 Workspaces { }
+
+                // --- Master Eye Toggle ---
+                Button {
+                    id: masterEye
+                    padding: 4
+                    Layout.preferredWidth: 32; Layout.preferredHeight: 32
+                    background: Rectangle {
+                        radius: Theme.radius
+                        color: masterEye.hovered ? Theme.surface1 : Theme.surface0
+                        border.color: masterEye.pressed ? Theme.mauve : Theme.surface1
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                    }
+                    contentItem: Image {
+                        source: root.studyVisible ? "assets/eye-svgrepo-com.svg" : "assets/eye-slash-svgrepo-com.svg"
+                        sourceSize: Qt.size(20, 20)
+                        fillMode: Image.PreserveAspectFit
+                        layer.enabled: true
+                        layer.effect: ColorOverlay { color: root.studyVisible ? Theme.mauve : Theme.subtext0 }
+                    }
+                    onClicked: root.studyVisible = !root.studyVisible
+                }
+
                 Media { }
                 // Title { }
             }
@@ -132,6 +159,7 @@ ShellRoot {
             right: true
         }
         
+        visible: root.studyVisible
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.namespace: "study-tracker-todo"
         WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
@@ -303,6 +331,7 @@ ShellRoot {
             bottom: true
         }
         
+        visible: root.studyVisible
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.namespace: "study-tracker"
         WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
@@ -331,6 +360,7 @@ ShellRoot {
             bottom: true
         }
         
+        visible: root.studyVisible
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.namespace: "study-tracker-science"
         WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
