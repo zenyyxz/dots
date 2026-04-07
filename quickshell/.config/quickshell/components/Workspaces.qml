@@ -180,7 +180,7 @@ Rectangle {
             id: pacman
             x: root.pacmanX; y: parent.height/2 - height/2
             width: 20; height: 20
-            source: root.isEating ? Quickshell.shellPath("assets/pacman-eating.svg") : Quickshell.shellPath("assets/pacman.svg")
+            source: root.isEating ? Quickshell.shellPath("assets/pacman.svg") : Quickshell.shellPath("assets/pacman-eating.svg")
             visible: false
             z: 11
         }
