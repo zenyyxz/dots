@@ -395,7 +395,7 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
-        implicitWidth: 530
+        implicitWidth: 550
         margins {
             top: 56 
             left: 570 // mathsTracker (550) + margin (10) + gap (10)
@@ -411,6 +411,7 @@ ShellRoot {
                 Layout.fillHeight: true
                 subjectName: "Physics"
                 initTopicCount: 10
+                flexibleWidth: true
             }
 
             StudyTracker {
@@ -418,6 +419,7 @@ ShellRoot {
                 Layout.fillHeight: true
                 subjectName: "ICT"
                 initTopicCount: 10
+                flexibleWidth: true
             }
         }
     }
