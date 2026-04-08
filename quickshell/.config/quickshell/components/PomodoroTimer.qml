@@ -78,37 +78,71 @@ Rectangle {
         }
 
         // Subject Selector
-        ScrollView {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 35
-            clip: true
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        Rectangle {
+            id: subjectPillContainer
+            Layout.alignment: Qt.AlignHCenter
+            height: 32
+            implicitWidth: subRow.implicitWidth + 8
+            radius: 16
+            color: Theme.surface1
+
+            Rectangle {
+                id: selectionIndicator
+                height: 26
+                radius: 13
+                color: Theme.mauve
+                y: 3
+                visible: root.selectedSubjectId !== -1
+                Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+            }
             
             RowLayout {
-                spacing: 8
+                id: subRow
+                anchors.centerIn: parent
+                spacing: 4
                 Repeater {
                     model: root.subjects
-                    delegate: Rectangle {
-                        height: 25
-                        implicitWidth: subLabel.implicitWidth + 20
-                        radius: 12
-                        color: root.selectedSubjectId === modelData.id ? Theme.mauve : Theme.surface1
-                        border.color: root.selectedSubjectId === modelData.id ? Theme.mauve : "transparent"
+                    delegate: Item {
+                        id: subjectItem
+                        height: 26
+                        implicitWidth: subLabel.implicitWidth + 24
                         
                         Text {
                             id: subLabel
                             anchors.centerIn: parent
-                            text: modelData.name
+                            text: {
+                                if (modelData.name === "Combined Maths") return "CM";
+                                if (modelData.name === "Physics") return "P6";
+                                if (modelData.name === "ICT") return "IT";
+                                return modelData.name;
+                            }
                             color: root.selectedSubjectId === modelData.id ? Theme.crust : Theme.text
                             font.family: Theme.fontName
-                            font.pixelSize: 10
+                            font.pixelSize: 11
                             font.bold: true
+                            Behavior on color { ColorAnimation { duration: 250 } }
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             onClicked: root.selectedSubjectId = modelData.id
                         }
+
+                        function updateIndicator() {
+                            if (root.selectedSubjectId === modelData.id) {
+                                selectionIndicator.x = subjectItem.x + subRow.x;
+                                selectionIndicator.width = subjectItem.width;
+                            }
+                        }
+
+                        Connections {
+                            target: root
+                            function onSelectedSubjectIdChanged() { subjectItem.updateIndicator(); }
+                        }
+                        
+                        Component.onCompleted: subjectItem.updateIndicator();
+                        onXChanged: subjectItem.updateIndicator();
                     }
                 }
             }
