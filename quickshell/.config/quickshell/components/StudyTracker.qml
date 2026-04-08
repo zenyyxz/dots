@@ -135,7 +135,7 @@ Rectangle {
                     sourceSize: Qt.size(20, 20)
                     fillMode: Image.PreserveAspectFit
                     layer.enabled: true
-                    layer.effect: ColorOverlay { color: trackerRoot.isShowing ? Theme.mauve : Theme.subtext0 }
+                    layer.effect: ColorOverlay { color: trackerRoot.isShowing ? Theme.sapphire : Theme.subtext0 }
                 }
                 onClicked: trackerRoot.isShowing = !trackerRoot.isShowing
             }

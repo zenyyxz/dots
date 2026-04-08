@@ -8,11 +8,11 @@ Rectangle {
     id: dashboardRoot
     
     // Horizontal Layout Dimensions
-    width: 800
-    height: 500
+    implicitWidth: 800
+    implicitHeight: 500
     
     radius: Theme.radius
-    color: Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.85)
+    color: Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.85)
     border.color: Theme.surface0
     border.width: 1
     

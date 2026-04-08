@@ -60,7 +60,7 @@ ShellRoot {
                     background: Rectangle {
                         radius: Theme.radius
                         color: masterEye.hovered ? Theme.surface1 : Theme.surface0
-                        border.color: masterEye.pressed ? Theme.mauve : Theme.surface1
+                        border.color: masterEye.pressed ? Theme.sapphire : Theme.surface1
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 200 } }
                     }
@@ -69,7 +69,7 @@ ShellRoot {
                         sourceSize: Qt.size(20, 20)
                         fillMode: Image.PreserveAspectFit
                         layer.enabled: true
-                        layer.effect: ColorOverlay { color: root.studyVisible ? Theme.mauve : Theme.subtext0 }
+                        layer.effect: ColorOverlay { color: root.studyVisible ? Theme.sapphire : Theme.subtext0 }
                     }
                     onClicked: root.studyVisible = !root.studyVisible
                 }
@@ -166,7 +166,7 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
-        width: 800
+        width: 775
         height: 500
         margins {
             bottom: 10
