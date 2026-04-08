@@ -365,7 +365,7 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
-        implicitWidth: 450
+        implicitWidth: 550
         margins {
             top: 56 
             left: 10
@@ -375,6 +375,7 @@ ShellRoot {
         StudyTracker {
             anchors.fill: parent
             subjectName: "Combined Maths"
+            flexibleWidth: true
         }
     }
 
@@ -397,7 +398,7 @@ ShellRoot {
         implicitWidth: 530
         margins {
             top: 56 
-            left: 470 // mathsTracker (450) + margin (10) + gap (10)
+            left: 570 // mathsTracker (550) + margin (10) + gap (10)
             bottom: 8
         }
 

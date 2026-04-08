@@ -9,6 +9,7 @@ Rectangle {
     
     property bool authenticated: false
     property bool isShowing: true
+    property bool flexibleWidth: false
     property string subjectName: "Subject"
     property var columnTitles: ["T", "R", "PP", "MP"]
     readonly property var columnColors: [Theme.mauve, Theme.lavender, Theme.sapphire, Theme.teal]
@@ -32,9 +33,16 @@ Rectangle {
 
     // Geometry Constants
     readonly property int colIndexWidth: 40
-    readonly property int colLessonWidth: 240
+    property int colLessonWidth: 240
     readonly property int colCheckWidth: 60
     readonly property int cellHeight: 34
+
+    onWidthChanged: {
+        if (flexibleWidth) {
+            let calculated = width - colIndexWidth - (colCheckWidth * 4) - 26; // Account for margins and vertical scrollbar
+            colLessonWidth = Math.max(calculated, 150);
+        }
+    }
 
     implicitWidth: colIndexWidth + colLessonWidth + (colCheckWidth * 4) + 2 
     color: Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.85)
@@ -176,7 +184,7 @@ Rectangle {
             opacity: trackerRoot.isShowing ? 1.0 : 0.0
             Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
             
-            ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+            ScrollBar.horizontal.policy: trackerRoot.flexibleWidth ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
 
             Column {
                 id: tableGrid
