@@ -22,13 +22,13 @@ Item {
         // Background Circle (the "track")
         ShapePath {
             strokeColor: Theme.surface1
-            strokeWidth: 2
+            strokeWidth: 6
             fillColor: "transparent"
             capStyle: ShapePath.RoundCap
 
             PathAngleArc {
-                centerX: 8; centerY: 8
-                radiusX: 6; radiusY: 6
+                centerX: root.width / 2; centerY: root.height / 2
+                radiusX: (root.width / 2) - 10; radiusY: (root.height / 2) - 10
                 startAngle: -90
                 sweepAngle: 360
             }
@@ -37,13 +37,13 @@ Item {
         // Foreground Circle (the "usage")
         ShapePath {
             strokeColor: root.color
-            strokeWidth: 2
+            strokeWidth: 6
             fillColor: "transparent"
             capStyle: ShapePath.RoundCap
 
             PathAngleArc {
-                centerX: 8; centerY: 8
-                radiusX: 6; radiusY: 6
+                centerX: root.width / 2; centerY: root.height / 2
+                radiusX: (root.width / 2) - 10; radiusY: (root.height / 2) - 10
                 startAngle: -90
                 sweepAngle: 360 * root.value
             }

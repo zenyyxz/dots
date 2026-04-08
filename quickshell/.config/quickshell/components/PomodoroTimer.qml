@@ -57,7 +57,11 @@ Rectangle {
             } else {
                 root.running = false;
                 if (root.mode === "focus") {
-                    root.finished(25 * 60, root.selectedSubjectId);
+                    let totalSeconds = 25 * 60;
+                    service.logStudyTime(totalSeconds, root.selectedSubjectId, () => {
+                        root.finished(totalSeconds, root.selectedSubjectId);
+                        service.logToFile(`[Pomodoro] Logged ${totalSeconds}s for subject ${root.selectedSubjectId}`);
+                    });
                 }
             }
         }
@@ -150,54 +154,45 @@ Rectangle {
 
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            spacing: 10
+            spacing: 30
             
-            Button {
-                text: "Focus"
-                flat: true
-                onClicked: root.setMode("focus")
-                contentItem: Text {
-                    text: parent.text
-                    color: root.mode === "focus" ? Theme.mauve : Theme.subtext0
+            Repeater {
+                model: [
+                    { name: "Focus", mode: "focus", color: Theme.mauve },
+                    { name: "Short", mode: "short", color: Theme.green },
+                    { name: "Long", mode: "long", color: Theme.blue }
+                ]
+                delegate: Text {
+                    text: modelData.name
+                    color: root.mode === modelData.mode ? modelData.color : Theme.subtext0
                     font.family: Theme.fontName
-                    font.bold: root.mode === "focus"
-                }
-            }
-            Button {
-                text: "Short"
-                flat: true
-                onClicked: root.setMode("short")
-                contentItem: Text {
-                    text: parent.text
-                    color: root.mode === "short" ? Theme.green : Theme.subtext0
-                    font.family: Theme.fontName
-                    font.bold: root.mode === "short"
-                }
-            }
-            Button {
-                text: "Long"
-                flat: true
-                onClicked: root.setMode("long")
-                contentItem: Text {
-                    text: parent.text
-                    color: root.mode === "long" ? Theme.blue : Theme.subtext0
-                    font.family: Theme.fontName
-                    font.bold: root.mode === "long"
+                    font.pixelSize: 16
+                    font.bold: root.mode === modelData.mode
+                    
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: root.setMode(modelData.mode)
+                    }
                 }
             }
         }
 
         Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: 120
+            Layout.preferredHeight: 150
             
-            Rectangle {
+            ProgressCircle {
                 anchors.centerIn: parent
-                width: 120; height: 120; radius: 60
-                color: "transparent"
-                border.color: root.mode === "focus" ? Theme.mauve : (root.mode === "short" ? Theme.green : Theme.blue)
-                border.width: 4
-                opacity: 0.3
+                width: 140; height: 140
+                value: {
+                    let total = 25 * 60;
+                    if (root.mode === "short") total = 5 * 60;
+                    else if (root.mode === "long") total = 15 * 60;
+                    return (total - root.secondsRemaining) / total;
+                }
+                color: root.mode === "focus" ? Theme.mauve : (root.mode === "short" ? Theme.green : Theme.blue)
             }
 
             Text {
@@ -205,7 +200,7 @@ Rectangle {
                 text: root.formatTime(root.secondsRemaining)
                 color: Theme.text
                 font.family: Theme.fontName
-                font.pixelSize: 36
+                font.pixelSize: 42
                 font.bold: true
             }
         }
