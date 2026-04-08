@@ -186,6 +186,7 @@ Rectangle {
             ProgressCircle {
                 anchors.centerIn: parent
                 width: 140; height: 140
+                strokeWidth: 6
                 value: {
                     let total = 25 * 60;
                     if (root.mode === "short") total = 5 * 60;
