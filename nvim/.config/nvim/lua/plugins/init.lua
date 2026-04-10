@@ -23,7 +23,7 @@ return {
         },
         custom_highlights = function(colors)
           return {
-            -- Force lualine to be transparent
+            -- Force transparency across various UI components
             LualineNormal = { bg = "NONE" },
             LualineInsert = { bg = "NONE" },
             LualineVisual = { bg = "NONE" },
@@ -31,6 +31,12 @@ return {
             LualineCommand = { bg = "NONE" },
             LualineInactive = { bg = "NONE" },
             StatusLine = { bg = "NONE" },
+            StatusLineNC = { bg = "NONE" },
+            TabLine = { bg = "NONE" },
+            TabLineFill = { bg = "NONE" },
+            TabLineSel = { bg = "NONE" },
+            WinSeparator = { bg = "NONE" },
+            VertSplit = { bg = "NONE" },
             -- Neon blue scope highlight
             MiniIndentscopeSymbol = { fg = "#00ffff" },
           }
@@ -45,7 +51,7 @@ return {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     opts = {
-      ensure_installed = { "lua", "javascript", "typescript", "python", "bash", "markdown", "hyprlang", "c", "cpp" },
+      ensure_installed = { "lua", "javascript", "typescript", "python", "bash", "markdown", "hyprlang", "c", "cpp", "qmljs" },
       highlight = { enable = true },
     },
     config = function(_, opts)
@@ -79,12 +85,23 @@ return {
         ensure_installed = { "lua_ls", "ts_ls", "pyright" },
       })
       
-      local servers = { "lua_ls", "ts_ls", "pyright" }
+      local servers = { "lua_ls", "ts_ls", "pyright", "qmlls" }
+      
       for _, lsp in ipairs(servers) do
+        local opts = {}
+        if lsp == "qmlls" then
+          opts.cmd = { "/usr/bin/qmlls6" }
+        end
+
         if vim.lsp.enable then
+          -- Neovim 0.11+ way: avoids require('lspconfig') warning
+          if next(opts) ~= nil and vim.lsp.config then
+            vim.lsp.config(lsp, opts)
+          end
           vim.lsp.enable(lsp)
         else
-          require("lspconfig")[lsp].setup({})
+          -- Fallback for older Neovim versions
+          require("lspconfig")[lsp].setup(opts)
         end
       end
       
@@ -221,15 +238,18 @@ return {
   -- Statusline
   {
     "nvim-lualine/lualine.nvim",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    opts = {
-      options = {
-        theme = "catppuccin",
-        globalstatus = true,
-        component_separators = { left = "", right = "" },
-        section_separators = { left = "", right = "" },
-      },
-    },
+    event = "VeryLazy",
+    dependencies = { "nvim-tree/nvim-web-devicons", "catppuccin" },
+    opts = function()
+      return {
+        options = {
+          theme = "auto",
+          globalstatus = true,
+          component_separators = { left = "", right = "" },
+          section_separators = { left = "", right = "" },
+        },
+      }
+    end,
   },
 
   -- File Explorer
