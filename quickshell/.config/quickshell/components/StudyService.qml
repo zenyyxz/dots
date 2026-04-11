@@ -273,6 +273,7 @@ function deleteTodo(todoId, callback) {
 }
 
 function updateHistory(date, seconds, callback) {
+    service.logToFile(`[StudyService] Updating history: ${date} -> ${seconds}s`);
     const qml = `
         import Quickshell
         import Quickshell.Io
@@ -280,7 +281,11 @@ function updateHistory(date, seconds, callback) {
             property var finishedCallback: null
             running: false
             command: ["${bridgePath}", "update_history", "${date}", "${seconds}"]
+            stderr: SplitParser {
+                onRead: msg => service.logToFile("[StudyService Bridge Error] " + msg)
+            }
             onExited: status => {
+                service.logToFile("[StudyService Bridge] update_history exited with status: " + status);
                 if (status === 0 && finishedCallback) finishedCallback();
                 this.destroy();
             }

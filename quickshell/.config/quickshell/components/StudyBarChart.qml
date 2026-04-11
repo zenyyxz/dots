@@ -259,6 +259,8 @@ Rectangle {
                         height: parent.height
                         spacing: 6
                         
+                        readonly property string date: modelData.date
+                        readonly property string day: modelData.day
                         readonly property real hours: modelData.seconds / 3600
                         
                         Item {
@@ -330,7 +332,7 @@ Rectangle {
                                                     // Requirement says: "fill up all pills up to 5th pill".
                                                     // And "remove 4th and 5th pills" if clicking 3rd.
                                                     
-                                                    root.timeSet(modelData.date, targetSeconds);
+                                                    root.timeSet(barCol.date, targetSeconds);
                                                 }
                                             }
                                         }
@@ -374,7 +376,7 @@ Rectangle {
                         
                         Text {
                             Layout.alignment: Qt.AlignHCenter
-                            text: modelData.day
+                            text: barCol.day
                             color: Theme.subtext0
                             font.family: Theme.smallFontName
                             font.pixelSize: 9
