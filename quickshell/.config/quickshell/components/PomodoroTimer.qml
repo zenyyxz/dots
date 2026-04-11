@@ -76,8 +76,8 @@ Rectangle {
     signal finished(int totalSeconds, int subjectId)
     
     radius: Theme.radius
-    color: Theme.surface0
-    border.color: Theme.surface1
+    color: Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.85)
+    border.color: Theme.surface0
     border.width: 1
     
     width: 300

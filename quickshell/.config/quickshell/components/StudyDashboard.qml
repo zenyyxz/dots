@@ -12,7 +12,7 @@ Rectangle {
     implicitHeight: 500
     
     radius: Theme.radius
-    color: Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.85)
+    color: Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.95)
     border.color: Theme.surface0
     border.width: 1
     

@@ -26,8 +26,8 @@ Rectangle {
     }
 
     radius: Theme.radius
-    color: Theme.surface0
-    border.color: Theme.surface1
+    color: Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.85)
+    border.color: Theme.surface0
     border.width: 1
     
     width: 400
@@ -224,22 +224,22 @@ Rectangle {
         Rectangle {
             id: motivationBox
             Layout.fillWidth: true
-            Layout.preferredHeight: 45
+            Layout.preferredHeight: 50
             radius: 10
-            color: root.authenticated ? Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.05) : Theme.surface0
+            color: root.authenticated ? Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.08) : Theme.mantle
             border.color: root.authenticated ? Theme.teal : Theme.surface1
             border.width: 1
             Behavior on color { ColorAnimation { duration: 200 } }
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 10
+                anchors.margins: 12
+                spacing: 12
 
                 Text {
                     text: root.authenticated ? "󰏫" : "󰄬"
                     font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 16
+                    font.pixelSize: 18
                     color: Theme.teal
                 }
 
@@ -249,7 +249,7 @@ Rectangle {
                     text: root.motivation
                     color: Theme.text
                     font.family: Theme.smallFontName
-                    font.pixelSize: 10
+                    font.pixelSize: 13
                     font.italic: !root.authenticated
                     enabled: root.authenticated
                     selectByMouse: true
