@@ -305,7 +305,12 @@ Rectangle {
                                             font.family: Theme.smallFontName
                                             font.pixelSize: 9
                                             font.weight: Font.DemiBold
-                                            visible: !root.authenticated && pillHover.containsMouse
+                                            
+                                            opacity: !root.authenticated && pillHover.containsMouse ? 1.0 : 0.0
+                                            scale: opacity
+                                            
+                                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                                            Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
                                         }
                                     }
                                 }
