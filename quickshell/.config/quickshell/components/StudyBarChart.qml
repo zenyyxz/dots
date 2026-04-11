@@ -42,6 +42,16 @@ Rectangle {
         return (total / history.length) / 3600;
     }
 
+    function getOptimisticAverage(targetIndex, targetSeconds) {
+        if (!history || history.length === 0) return 0;
+        let total = 0;
+        for (let i = 0; i < history.length; i++) {
+            if (i === targetIndex) total += targetSeconds;
+            else total += history[i].seconds;
+        }
+        return (total / history.length) / 3600;
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 16
@@ -272,6 +282,7 @@ Rectangle {
                         height: parent.height
                         spacing: 6
                         
+                        readonly property int dayIndex: index
                         readonly property string date: modelData.date
                         readonly property string day: modelData.day
                         
@@ -363,8 +374,16 @@ Rectangle {
                                             onClicked: {
                                                 if (root.authenticated) {
                                                     let targetHours = pillIndex + 1;
+                                                    let targetSeconds = targetHours * 3600;
+                                                    
                                                     barCol.animateTo(targetHours);
-                                                    root.timeSet(barCol.date, targetHours * 3600);
+                                                    
+                                                    // Optimistic Summary Update: Update numbers immediately to align with pill animation
+                                                    if (barCol.dayIndex === 6) statsPill.visualToday = targetHours;
+                                                    if (barCol.dayIndex === 5) statsPill.visualYesterday = targetHours;
+                                                    statsPill.visualAvg = root.getOptimisticAverage(barCol.dayIndex, targetSeconds);
+                                                    
+                                                    root.timeSet(barCol.date, targetSeconds);
                                                 }
                                             }
                                         }
