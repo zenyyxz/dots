@@ -126,6 +126,8 @@ Rectangle {
         return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
     }
 
+    property int _elapsedSeconds: 0
+
     Timer {
         id: mainTimer
         interval: 1000
@@ -134,8 +136,24 @@ Rectangle {
         onTriggered: {
             if (root.secondsRemaining > 0) {
                 root.secondsRemaining--;
+                root._elapsedSeconds++;
+                
+                // Log every minute to the DB
+                if (root._elapsedSeconds >= 60) {
+                    service.logStudyTime(60, root.selectedSubjectId);
+                    root._elapsedSeconds = 0;
+                    service.logToFile(`[Pomodoro] Synced 60s to DB (Running)`);
+                }
             } else {
                 root.running = false;
+                
+                // Log any remaining seconds that didn't make a full minute
+                if (root._elapsedSeconds > 0) {
+                    service.logStudyTime(root._elapsedSeconds, root.selectedSubjectId);
+                    service.logToFile(`[Pomodoro] Synced final ${root._elapsedSeconds}s to DB (Finished)`);
+                    root._elapsedSeconds = 0;
+                }
+
                 let totalSeconds = 0;
                 if (root.mode === "focus") {
                     totalSeconds = 25 * 60;
@@ -145,12 +163,8 @@ Rectangle {
                     }
                 }
                 
-                if (totalSeconds > 0) {
-                    service.logStudyTime(totalSeconds, root.selectedSubjectId, () => {
-                        root.finished(totalSeconds, root.selectedSubjectId);
-                        service.logToFile(`[Pomodoro] Logged ${totalSeconds}s for subject ${root.selectedSubjectId}`);
-                    });
-                }
+                root.finished(totalSeconds, root.selectedSubjectId);
+                service.logToFile(`[Pomodoro] Timer sequence completed`);
             }
         }
     }
