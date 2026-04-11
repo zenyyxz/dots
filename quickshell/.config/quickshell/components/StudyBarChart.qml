@@ -74,41 +74,38 @@ Rectangle {
             // --- Live Reload Toggle Button ---
             Button {
                 id: liveToggle
-                width: 60; height: 24
+                Layout.preferredWidth: 32; Layout.preferredHeight: 32
                 enabled: root.authenticated
                 
                 background: Rectangle {
-                    radius: 12
-                    color: root.liveReload ? Qt.rgba(Theme.green.r, Theme.green.g, Theme.green.b, 0.15) : Theme.surface1
-                    border.color: root.liveReload ? Theme.green : Theme.surface2
+                    radius: 8
+                    color: liveToggle.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                    border.color: liveToggle.pressed ? Theme.green : "transparent"
                     border.width: 1
                     opacity: root.authenticated ? 1.0 : 0.5
                 }
 
-                contentItem: Row {
-                    spacing: 4
-                    anchors.centerIn: parent
-                    opacity: root.authenticated ? 1.0 : 0.5
-                    
+                contentItem: Item {
                     Rectangle {
-                        width: 6; height: 6; radius: 3
+                        id: glowDot
+                        width: 8; height: 8; radius: 4
                         color: root.liveReload ? Theme.green : Theme.subtext0
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.centerIn: parent
                         
                         SequentialAnimation on opacity {
                             running: root.liveReload
                             loops: Animation.Infinite
-                            NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
-                            NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
+                            NumberAnimation { from: 1.0; to: 0.4; duration: 1000; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: 0.4; to: 1.0; duration: 1000; easing.type: Easing.InOutQuad }
                         }
-                    }
-                    Text {
-                        text: "LIVE"
-                        color: root.liveReload ? Theme.green : Theme.subtext0
-                        font.family: Theme.smallFontName
-                        font.pixelSize: 9
-                        font.bold: true
-                        anchors.verticalCenter: parent.verticalCenter
+
+                        layer.enabled: root.liveReload
+                        layer.effect: Glow {
+                            radius: 12
+                            samples: 15
+                            color: Theme.green
+                            transparentBorder: true
+                        }
                     }
                 }
 
