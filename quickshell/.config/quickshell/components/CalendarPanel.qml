@@ -256,7 +256,7 @@ PanelWindow {
                             }
 
                             // 3. Minimalist Numbers (12, 3, 6, 9)
-                            ctx.font = "bold 14px '" + Theme.fontName + "'";
+                            ctx.font = "bold 14px 'JetBrains Mono'";
                             ctx.textAlign = "center";
                             ctx.textBaseline = "middle";
                             var nums = [12, 3, 6, 9];
