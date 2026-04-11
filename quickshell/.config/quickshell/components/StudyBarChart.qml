@@ -261,7 +261,31 @@ Rectangle {
                         
                         readonly property string date: modelData.date
                         readonly property string day: modelData.day
-                        readonly property real hours: modelData.seconds / 3600
+                        
+                        property real visualHours: modelData.seconds / 3600
+
+                        NumberAnimation {
+                            id: fillAnim
+                            target: barCol
+                            property: "visualHours"
+                            duration: 700
+                            easing.type: Easing.OutCubic
+                        }
+
+                        function animateTo(target) {
+                            fillAnim.stop();
+                            fillAnim.from = visualHours;
+                            fillAnim.to = target;
+                            fillAnim.start();
+                        }
+
+                        // Keep visualHours in sync with model updates when locked
+                        Binding {
+                            target: barCol
+                            property: "visualHours"
+                            value: modelData.seconds / 3600
+                            when: !root.authenticated && !fillAnim.running
+                        }
                         
                         Item {
                             Layout.fillWidth: true
@@ -282,7 +306,7 @@ Rectangle {
                                         radius: 5
                                         
                                         readonly property int pillIndex: 15 - index
-                                        readonly property bool active: pillIndex < Math.floor(barCol.hours)
+                                        readonly property bool active: pillIndex < Math.floor(barCol.visualHours)
                                         property bool showNumber: false
                                         
                                         color: {
@@ -297,7 +321,9 @@ Rectangle {
                                         }
                                         
                                         opacity: (active || (root.authenticated && pillHover.containsMouse)) ? 1.0 : 0.3
-                                        Behavior on opacity { NumberAnimation { duration: 400 } }
+                                        
+                                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                                        Behavior on color { ColorAnimation { duration: 150 } }
 
                                         Timer {
                                             id: hideTimer
@@ -323,16 +349,9 @@ Rectangle {
                                             }
                                             onClicked: {
                                                 if (root.authenticated) {
-                                                    // Set total time to this pill's level (1-indexed)
-                                                    let targetSeconds = (pillIndex + 1) * 3600;
-                                                    
-                                                    // Special case: if clicking exactly the current highest active pill, 
-                                                    // AND the bar is not exactly a full hour (e.g. 2.5 hours), 
-                                                    // should it round up to 3 or set to exactly 3?
-                                                    // Requirement says: "fill up all pills up to 5th pill".
-                                                    // And "remove 4th and 5th pills" if clicking 3rd.
-                                                    
-                                                    root.timeSet(barCol.date, targetSeconds);
+                                                    let targetHours = pillIndex + 1;
+                                                    barCol.animateTo(targetHours);
+                                                    root.timeSet(barCol.date, targetHours * 3600);
                                                 }
                                             }
                                         }
@@ -365,12 +384,12 @@ Rectangle {
                                 anchors.bottom: parent.top
                                 anchors.bottomMargin: 2
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: barCol.hours.toFixed(1) + "h"
+                                text: barCol.visualHours.toFixed(1) + "h"
                                 color: Theme.text
                                 font.family: Theme.fontName
                                 font.pixelSize: 9
                                 font.bold: true
-                                visible: barCol.hours > 0
+                                visible: barCol.visualHours > 0
                             }
                         }
                         

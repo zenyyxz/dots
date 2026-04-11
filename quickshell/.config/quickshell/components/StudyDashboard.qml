@@ -32,6 +32,12 @@ Rectangle {
     }
 
     Timer {
+        id: refreshTimer
+        interval: 1000
+        onTriggered: dashboardRoot.refresh()
+    }
+
+    Timer {
         interval: 30000 // 30 seconds
         running: dashboardRoot.liveReload
         repeat: true
@@ -63,7 +69,7 @@ Rectangle {
             liveReload: dashboardRoot.liveReload
             onToggleLiveReload: dashboardRoot.liveReload = !dashboardRoot.liveReload
             onTimeSet: (date, seconds) => {
-                service.updateHistory(date, seconds, () => dashboardRoot.refresh());
+                service.updateHistory(date, seconds, () => refreshTimer.start());
             }
         }
     }
