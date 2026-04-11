@@ -62,8 +62,8 @@ Rectangle {
             history: dashboardRoot.stats.history
             liveReload: dashboardRoot.liveReload
             onToggleLiveReload: dashboardRoot.liveReload = !dashboardRoot.liveReload
-            onTimeAdjusted: (seconds) => {
-                service.logStudyTime(seconds, -1, () => dashboardRoot.refresh());
+            onTimeSet: (date, seconds) => {
+                service.updateHistory(date, seconds, () => dashboardRoot.refresh());
             }
         }
     }

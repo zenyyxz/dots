@@ -272,6 +272,25 @@ function deleteTodo(todoId, callback) {
     obj.running = true;
 }
 
+function updateHistory(date, seconds, callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "update_history", "${date}", "${seconds}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
 // --- Dashboard & History ---
 
 function getDashboardStats(callback) {

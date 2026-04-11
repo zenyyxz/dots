@@ -15,7 +15,7 @@ Rectangle {
     property bool authenticated: false
     property string motivation: "Study like there's no tomorrow."
     signal toggleLiveReload()
-    signal timeAdjusted(int seconds)
+    signal timeSet(string date, int seconds)
     
     StudyService { id: service }
 
@@ -321,8 +321,16 @@ Rectangle {
                                             }
                                             onClicked: {
                                                 if (root.authenticated) {
-                                                    // Add or remove 1 hour (3600 seconds)
-                                                    root.timeAdjusted(active ? -3600 : 3600);
+                                                    // Set total time to this pill's level (1-indexed)
+                                                    let targetSeconds = (pillIndex + 1) * 3600;
+                                                    
+                                                    // Special case: if clicking exactly the current highest active pill, 
+                                                    // AND the bar is not exactly a full hour (e.g. 2.5 hours), 
+                                                    // should it round up to 3 or set to exactly 3?
+                                                    // Requirement says: "fill up all pills up to 5th pill".
+                                                    // And "remove 4th and 5th pills" if clicking 3rd.
+                                                    
+                                                    root.timeSet(modelData.date, targetSeconds);
                                                 }
                                             }
                                         }

@@ -91,22 +91,34 @@ public:
         // 2. Global 7-Day History
         result["history"] = json::array();
         for (int i = 6; i >= 0; --i) {
-            const char* histSql = "SELECT seconds FROM study_history WHERE date = date('now', 'localtime', ?);";
+            const char* histSql = "SELECT seconds, date(date('now', 'localtime'), ?) FROM study_history WHERE date = date('now', 'localtime', ?);";
             if (sqlite3_prepare_v2(db, histSql, -1, &stmt, nullptr) == SQLITE_OK) {
                 std::string offset = "-" + std::to_string(i) + " days";
                 sqlite3_bind_text(stmt, 1, offset.c_str(), -1, SQLITE_STATIC);
+                sqlite3_bind_text(stmt, 2, offset.c_str(), -1, SQLITE_STATIC);
                 
                 int seconds = 0;
+                std::string actualDate = "";
                 if (sqlite3_step(stmt) == SQLITE_ROW) {
                     seconds = sqlite3_column_int(stmt, 0);
+                    actualDate = (const char*)sqlite3_column_text(stmt, 1);
+                } else {
+                    sqlite3_finalize(stmt);
+                    const char* dateSql = "SELECT date(date('now', 'localtime'), ?);";
+                    if (sqlite3_prepare_v2(db, dateSql, -1, &stmt, nullptr) == SQLITE_OK) {
+                        sqlite3_bind_text(stmt, 1, offset.c_str(), -1, SQLITE_STATIC);
+                        if (sqlite3_step(stmt) == SQLITE_ROW) {
+                            actualDate = (const char*)sqlite3_column_text(stmt, 0);
+                        }
+                    }
                 }
                 
                 json day;
-                const char* dayNameSql = "SELECT strftime('%w', 'now', 'localtime', ?);";
+                const char* dayNameSql = "SELECT strftime('%w', ?);";
                 sqlite3_stmt* nameStmt;
                 std::string dayName = "?";
                 if (sqlite3_prepare_v2(db, dayNameSql, -1, &nameStmt, nullptr) == SQLITE_OK) {
-                    sqlite3_bind_text(nameStmt, 1, offset.c_str(), -1, SQLITE_STATIC);
+                    sqlite3_bind_text(nameStmt, 1, actualDate.c_str(), -1, SQLITE_STATIC);
                     if (sqlite3_step(nameStmt) == SQLITE_ROW) {
                         int dayIdx = sqlite3_column_int(nameStmt, 0);
                         const char* days[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -116,6 +128,7 @@ public:
                 }
 
                 day["day"] = dayName;
+                day["date"] = actualDate;
                 day["seconds"] = seconds;
                 result["history"].push_back(day);
                 sqlite3_finalize(stmt);
@@ -179,6 +192,17 @@ public:
                 sqlite3_step(stmt);
                 sqlite3_finalize(stmt);
             }
+        }
+    }
+
+    void updateHistory(const std::string& date, int seconds) {
+        const char* sql = "INSERT OR REPLACE INTO study_history (date, seconds) VALUES (?, ?);";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, date.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 2, seconds);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
         }
     }
 
@@ -592,11 +616,13 @@ int main(int argc, char* argv[]) {
             if (key != "") {
                 std::cout << "{\"value\":\"" << sdb.getConfig(key) << "\"}" << std::endl;
             } else {
-                // Future: return all config?
                 std::cout << "{}" << std::endl;
             }
         } else if (cmd == "set_config" && argc == 4) {
             sdb.setConfig(argv[2], argv[3]);
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "update_history" && argc == 4) {
+            sdb.updateHistory(argv[2], std::stoi(argv[3]));
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         }
     } catch (const std::exception& e) {
