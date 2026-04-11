@@ -283,6 +283,9 @@ Rectangle {
                                         property bool showNumber: false
                                         
                                         color: {
+                                            if (root.authenticated && pillHover.containsMouse) {
+                                                return active ? Theme.red : Theme.green;
+                                            }
                                             if (!active) return Theme.surface1;
                                             if (pillIndex < 4) return Theme.sky;
                                             if (pillIndex < 8) return Theme.teal;
@@ -290,7 +293,7 @@ Rectangle {
                                             return Theme.mauve;
                                         }
                                         
-                                        opacity: active ? 1.0 : 0.3
+                                        opacity: (active || (root.authenticated && pillHover.containsMouse)) ? 1.0 : 0.3
                                         Behavior on opacity { NumberAnimation { duration: 400 } }
 
                                         Timer {
@@ -303,22 +306,35 @@ Rectangle {
                                             id: pillHover
                                             anchors.fill: parent
                                             hoverEnabled: true
+                                            cursorShape: root.authenticated ? Qt.PointingHandCursor : Qt.ArrowCursor
                                             onEntered: {
-                                                hideTimer.stop();
-                                                pill.showNumber = true;
+                                                if (!root.authenticated) {
+                                                    hideTimer.stop();
+                                                    pill.showNumber = true;
+                                                }
                                             }
-                                            onExited: hideTimer.start();
+                                            onExited: {
+                                                if (!root.authenticated) {
+                                                    hideTimer.start();
+                                                }
+                                            }
                                         }
 
                                         Text {
                                             anchors.centerIn: parent
-                                            text: (pillIndex + 1).toString()
+                                            text: {
+                                                if (root.authenticated) return active ? "－" : "＋";
+                                                return (pillIndex + 1).toString();
+                                            }
                                             color: Theme.crust
                                             font.family: Theme.smallFontName
-                                            font.pixelSize: 9
+                                            font.pixelSize: root.authenticated ? 12 : 9
                                             font.weight: Font.DemiBold
                                             
-                                            opacity: !root.authenticated && pill.active && pill.showNumber ? 1.0 : 0.0
+                                            opacity: {
+                                                if (root.authenticated) return pillHover.containsMouse ? 1.0 : 0.0;
+                                                return pill.active && pill.showNumber ? 1.0 : 0.0;
+                                            }
                                             scale: opacity
                                             
                                             Behavior on opacity { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
