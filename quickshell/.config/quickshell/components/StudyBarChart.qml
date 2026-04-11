@@ -94,7 +94,7 @@ Rectangle {
                     Text {
                         text: "LIVE"
                         color: root.liveReload ? Theme.green : Theme.subtext0
-                        font.family: Theme.fontName
+                        font.family: Theme.smallFontName
                         font.pixelSize: 9
                         font.bold: true
                         anchors.verticalCenter: parent.verticalCenter
@@ -168,7 +168,7 @@ Rectangle {
                             Text { 
                                 text: modelData.label
                                 color: Theme.subtext0
-                                font.family: Theme.fontName
+                                font.family: Theme.smallFontName
                                 font.pixelSize: 9
                                 font.bold: true
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -224,7 +224,7 @@ Rectangle {
                     Layout.fillWidth: true
                     text: root.motivation
                     color: Theme.text
-                    font.family: Theme.fontName
+                    font.family: Theme.smallFontName
                     font.pixelSize: 10
                     font.italic: !root.authenticated
                     enabled: root.authenticated
@@ -273,6 +273,7 @@ Rectangle {
                                 Repeater {
                                     model: 16
                                     delegate: Rectangle {
+                                        id: pill
                                         width: parent.width
                                         height: 12
                                         radius: 5
@@ -290,6 +291,22 @@ Rectangle {
                                         
                                         opacity: active ? 1.0 : 0.3
                                         Behavior on opacity { NumberAnimation { duration: 400 } }
+
+                                        MouseArea {
+                                            id: pillHover
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                        }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: (pillIndex + 1).toString()
+                                            color: Theme.crust
+                                            font.family: Theme.smallFontName
+                                            font.pixelSize: 9
+                                            font.weight: Font.DemiBold
+                                            visible: !root.authenticated && pillHover.containsMouse
+                                        }
                                     }
                                 }
                             }
@@ -311,7 +328,7 @@ Rectangle {
                             Layout.alignment: Qt.AlignHCenter
                             text: modelData.day
                             color: Theme.subtext0
-                            font.family: Theme.fontName
+                            font.family: Theme.smallFontName
                             font.pixelSize: 9
                             font.bold: true
                         }

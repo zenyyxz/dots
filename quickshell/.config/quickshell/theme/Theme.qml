@@ -41,6 +41,7 @@ QtObject {
     readonly property color borderColor: surface0
     
     readonly property string fontName: "JetBrains Mono, FreeSerif, LKLUG, serif"
+    readonly property string smallFontName: "Adwaita Sans, Nimbus Sans, Helvetica, Arial, sans-serif"
     readonly property int fontSize: 11
 
     // Animations
