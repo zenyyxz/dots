@@ -285,6 +285,7 @@ Rectangle {
                         readonly property int dayIndex: index
                         readonly property string date: modelData.date
                         readonly property string day: modelData.day
+                        property bool dayHovered: false
                         
                         property real visualHours: modelData.seconds / 3600
 
@@ -334,8 +335,8 @@ Rectangle {
                                         property bool showNumber: false
                                         
                                         color: {
-                                            if (root.authenticated && pillHover.containsMouse) {
-                                                return active ? Theme.red : Theme.green;
+                                            if (root.authenticated && (pillHover.containsMouse || barCol.dayHovered)) {
+                                                return active ? Theme.red : (pillHover.containsMouse ? Theme.green : Theme.surface1);
                                             }
                                             if (!active) return Theme.surface1;
                                             if (pillIndex < 4) return Theme.sky;
@@ -344,7 +345,11 @@ Rectangle {
                                             return Theme.mauve;
                                         }
                                         
-                                        opacity: (active || (root.authenticated && pillHover.containsMouse)) ? 1.0 : 0.3
+                                        opacity: {
+                                            if (active) return 1.0;
+                                            if (root.authenticated && pillHover.containsMouse) return 1.0;
+                                            return 0.3;
+                                        }
                                         
                                         Behavior on opacity { NumberAnimation { duration: 150 } }
                                         Behavior on color { ColorAnimation { duration: 150 } }
@@ -426,12 +431,34 @@ Rectangle {
                         }
                         
                         Text {
+                            id: dayLabel
                             Layout.alignment: Qt.AlignHCenter
-                            text: barCol.day
-                            color: Theme.subtext0
+                            text: root.authenticated && barCol.dayHovered ? "－" : barCol.day
+                            color: root.authenticated && barCol.dayHovered ? Theme.red : Theme.subtext0
                             font.family: Theme.smallFontName
-                            font.pixelSize: 9
+                            font.pixelSize: root.authenticated && barCol.dayHovered ? 12 : 9
                             font.bold: true
+                            
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: root.authenticated ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onEntered: if (root.authenticated) barCol.dayHovered = true
+                                onExited: barCol.dayHovered = false
+                                onClicked: {
+                                    if (root.authenticated) {
+                                        // Clear entire day
+                                        barCol.animateTo(0);
+                                        
+                                        // Optimistic Summary Update
+                                        if (barCol.dayIndex === 6) statsPill.visualToday = 0;
+                                        if (barCol.dayIndex === 5) statsPill.visualYesterday = 0;
+                                        statsPill.visualAvg = root.getOptimisticAverage(barCol.dayIndex, 0);
+                                        
+                                        root.timeSet(barCol.date, 0);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
