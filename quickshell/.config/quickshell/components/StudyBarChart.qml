@@ -118,8 +118,7 @@ Rectangle {
             // --- Auth Button ---
             Button {
                 id: authButton
-                padding: 4
-                Layout.preferredWidth: 32; Layout.preferredHeight: 32
+                padding: 8
                 
                 background: Rectangle {
                     radius: 6
