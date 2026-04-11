@@ -15,6 +15,7 @@ Rectangle {
     property bool authenticated: false
     property string motivation: "Study like there's no tomorrow."
     signal toggleLiveReload()
+    signal timeAdjusted(int seconds)
     
     StudyService { id: service }
 
@@ -316,6 +317,12 @@ Rectangle {
                                             onExited: {
                                                 if (!root.authenticated) {
                                                     hideTimer.start();
+                                                }
+                                            }
+                                            onClicked: {
+                                                if (root.authenticated) {
+                                                    // Add or remove 1 hour (3600 seconds)
+                                                    root.timeAdjusted(active ? -3600 : 3600);
                                                 }
                                             }
                                         }
