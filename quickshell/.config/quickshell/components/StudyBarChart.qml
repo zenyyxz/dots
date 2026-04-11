@@ -318,7 +318,7 @@ Rectangle {
                                             font.pixelSize: 9
                                             font.weight: Font.DemiBold
                                             
-                                            opacity: !root.authenticated && pill.showNumber ? 1.0 : 0.0
+                                            opacity: !root.authenticated && pill.active && pill.showNumber ? 1.0 : 0.0
                                             scale: opacity
                                             
                                             Behavior on opacity { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
