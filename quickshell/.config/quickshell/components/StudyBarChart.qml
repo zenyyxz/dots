@@ -147,8 +147,21 @@ Rectangle {
             border.color: Theme.surface1
             border.width: 1
             
-            readonly property real todayHours: (root.history && root.history.length > 0) ? root.history[root.history.length - 1].seconds / 3600 : 0
-            readonly property real yesterdayHours: (root.history && root.history.length > 1) ? root.history[root.history.length - 2].seconds / 3600 : 0
+            readonly property real actualTodayHours: (root.history && root.history.length > 0) ? root.history[root.history.length - 1].seconds / 3600 : 0
+            readonly property real actualYesterdayHours: (root.history && root.history.length > 1) ? root.history[root.history.length - 2].seconds / 3600 : 0
+            readonly property real actualAvgHours: root.getAverage()
+
+            property real visualToday: actualTodayHours
+            property real visualYesterday: actualYesterdayHours
+            property real visualAvg: actualAvgHours
+
+            Behavior on visualToday { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+            Behavior on visualYesterday { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+            Behavior on visualAvg { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+
+            onActualTodayHoursChanged: visualToday = actualTodayHours
+            onActualYesterdayHoursChanged: visualYesterday = actualYesterdayHours
+            onActualAvgHoursChanged: visualAvg = actualAvgHours
 
             Row {
                 anchors.centerIn: parent
@@ -156,9 +169,9 @@ Rectangle {
 
                 Repeater {
                     model: [
-                        { val: statsPill.yesterdayHours.toFixed(1) + "h", color: Theme.subtext0, label: "Yest" },
-                        { val: statsPill.todayHours.toFixed(1) + "h", color: Theme.teal, label: "Today" },
-                        { val: root.getAverage().toFixed(1) + "h", color: Theme.mauve, label: "Avg" }
+                        { val: statsPill.visualYesterday.toFixed(1) + "h", color: Theme.subtext0, label: "Yest" },
+                        { val: statsPill.visualToday.toFixed(1) + "h", color: Theme.teal, label: "Today" },
+                        { val: statsPill.visualAvg.toFixed(1) + "h", color: Theme.mauve, label: "Avg" }
                     ]
                     delegate: Row {
                         spacing: 25
