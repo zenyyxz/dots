@@ -162,7 +162,7 @@ ShellRoot {
         visible: root.studyVisible
         WlrLayershell.layer: WlrLayer.Bottom // Background layer
         WlrLayershell.namespace: "study-dashboard-static"
-        WlrLayershell.keyboardFocus: WlrLayershell.None // NEVER steal focus
+        WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
