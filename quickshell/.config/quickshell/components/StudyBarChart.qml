@@ -430,14 +430,20 @@ Rectangle {
                             }
                         }
                         
-                        Text {
-                            id: dayLabel
+                        Item {
                             Layout.alignment: Qt.AlignHCenter
-                            text: root.authenticated && barCol.dayHovered ? "－" : barCol.day
-                            color: root.authenticated && barCol.dayHovered ? Theme.red : Theme.subtext0
-                            font.family: Theme.smallFontName
-                            font.pixelSize: root.authenticated && barCol.dayHovered ? 12 : 9
-                            font.bold: true
+                            Layout.preferredWidth: parent.width
+                            Layout.preferredHeight: 20
+
+                            Text {
+                                id: dayLabel
+                                anchors.centerIn: parent
+                                text: root.authenticated && barCol.dayHovered ? "－" : barCol.day
+                                color: root.authenticated && barCol.dayHovered ? Theme.red : Theme.subtext0
+                                font.family: Theme.smallFontName
+                                font.pixelSize: root.authenticated && barCol.dayHovered ? 12 : 9
+                                font.bold: true
+                            }
                             
                             MouseArea {
                                 anchors.fill: parent
@@ -447,14 +453,10 @@ Rectangle {
                                 onExited: barCol.dayHovered = false
                                 onClicked: {
                                     if (root.authenticated) {
-                                        // Clear entire day
                                         barCol.animateTo(0);
-                                        
-                                        // Optimistic Summary Update
                                         if (barCol.dayIndex === 6) statsPill.visualToday = 0;
                                         if (barCol.dayIndex === 5) statsPill.visualYesterday = 0;
                                         statsPill.visualAvg = root.getOptimisticAverage(barCol.dayIndex, 0);
-                                        
                                         root.timeSet(barCol.date, 0);
                                     }
                                 }
