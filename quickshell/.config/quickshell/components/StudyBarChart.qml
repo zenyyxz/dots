@@ -280,6 +280,7 @@ Rectangle {
                                         
                                         readonly property int pillIndex: 15 - index
                                         readonly property bool active: pillIndex < Math.floor(barCol.hours)
+                                        property bool showNumber: false
                                         
                                         color: {
                                             if (!active) return Theme.surface1;
@@ -292,10 +293,21 @@ Rectangle {
                                         opacity: active ? 1.0 : 0.3
                                         Behavior on opacity { NumberAnimation { duration: 400 } }
 
+                                        Timer {
+                                            id: hideTimer
+                                            interval: 2000 // 2 seconds delay
+                                            onTriggered: pill.showNumber = false
+                                        }
+
                                         MouseArea {
                                             id: pillHover
                                             anchors.fill: parent
                                             hoverEnabled: true
+                                            onEntered: {
+                                                hideTimer.stop();
+                                                pill.showNumber = true;
+                                            }
+                                            onExited: hideTimer.start();
                                         }
 
                                         Text {
@@ -306,11 +318,11 @@ Rectangle {
                                             font.pixelSize: 9
                                             font.weight: Font.DemiBold
                                             
-                                            opacity: !root.authenticated && pillHover.containsMouse ? 1.0 : 0.0
+                                            opacity: !root.authenticated && pill.showNumber ? 1.0 : 0.0
                                             scale: opacity
                                             
-                                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                                            Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                                            Behavior on opacity { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
                                         }
                                     }
                                 }
