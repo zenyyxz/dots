@@ -16,30 +16,62 @@ Rectangle {
     property var subjects: []
     StudyService { id: service }
 
-    Settings {
-        id: timerSettings
-        category: "Pomodoro"
-        property string customTimersJson: "[]"
-        property int lastSelectedIndex: -1
+    property var customTimersList: []
+    property int _internalSelectedIndex: -1
+
+    function refreshTimers() {
+        service.getTimers((data) => {
+            customTimersList = data;
+        });
     }
 
-    property var customTimersList: []
+    function saveState() {
+        service.setConfig("pomodoro_subject_id", root.selectedSubjectId.toString());
+        service.setConfig("pomodoro_mode", root.mode);
+        if (root.mode === "custom" && customTimersList.length > 0 && _internalSelectedIndex !== -1) {
+            let currentTimer = customTimersList[_internalSelectedIndex];
+            if (currentTimer) service.setConfig("pomodoro_custom_id", currentTimer.id.toString());
+        }
+    }
 
     Component.onCompleted: {
         Qt.application.name = "PomodoroTimer";
         Qt.application.organization = "quickshell";
         
-        try {
-            customTimersList = JSON.parse(timerSettings.customTimersJson);
-        } catch(e) {
-            customTimersList = [];
-        }
+        service.getTimers((timers) => {
+            customTimersList = timers;
+            
+            service.getConfig("pomodoro_mode", (modeVal) => {
+                if (modeVal) root.mode = modeVal;
+                
+                service.getConfig("pomodoro_custom_id", (idVal) => {
+                    if (idVal) {
+                        let idx = timers.findIndex(t => t.id === parseInt(idVal));
+                        if (idx !== -1) {
+                            _internalSelectedIndex = idx;
+                            if (root.mode === "custom") {
+                                setCustomMode(idx, false);
+                            }
+                        }
+                    }
+                });
+            });
+        });
 
         service.getSubjects((data) => {
             subjects = data;
-            if (data.length > 0) selectedSubjectId = data[0].id;
+            service.getConfig("pomodoro_subject_id", (val) => {
+                if (val && parseInt(val) !== -1) {
+                    root.selectedSubjectId = parseInt(val);
+                } else if (data.length > 0) {
+                    root.selectedSubjectId = data[0].id;
+                }
+            });
         });
     }
+
+    onSelectedSubjectIdChanged: saveState()
+    onModeChanged: saveState()
 
     signal finished(int totalSeconds, int subjectId)
     
@@ -55,25 +87,37 @@ Rectangle {
         root.running = false;
         root.mode = newMode;
         if (newMode === "focus") root.secondsRemaining = 25 * 60;
+        saveState();
     }
 
-    function setCustomMode(index) {
+    function setCustomMode(index, shouldSave = true) {
         if (index >= 0 && index < root.customTimersList.length) {
             root.running = false;
             root.mode = "custom";
             let mins = root.customTimersList[index].minutes;
             root.secondsRemaining = mins * 60;
-            timerSettings.lastSelectedIndex = index;
+            _internalSelectedIndex = index;
+            if (shouldSave) saveState();
         }
     }
 
     function addCustomTimer(name, minutes) {
-        let newList = root.customTimersList.slice();
-        newList.push({name: name, minutes: minutes});
-        timerSettings.customTimersJson = JSON.stringify(newList);
-        root.customTimersList = newList;
-        timerSettings.lastSelectedIndex = newList.length - 1;
-        setCustomMode(newList.length - 1);
+        service.addTimer(name, minutes, () => {
+            service.getTimers((data) => {
+                customTimersList = data;
+                setCustomMode(data.length - 1);
+            });
+        });
+    }
+
+    function deleteCustomTimer(id) {
+        service.deleteTimer(id, () => {
+            refreshTimers();
+            if (root.mode === "custom") {
+                root.setMode("focus");
+                _internalSelectedIndex = -1;
+            }
+        });
     }
 
     function formatTime(s) {
@@ -96,8 +140,8 @@ Rectangle {
                 if (root.mode === "focus") {
                     totalSeconds = 25 * 60;
                 } else if (root.mode === "custom") {
-                    if (timerSettings.lastSelectedIndex >= 0 && timerSettings.lastSelectedIndex < root.customTimersList.length) {
-                        totalSeconds = root.customTimersList[timerSettings.lastSelectedIndex].minutes * 60;
+                    if (_internalSelectedIndex >= 0 && _internalSelectedIndex < root.customTimersList.length) {
+                        totalSeconds = root.customTimersList[_internalSelectedIndex].minutes * 60;
                     }
                 }
                 
@@ -217,8 +261,8 @@ Rectangle {
                 id: customPlaceholder
                 text: {
                     if (root.customTimersList.length === 0) return "Custom +";
-                    if (timerSettings.lastSelectedIndex >= 0 && timerSettings.lastSelectedIndex < root.customTimersList.length) {
-                        let t = root.customTimersList[timerSettings.lastSelectedIndex];
+                    if (_internalSelectedIndex >= 0 && _internalSelectedIndex < root.customTimersList.length) {
+                        let t = root.customTimersList[_internalSelectedIndex];
                         return t.name + " " + t.minutes + "m";
                     }
                     return "Custom";
@@ -236,7 +280,7 @@ Rectangle {
                             addTimerDialog.open();
                         } else {
                             if (root.mode !== "custom") {
-                                root.setCustomMode(timerSettings.lastSelectedIndex);
+                                root.setCustomMode(_internalSelectedIndex);
                             } else {
                                 customTimerPopup.open();
                             }
@@ -278,8 +322,8 @@ Rectangle {
                 value: {
                     let total = 25 * 60;
                     if (root.mode === "custom") {
-                        if (timerSettings.lastSelectedIndex >= 0 && timerSettings.lastSelectedIndex < root.customTimersList.length) {
-                            total = root.customTimersList[timerSettings.lastSelectedIndex].minutes * 60;
+                        if (_internalSelectedIndex >= 0 && _internalSelectedIndex < root.customTimersList.length) {
+                            total = root.customTimersList[_internalSelectedIndex].minutes * 60;
                         }
                     }
                     return (total - root.secondsRemaining) / total;
@@ -294,8 +338,8 @@ Rectangle {
                 Text {
                     text: {
                         if (root.mode === "focus") return "FOCUS";
-                        if (timerSettings.lastSelectedIndex >= 0 && timerSettings.lastSelectedIndex < root.customTimersList.length) {
-                            return root.customTimersList[timerSettings.lastSelectedIndex].name.toUpperCase();
+                        if (_internalSelectedIndex >= 0 && _internalSelectedIndex < root.customTimersList.length) {
+                            return root.customTimersList[_internalSelectedIndex].name.toUpperCase();
                         }
                         return "CUSTOM";
                     }
@@ -421,21 +465,23 @@ Rectangle {
                         height: 40
                         radius: 6
                         color: {
-                            if (timerSettings.lastSelectedIndex === index && root.mode === "custom") return Theme.surface1;
+                            if (_internalSelectedIndex === index && root.mode === "custom") return Theme.surface1;
                             return timerHover.containsMouse ? Theme.surface1 : "transparent";
                         }
-                        border.color: (timerSettings.lastSelectedIndex === index && root.mode === "custom") ? Theme.sapphire : "transparent"
+                        border.color: (_internalSelectedIndex === index && root.mode === "custom") ? Theme.sapphire : "transparent"
                         border.width: 1
                         
                         RowLayout {
                             anchors.fill: parent
                             anchors.margins: 10
+                            spacing: 8
                             Text {
                                 text: modelData.name
                                 color: Theme.text
                                 font.family: Theme.fontName
                                 font.pixelSize: 14
                                 Layout.fillWidth: true
+                                elide: Text.ElideRight
                             }
                             Text {
                                 text: modelData.minutes + "m"
@@ -443,6 +489,32 @@ Rectangle {
                                 font.family: Theme.fontName
                                 font.pixelSize: 12
                                 font.bold: true
+                            }
+                            
+                            // Delete Button
+                            Rectangle {
+                                width: 24; height: 24
+                                radius: 12
+                                color: deleteHover.containsMouse ? Theme.red : "transparent"
+                                opacity: deleteHover.containsMouse ? 1.0 : 0.5
+                                visible: !root.running // Don't allow deleting while running
+                                
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰆴"
+                                    font.family: "JetBrainsMono Nerd Font"
+                                    font.pixelSize: 14
+                                    color: deleteHover.containsMouse ? Theme.crust : Theme.subtext0
+                                }
+                                
+                                MouseArea {
+                                    id: deleteHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        root.deleteCustomTimer(modelData.id);
+                                    }
+                                }
                             }
                         }
                         

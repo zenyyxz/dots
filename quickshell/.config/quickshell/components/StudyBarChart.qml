@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Io
 import "../theme"
@@ -11,8 +12,18 @@ Rectangle {
     property var history: []
     property real maxHours: 8.0
     property bool liveReload: false
+    property bool authenticated: false
+    property string motivation: "Study like there's no tomorrow."
     signal toggleLiveReload()
     
+    StudyService { id: service }
+
+    Component.onCompleted: {
+        service.getConfig("motivation_quote", (val) => {
+            if (val) root.motivation = val;
+        });
+    }
+
     radius: Theme.radius
     color: Theme.surface0
     border.color: Theme.surface1
@@ -53,17 +64,21 @@ Rectangle {
             Button {
                 id: liveToggle
                 width: 60; height: 24
+                enabled: root.authenticated
                 
                 background: Rectangle {
                     radius: 12
                     color: root.liveReload ? Qt.rgba(Theme.green.r, Theme.green.g, Theme.green.b, 0.15) : Theme.surface1
                     border.color: root.liveReload ? Theme.green : Theme.surface2
                     border.width: 1
+                    opacity: root.authenticated ? 1.0 : 0.5
                 }
 
                 contentItem: Row {
                     spacing: 4
                     anchors.centerIn: parent
+                    opacity: root.authenticated ? 1.0 : 0.5
+                    
                     Rectangle {
                         width: 6; height: 6; radius: 3
                         color: root.liveReload ? Theme.green : Theme.subtext0
@@ -87,6 +102,37 @@ Rectangle {
                 }
 
                 onClicked: root.toggleLiveReload()
+            }
+
+            // --- Auth Button ---
+            Button {
+                id: authButton
+                padding: 4
+                Layout.preferredWidth: 32; Layout.preferredHeight: 32
+                
+                background: Rectangle {
+                    radius: 6
+                    color: authButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                    border.color: authButton.pressed ? Theme.mauve : "transparent"
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+                
+                contentItem: Image {
+                    source: root.authenticated ? "../assets/unlock.svg" : "../assets/lock.svg"
+                    sourceSize: Qt.size(20, 20)
+                    fillMode: Image.PreserveAspectFit
+                    layer.enabled: true
+                    layer.effect: ColorOverlay {
+                        color: root.authenticated ? Theme.green : Theme.red
+                    }
+                    opacity: authButton.hovered ? 1.0 : 0.8
+                }
+                
+                scale: pressed ? 0.9 : 1.0
+                Behavior on scale { NumberAnimation { duration: 100 } }
+                
+                onClicked: root.authenticated = !root.authenticated
             }
         }
 
@@ -156,9 +202,10 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 45
             radius: 10
-            color: Theme.surface0
-            border.color: Theme.surface1
+            color: root.authenticated ? Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.05) : Theme.surface0
+            border.color: root.authenticated ? Theme.teal : Theme.surface1
             border.width: 1
+            Behavior on color { ColorAnimation { duration: 200 } }
 
             RowLayout {
                 anchors.fill: parent
@@ -166,20 +213,29 @@ Rectangle {
                 spacing: 10
 
                 Text {
-                    text: "󰄬"
+                    text: root.authenticated ? "󰏫" : "󰄬"
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 16
                     color: Theme.teal
                 }
 
-                Text {
+                TextInput {
+                    id: motivationInput
                     Layout.fillWidth: true
-                    text: "Study like there's no tomorrow."
+                    text: root.motivation
                     color: Theme.text
                     font.family: Theme.fontName
                     font.pixelSize: 10
-                    font.italic: true
-                    wrapMode: Text.WordWrap
+                    font.italic: !root.authenticated
+                    enabled: root.authenticated
+                    selectByMouse: true
+                    
+                    onEditingFinished: {
+                        if (text !== root.motivation) {
+                            root.motivation = text;
+                            service.setConfig("motivation_quote", text);
+                        }
+                    }
                 }
             }
         }

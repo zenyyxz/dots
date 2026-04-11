@@ -49,7 +49,7 @@ Rectangle {
         PomodoroTimer {
             Layout.preferredWidth: 350
             Layout.fillHeight: true
-            onFinished: (s, sid) => service.logStudyTime(s, sid, () => dashboardRoot.refresh())
+            onFinished: (s, sid) => dashboardRoot.refresh()
         }
 
         // Vertical Separator

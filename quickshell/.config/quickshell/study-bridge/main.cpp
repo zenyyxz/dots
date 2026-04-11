@@ -28,6 +28,8 @@ public:
             "CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY AUTOINCREMENT, subject_id INTEGER, name TEXT, display_order INTEGER, FOREIGN KEY(subject_id) REFERENCES subjects(id));"
             "CREATE TABLE IF NOT EXISTS progress (topic_id INTEGER PRIMARY KEY, c1 BOOLEAN DEFAULT 0, c2 BOOLEAN DEFAULT 0, c3 BOOLEAN DEFAULT 0, c4 BOOLEAN DEFAULT 0, FOREIGN KEY(topic_id) REFERENCES topics(id));"
             "CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, completed BOOLEAN DEFAULT 0, display_order INTEGER);"
+            "CREATE TABLE IF NOT EXISTS timers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, minutes INTEGER);"
+            "CREATE TABLE IF NOT EXISTS config (key TEXT PRIMARY KEY, value TEXT);"
             "CREATE TABLE IF NOT EXISTS study_history (date TEXT PRIMARY KEY, seconds INTEGER DEFAULT 0);"
             "CREATE TABLE IF NOT EXISTS study_history_subjects (date TEXT, subject_id INTEGER, seconds INTEGER DEFAULT 0, PRIMARY KEY(date, subject_id));"
             "CREATE TABLE IF NOT EXISTS deadlines (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, date TEXT, subject_id INTEGER);";
@@ -294,6 +296,69 @@ public:
         }
     }
 
+    json getTimers() {
+        const char* sql = "SELECT id, name, minutes FROM timers;";
+        sqlite3_stmt* stmt;
+        json result = json::array();
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                json t;
+                t["id"] = sqlite3_column_int(stmt, 0);
+                t["name"] = (const char*)sqlite3_column_text(stmt, 1);
+                t["minutes"] = sqlite3_column_int(stmt, 2);
+                result.push_back(t);
+            }
+            sqlite3_finalize(stmt);
+        }
+        return result;
+    }
+
+    void addTimer(const std::string& name, int minutes) {
+        const char* sql = "INSERT INTO timers (name, minutes) VALUES (?, ?);";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 2, minutes);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    void deleteTimer(int id) {
+        const char* sql = "DELETE FROM timers WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, id);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
+    std::string getConfig(const std::string& key, const std::string& defaultValue = "") {
+        const char* sql = "SELECT value FROM config WHERE key = ?;";
+        sqlite3_stmt* stmt;
+        std::string value = defaultValue;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, key.c_str(), -1, SQLITE_STATIC);
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                value = (const char*)sqlite3_column_text(stmt, 0);
+            }
+            sqlite3_finalize(stmt);
+        }
+        return value;
+    }
+
+    void setConfig(const std::string& key, const std::string& value) {
+        const char* sql = "INSERT OR REPLACE INTO config (key, value) VALUES (?, ?);";
+        sqlite3_stmt* stmt;
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_text(stmt, 1, key.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 2, value.c_str(), -1, SQLITE_STATIC);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+        }
+    }
+
     json getSubjectData(const std::string& subjectName) {
         const char* sql = "SELECT id FROM subjects WHERE name = ?;";
         sqlite3_stmt* stmt;
@@ -513,6 +578,25 @@ int main(int argc, char* argv[]) {
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         } else if (cmd == "delete_deadline" && argc == 3) {
             sdb.deleteDeadline(std::stoi(argv[2]));
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "get_timers" && argc == 2) {
+            std::cout << sdb.getTimers().dump() << std::endl;
+        } else if (cmd == "add_timer" && argc == 4) {
+            sdb.addTimer(argv[2], std::stoi(argv[3]));
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "delete_timer" && argc == 3) {
+            sdb.deleteTimer(std::stoi(argv[2]));
+            std::cout << "{\"status\":\"ok\"}" << std::endl;
+        } else if (cmd == "get_config" && (argc == 3 || argc == 2)) {
+            std::string key = (argc == 3) ? argv[2] : "";
+            if (key != "") {
+                std::cout << "{\"value\":\"" << sdb.getConfig(key) << "\"}" << std::endl;
+            } else {
+                // Future: return all config?
+                std::cout << "{}" << std::endl;
+            }
+        } else if (cmd == "set_config" && argc == 4) {
+            sdb.setConfig(argv[2], argv[3]);
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         }
     } catch (const std::exception& e) {

@@ -403,5 +403,114 @@ function deleteDeadline(id, callback) {
     obj.finishedCallback = callback;
     obj.running = true;
 }
+
+function getTimers(callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "get_timers"]
+            stdout: SplitParser {
+                property string output: ""
+                onRead: msg => output += msg
+            }
+            onExited: status => {
+                if (status === 0) {
+                    try {
+                        const data = JSON.parse(stdout.output);
+                        if (finishedCallback) finishedCallback(data);
+                    } catch (e) { console.error("Timers parse error:", e); }
+                }
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
 }
 
+function addTimer(name, minutes, callback) {
+    const qml = `
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "add_timer", "${name}", "${minutes}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function deleteTimer(id, callback) {
+    const qml = `
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "delete_timer", "${id}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function getConfig(key, callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "get_config", "${key}"]
+            stdout: SplitParser {
+                property string output: ""
+                onRead: msg => output += msg
+            }
+            onExited: status => {
+                if (status === 0) {
+                    try {
+                        const data = JSON.parse(stdout.output);
+                        if (finishedCallback) finishedCallback(data.value);
+                    } catch (e) { console.error("Config parse error:", e); }
+                }
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
+function setConfig(key, value, callback) {
+    const qml = `
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "set_config", "${key}", "${value}"]
+            onExited: status => {
+                if (status === 0 && finishedCallback) finishedCallback();
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+}
