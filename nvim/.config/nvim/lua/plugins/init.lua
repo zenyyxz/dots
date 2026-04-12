@@ -50,13 +50,11 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
+    main = "nvim-treesitter",
     opts = {
       ensure_installed = { "lua", "javascript", "typescript", "python", "bash", "markdown", "hyprlang", "c", "cpp", "qmljs" },
       highlight = { enable = true },
     },
-    config = function(_, opts)
-      require("nvim-treesitter").setup(opts)
-    end,
   },
 
   -- Telescope
@@ -82,10 +80,10 @@ return {
     config = function()
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "ts_ls", "pyright" },
+        ensure_installed = { "lua_ls", "ts_ls", "pyright", "clangd" },
       })
       
-      local servers = { "lua_ls", "ts_ls", "pyright", "qmlls" }
+      local servers = { "lua_ls", "ts_ls", "pyright", "qmlls", "clangd" }
       
       for _, lsp in ipairs(servers) do
         local opts = {}
