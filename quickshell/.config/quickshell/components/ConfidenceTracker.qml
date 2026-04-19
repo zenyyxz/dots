@@ -13,40 +13,14 @@ Rectangle {
     StudyService { id: service }
 
     property var subjects: []
-    property var subjectProgress: ({})
-    property var subjectCounts: ({})
     property bool loading: false
 
     function refresh() {
+        if (loading) return;
         loading = true;
-        service.getSubjects((data) => {
+        service.getSubjectProgress((data) => {
             subjects = data;
             loading = false;
-            if (data) {
-                data.forEach(s => updateProgressForSubject(s.name));
-            }
-        });
-    }
-
-    function updateProgressForSubject(subjectName) {
-        service.getSubjectData(subjectName, (data) => {
-            if (!data || data.length === 0) return;
-            let total = data.length;
-            let completed = 0;
-            for (let i = 0; i < total; i++) {
-                if (data[i].checked && data[i].checked[0]) completed++;
-            }
-            let percentage = Math.round((completed / total) * 100);
-            
-            // Percentage
-            let newProgress = JSON.parse(JSON.stringify(subjectProgress));
-            newProgress[subjectName] = percentage;
-            subjectProgress = newProgress;
-
-            // Counts
-            let newCounts = JSON.parse(JSON.stringify(subjectCounts));
-            newCounts[subjectName] = completed + "/" + total;
-            subjectCounts = newCounts;
         });
     }
 
@@ -176,8 +150,9 @@ Rectangle {
                     property int subjectId: modelData ? modelData.id : -1
                     property string subjectName: modelData ? modelData.name : ""
                     property int currentRating: (modelData && modelData.rating) ? modelData.rating : 0
-                    property int progress: (subjectProgress[subjectName] !== undefined) ? subjectProgress[subjectName] : 0
-                    property string counts: (subjectCounts[subjectName] !== undefined) ? subjectCounts[subjectName] : "0/0"
+                    property int completedCount: (modelData && modelData.completed) ? modelData.completed : 0
+                    property int totalCount: (modelData && modelData.total) ? modelData.total : 0
+                    property real progress: totalCount > 0 ? (completedCount / totalCount) : 0
 
                     readonly property color subjectColor: {
                         const name = subjectName.toLowerCase();
@@ -185,6 +160,18 @@ Rectangle {
                         if (name.includes("physics")) return Theme.maroon;
                         if (name.includes("ict")) return Theme.green;
                         return Theme.mauve;
+                    }
+
+                    function getRatingColor(val) {
+                        const colors = [
+                            Theme.red,    // 1
+                            Theme.peach,  // 2
+                            Theme.yellow, // 3
+                            Theme.sky,    // 4
+                            Theme.teal,   // 5
+                            Theme.green   // 6
+                        ];
+                        return colors[val - 1] || Theme.surface1;
                     }
 
                     RowLayout {
@@ -230,8 +217,8 @@ Rectangle {
                                     width: 22
                                     height: 22
                                     radius: 5
-                                    color: (index + 1) <= currentRating ? subjectColor : Theme.base
-                                    border.color: (index + 1) <= currentRating ? subjectColor : Theme.surface1
+                                    color: (index + 1) <= currentRating ? getRatingColor(index + 1) : Theme.base
+                                    border.color: (index + 1) <= currentRating ? getRatingColor(index + 1) : Theme.surface1
                                     border.width: 1
 
                                     MouseArea {
@@ -244,15 +231,6 @@ Rectangle {
                                             }
                                         }
                                     }
-
-                                    Rectangle {
-                                        anchors.centerIn: parent
-                                        width: 8
-                                        height: 8
-                                        radius: 2
-                                        color: Theme.crust
-                                        visible: (index + 1) <= currentRating
-                                    }
                                 }
                             }
                         }
@@ -262,7 +240,7 @@ Rectangle {
 
                         // Raw Lesson Count Label
                         Text {
-                            text: counts
+                            text: completedCount + "/" + totalCount
                             color: Theme.subtext0
                             font.family: Theme.fontName
                             font.pixelSize: 10
@@ -286,14 +264,14 @@ Rectangle {
 
                             ProgressCircle {
                                 anchors.fill: parent
-                                value: progress / 100
+                                value: progress
                                 color: subjectColor
                                 strokeWidth: 3
                             }
 
                             Text {
                                 anchors.centerIn: parent
-                                text: progress + "%"
+                                text: Math.round(progress * 100) + "%"
                                 color: Theme.text
                                 font.family: Theme.fontName
                                 font.pixelSize: 10

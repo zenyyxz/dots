@@ -391,7 +391,36 @@ function getSubjects(callback) {
     obj.running = true;
 }
 
+function getSubjectProgress(callback) {
+    const qml = `
+        import Quickshell
+        import Quickshell.Io
+        Process {
+            property var finishedCallback: null
+            running: false
+            command: ["${bridgePath}", "get_subject_progress"]
+            stdout: SplitParser {
+                property string output: ""
+                onRead: msg => output += msg
+            }
+            onExited: status => {
+                if (status === 0) {
+                    try {
+                        const data = JSON.parse(stdout.output);
+                        if (finishedCallback) finishedCallback(data);
+                    } catch (e) { console.error("Subject progress parse error:", e); }
+                }
+                this.destroy();
+            }
+        }
+    `;
+    const obj = Qt.createQmlObject(qml, service, "dynamicProcess");
+    obj.finishedCallback = callback;
+    obj.running = true;
+}
+
 function addDeadline(task, date, subjectId, callback) {
+
     const sId = subjectId !== undefined ? subjectId : -1;
     const qml = `
         import Quickshell.Io

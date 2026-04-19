@@ -511,7 +511,7 @@ public:
     }
 
     json getSubjects() {
-        const char* sql = "SELECT id, name FROM subjects;";
+        const char* sql = "SELECT id, name, rating FROM subjects;";
         sqlite3_stmt* stmt;
         json result = json::array();
         if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
@@ -519,6 +519,31 @@ public:
                 json s;
                 s["id"] = sqlite3_column_int(stmt, 0);
                 s["name"] = (const char*)sqlite3_column_text(stmt, 1);
+                s["rating"] = sqlite3_column_int(stmt, 2);
+                result.push_back(s);
+            }
+            sqlite3_finalize(stmt);
+        }
+        return result;
+    }
+
+    json getSubjectProgress() {
+        const char* sql = 
+            "SELECT s.id, s.name, s.rating, "
+            "  (SELECT COUNT(*) FROM topics t JOIN progress p ON t.id = p.topic_id WHERE t.subject_id = s.id AND p.c1 = 1) as completed, "
+            "  (SELECT COUNT(*) FROM topics t WHERE t.subject_id = s.id) as total "
+            "FROM subjects s;";
+        
+        sqlite3_stmt* stmt;
+        json result = json::array();
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                json s;
+                s["id"] = sqlite3_column_int(stmt, 0);
+                s["name"] = (const char*)sqlite3_column_text(stmt, 1);
+                s["rating"] = sqlite3_column_int(stmt, 2);
+                s["completed"] = sqlite3_column_int(stmt, 3);
+                s["total"] = sqlite3_column_int(stmt, 4);
                 result.push_back(s);
             }
             sqlite3_finalize(stmt);
@@ -597,6 +622,8 @@ int main(int argc, char* argv[]) {
             std::cout << "{\"status\":\"ok\"}" << std::endl;
         } else if (cmd == "get_subjects" && argc == 2) {
             std::cout << sdb.getSubjects().dump() << std::endl;
+        } else if (cmd == "get_subject_progress" && argc == 2) {
+            std::cout << sdb.getSubjectProgress().dump() << std::endl;
         } else if (cmd == "add_deadline" && argc == 5) {
             sdb.addDeadline(argv[2], argv[3], std::stoi(argv[4]));
             std::cout << "{\"status\":\"ok\"}" << std::endl;
