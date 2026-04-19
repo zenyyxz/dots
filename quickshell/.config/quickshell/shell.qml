@@ -438,8 +438,8 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         
-        implicitWidth: 350
-        implicitHeight: 280
+        implicitWidth: 370
+        implicitHeight: 300
         margins {
             top: 56
             left: 1135 // scienceTrackers (1120) + gap (15)
