@@ -93,10 +93,18 @@ Rectangle {
                     property int currentRating: (modelData && modelData.rating) ? modelData.rating : 0
                     property int progress: (subjectProgress[subjectName] !== undefined) ? subjectProgress[subjectName] : 0
 
+                    readonly property color subjectColor: {
+                        const name = subjectName.toLowerCase();
+                        if (name.includes("math")) return Theme.sapphire;
+                        if (name.includes("physics")) return Theme.maroon;
+                        if (name.includes("ict")) return Theme.green;
+                        return Theme.mauve;
+                    }
+
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: 10
-                        anchors.rightMargin: 10
+                        anchors.rightMargin: 12
                         spacing: 12
 
                         // Icon Pill
@@ -104,7 +112,7 @@ Rectangle {
                             width: 36
                             height: 36
                             radius: 8
-                            color: Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.15)
+                            color: Qt.rgba(subjectColor.r, subjectColor.g, subjectColor.b, 0.15)
                             
                             Image {
                                 id: iconImage
@@ -120,7 +128,7 @@ Rectangle {
                                 sourceSize: Qt.size(24, 24)
                                 fillMode: Image.PreserveAspectFit
                                 layer.enabled: true
-                                layer.effect: ColorOverlay { color: Theme.sapphire }
+                                layer.effect: ColorOverlay { color: subjectColor }
                             }
                         }
 
@@ -133,8 +141,8 @@ Rectangle {
                                     width: 20
                                     height: 20
                                     radius: 5
-                                    color: (index + 1) <= currentRating ? Theme.sapphire : Theme.base
-                                    border.color: (index + 1) <= currentRating ? Theme.sapphire : Theme.surface1
+                                    color: (index + 1) <= currentRating ? subjectColor : Theme.base
+                                    border.color: (index + 1) <= currentRating ? subjectColor : Theme.surface1
                                     border.width: 1
 
                                     MouseArea {
@@ -168,40 +176,25 @@ Rectangle {
                             Layout.rightMargin: 4
                         }
 
-                        // Mastery Square
-                        Rectangle {
-                            width: 40
-                            height: 32
-                            radius: 6
-                            color: Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.1)
-                            border.color: Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.3)
-                            border.width: 1
+                        // Mastery Circle
+                        Item {
+                            width: 36
+                            height: 36
+
+                            ProgressCircle {
+                                anchors.fill: parent
+                                value: progress / 100
+                                color: subjectColor
+                                strokeWidth: 3
+                            }
 
                             Text {
                                 anchors.centerIn: parent
-                                anchors.verticalCenterOffset: -2
                                 text: progress + "%"
-                                color: Theme.sapphire
+                                color: Theme.text
                                 font.family: Theme.fontName
-                                font.pixelSize: 11
+                                font.pixelSize: 10
                                 font.bold: true
-                            }
-                            
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: parent.width - 8
-                                height: 2
-                                radius: 1
-                                color: Theme.base
-                                anchors.bottomMargin: 3
-                                
-                                Rectangle {
-                                    width: parent.width * (progress / 100)
-                                    height: parent.height
-                                    radius: 1
-                                    color: Theme.sapphire
-                                }
                             }
                         }
                     }
