@@ -439,7 +439,7 @@ ShellRoot {
         color: "transparent"
         
         implicitWidth: 370
-        implicitHeight: 300
+        implicitHeight: 310
         margins {
             top: 56
             left: 1135 // scienceTrackers (1120) + gap (15)

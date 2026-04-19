@@ -7,10 +7,14 @@ import "../theme"
 Rectangle {
     id: confidenceRoot
     
+    property bool authenticated: false
+    property bool isShowing: true
+
     StudyService { id: service }
 
     property var subjects: []
     property var subjectProgress: ({})
+    property var subjectCounts: ({})
     property bool loading: false
 
     function refresh() {
@@ -34,21 +38,30 @@ Rectangle {
             }
             let percentage = Math.round((completed / total) * 100);
             
-            // Trigger property update
+            // Percentage
             let newProgress = JSON.parse(JSON.stringify(subjectProgress));
             newProgress[subjectName] = percentage;
             subjectProgress = newProgress;
+
+            // Counts
+            let newCounts = JSON.parse(JSON.stringify(subjectCounts));
+            newCounts[subjectName] = completed + "/" + total;
+            subjectCounts = newCounts;
         });
     }
 
     Component.onCompleted: refresh()
 
     implicitWidth: 370
-    implicitHeight: 300
+    implicitHeight: 310
     color: Theme.crust
     radius: Theme.radius
     border.color: Theme.surface0
     border.width: 1
+
+    // Window Ghost Mode
+    opacity: confidenceRoot.isShowing ? 1.0 : 0.2
+    Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
 
     // Sapphire Tint Overlay
     Rectangle {
@@ -64,19 +77,91 @@ Rectangle {
         anchors.margins: 14
         spacing: 12
 
-        Text {
-            text: "Subject Cockpit"
-            color: Theme.text
-            font.family: Theme.fontName
-            font.pixelSize: 18
-            font.bold: true
-            Layout.alignment: Qt.AlignHCenter
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            Text {
+                text: "Subject Cockpit"
+                color: Theme.text
+                font.family: Theme.fontName
+                font.pixelSize: 18
+                font.bold: true
+                Layout.fillWidth: true
+                
+                opacity: confidenceRoot.isShowing ? 1.0 : 0.0
+                Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+            }
+
+            // Sync/Refresh Button
+            Button {
+                id: refreshButton
+                padding: 6
+                opacity: confidenceRoot.isShowing ? 1.0 : 0.0
+                enabled: confidenceRoot.isShowing
+                background: Rectangle {
+                    radius: 8
+                    color: refreshButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                }
+                contentItem: Text { 
+                    text: "󰑐"
+                    font.family: "JetBrainsMono Nerd Font"
+                    color: Theme.subtext0
+                    font.pixelSize: 18
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: confidenceRoot.refresh()
+            }
+
+            // Eye Toggle
+            Button {
+                id: eyeButton
+                padding: 6
+                background: Rectangle {
+                    radius: 8
+                    color: eyeButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                }
+                contentItem: Image {
+                    source: confidenceRoot.isShowing ? "../assets/eye-svgrepo-com.svg" : "../assets/eye-slash-svgrepo-com.svg"
+                    sourceSize: Qt.size(18, 18)
+                    fillMode: Image.PreserveAspectFit
+                    layer.enabled: true
+                    layer.effect: ColorOverlay { color: confidenceRoot.isShowing ? Theme.sapphire : Theme.subtext0 }
+                }
+                onClicked: confidenceRoot.isShowing = !confidenceRoot.isShowing
+            }
+
+            // Auth Button
+            Button {
+                id: authButton
+                padding: 6
+                opacity: confidenceRoot.isShowing ? 1.0 : 0.0
+                enabled: confidenceRoot.isShowing
+                background: Rectangle {
+                    radius: 8
+                    color: authButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+                }
+                contentItem: Image {
+                    source: confidenceRoot.authenticated ? "../assets/unlock.svg" : "../assets/lock.svg"
+                    sourceSize: Qt.size(18, 18)
+                    fillMode: Image.PreserveAspectFit
+                    layer.enabled: true
+                    layer.effect: ColorOverlay {
+                        color: confidenceRoot.authenticated ? Theme.green : Theme.red
+                    }
+                }
+                onClicked: confidenceRoot.authenticated = !confidenceRoot.authenticated
+            }
         }
 
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 8
+            
+            opacity: confidenceRoot.isShowing ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
 
             Repeater {
                 model: confidenceRoot.subjects
@@ -92,6 +177,7 @@ Rectangle {
                     property string subjectName: modelData ? modelData.name : ""
                     property int currentRating: (modelData && modelData.rating) ? modelData.rating : 0
                     property int progress: (subjectProgress[subjectName] !== undefined) ? subjectProgress[subjectName] : 0
+                    property string counts: (subjectCounts[subjectName] !== undefined) ? subjectCounts[subjectName] : "0/0"
 
                     readonly property color subjectColor: {
                         const name = subjectName.toLowerCase();
@@ -105,7 +191,7 @@ Rectangle {
                         anchors.fill: parent
                         anchors.leftMargin: 10
                         anchors.rightMargin: 12
-                        spacing: 12
+                        spacing: 10
 
                         // Icon Pill
                         Rectangle {
@@ -132,14 +218,17 @@ Rectangle {
                             }
                         }
 
+                        // Added spacer to push squares right
+                        Item { Layout.preferredWidth: 5 }
+
                         // Confidence Boxes
                         RowLayout {
                             spacing: 5
                             Repeater {
                                 model: 6
                                 delegate: Rectangle {
-                                    width: 20
-                                    height: 20
+                                    width: 22
+                                    height: 22
                                     radius: 5
                                     color: (index + 1) <= currentRating ? subjectColor : Theme.base
                                     border.color: (index + 1) <= currentRating ? subjectColor : Theme.surface1
@@ -148,9 +237,11 @@ Rectangle {
                                     MouseArea {
                                         anchors.fill: parent
                                         hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
+                                        cursorShape: confidenceRoot.authenticated ? Qt.PointingHandCursor : Qt.ArrowCursor
                                         onClicked: {
-                                            service.updateRating(subjectId, index + 1, () => confidenceRoot.refresh());
+                                            if (confidenceRoot.authenticated) {
+                                                service.updateRating(subjectId, index + 1, () => confidenceRoot.refresh());
+                                            }
                                         }
                                     }
 
@@ -166,14 +257,26 @@ Rectangle {
                             }
                         }
 
+                        // Space to push the rest to the right
+                        Item { Layout.fillWidth: true }
+
+                        // Raw Lesson Count Label
+                        Text {
+                            text: counts
+                            color: Theme.subtext0
+                            font.family: Theme.fontName
+                            font.pixelSize: 10
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
                         // Vertical Separator
                         Rectangle {
                             width: 1
                             height: 20
                             color: Theme.surface1
                             opacity: 0.5
-                            Layout.leftMargin: 4
-                            Layout.rightMargin: 4
+                            Layout.leftMargin: 2
+                            Layout.rightMargin: 2
                         }
 
                         // Mastery Circle
