@@ -86,9 +86,15 @@ Rectangle {
 
         // --- Left Side: Pawn Circle ---
         Item {
+            id: pawnContainer
             Layout.preferredWidth: 90
             Layout.preferredHeight: 90
             Layout.alignment: Qt.AlignVCenter
+            
+            property color pawnColor: Theme.sapphire
+            scale: 1.0
+            antialiasing: true
+            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
 
             Rectangle {
                 anchors.fill: parent
@@ -97,20 +103,42 @@ Rectangle {
                 border.color: Theme.sapphire
                 border.width: 2
                 opacity: 0.6
+                antialiasing: true
 
                 Image {
                     anchors.centerIn: parent
                     source: "../assets/pawn.svg"
-                    sourceSize: Qt.size(50, 50)
+                    sourceSize: Qt.size(100, 100) // Rendered larger to avoid artifacts when scaling
+                    width: 50; height: 50
                     fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    antialiasing: true
                     layer.enabled: true
-                    layer.effect: ColorOverlay { color: Theme.sapphire }
+                    layer.smooth: true
+                    layer.effect: ColorOverlay { 
+                        color: pawnContainer.pawnColor
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                    }
                 }
 
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: chessRoot.refresh()
+                    onClicked: {
+                        pawnContainer.scale = 1.2;
+                        pawnContainer.pawnColor = Theme.green;
+                        resetTimer.restart();
+                        chessRoot.refresh();
+                    }
+                }
+
+                Timer {
+                    id: resetTimer
+                    interval: 200
+                    onTriggered: {
+                        pawnContainer.scale = 1.0;
+                        pawnContainer.pawnColor = Theme.sapphire;
+                    }
                 }
             }
         }
@@ -197,8 +225,12 @@ Rectangle {
         
         // Eye Toggle
         Button {
+            id: eyeButton
             width: 24; height: 24
-            background: Rectangle { color: "transparent" }
+            background: Rectangle {
+                radius: 6
+                color: eyeButton.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+            }
             contentItem: Image {
                 source: chessRoot.isShowing ? "../assets/eye-svgrepo-com.svg" : "../assets/eye-slash-svgrepo-com.svg"
                 sourceSize: Qt.size(16, 16)
@@ -213,7 +245,10 @@ Rectangle {
         Button {
             id: refreshBtn
             width: 24; height: 24
-            background: Rectangle { color: "transparent" }
+            background: Rectangle {
+                radius: 6
+                color: refreshBtn.hovered ? Qt.rgba(Theme.surface1.r, Theme.surface1.g, Theme.surface1.b, 0.4) : "transparent"
+            }
             contentItem: Text { 
                 text: "󰑐"; 
                 font.family: "JetBrainsMono Nerd Font"; 

@@ -84,8 +84,17 @@ Rectangle {
                     font.pixelSize: 18
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
+
+                    rotation: 0
+                    RotationAnimation on rotation {
+                        id: rotateAnim
+                        from: 0; to: 360; duration: 500; running: false; easing.type: Easing.OutCubic
+                    }
                 }
-                onClicked: confidenceRoot.refresh()
+                onClicked: {
+                    rotateAnim.restart();
+                    confidenceRoot.refresh();
+                }
             }
 
             // Eye Toggle
