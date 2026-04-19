@@ -423,4 +423,30 @@ ShellRoot {
             }
         }
     }
+
+    // --- Confidence Tracker (Middle Gap) ---
+    PanelWindow {
+        id: confidencePanel
+        anchors {
+            top: true
+            left: true
+        }
+        
+        visible: root.studyVisible
+        WlrLayershell.layer: WlrLayer.Bottom
+        WlrLayershell.namespace: "confidence-tracker"
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        
+        implicitWidth: 350
+        implicitHeight: 280
+        margins {
+            top: 56
+            left: 1135 // scienceTrackers (1120) + gap (15)
+        }
+
+        ConfidenceTracker {
+            anchors.fill: parent
+        }
+    }
 }
