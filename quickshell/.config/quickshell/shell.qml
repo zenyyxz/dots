@@ -151,6 +151,32 @@ ShellRoot {
     VpnConfig { id: vpnConfig; isOpen: false }
     TodoList { id: todoList; visible: false }
 
+    // --- Chess Widget (New Hobby Widget) ---
+    PanelWindow {
+        id: chessPanel
+        anchors {
+            top: true
+            left: true
+        }
+        
+        visible: root.studyVisible
+        WlrLayershell.layer: WlrLayer.Bottom
+        WlrLayershell.namespace: "chess-widget"
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        
+        implicitWidth: 370
+        implicitHeight: 195
+        margins {
+            top: 56 + 290 + 15 // Top + Confidence Height + Gap
+            left: 1135
+        }
+
+        ChessWidget {
+            anchors.fill: parent
+        }
+    }
+
     // --- Study Dashboard (Static Bottom-Right Panel) ---
     PanelWindow {
         id: studyDashboardPanel
@@ -439,7 +465,7 @@ ShellRoot {
         color: "transparent"
         
         implicitWidth: 370
-        implicitHeight: 310
+        implicitHeight: 290
         margins {
             top: 56
             left: 1135 // scienceTrackers (1120) + gap (15)

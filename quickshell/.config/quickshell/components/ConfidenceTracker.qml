@@ -27,7 +27,7 @@ Rectangle {
     Component.onCompleted: refresh()
 
     implicitWidth: 370
-    implicitHeight: 310
+    implicitHeight: 290
     color: Theme.crust
     radius: Theme.radius
     border.color: Theme.surface0
