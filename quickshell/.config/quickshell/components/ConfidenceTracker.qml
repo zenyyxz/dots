@@ -66,19 +66,28 @@ Rectangle {
                     property int subjectId: modelData.id
                     property int currentRating: modelData.rating || 0
 
-                    Text {
-                        text: {
-                            const name = modelData.name.toLowerCase();
-                            if (name.includes("math")) return "\uf0626"; // Sigma
-                            if (name.includes("physics")) return "\uf0831"; // Atom
-                            if (name.includes("ict")) return "\uf066f"; // Monitor
-                            return "\uf059d"; // Question mark
+                    Rectangle {
+                        Layout.preferredWidth: 42
+                        Layout.preferredHeight: 42
+                        radius: 10
+                        color: Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.1)
+                        border.color: Qt.rgba(Theme.sapphire.r, Theme.sapphire.g, Theme.sapphire.b, 0.2)
+                        border.width: 1
+
+                        Image {
+                            anchors.centerIn: parent
+                            source: {
+                                const name = modelData.name.toLowerCase();
+                                if (name.includes("math")) return "../assets/sigma.svg";
+                                if (name.includes("physics")) return "../assets/atom.svg";
+                                if (name.includes("ict")) return "../assets/code.svg";
+                                return "../assets/eye-svgrepo-com.svg";
+                            }
+                            sourceSize: Qt.size(24, 24)
+                            fillMode: Image.PreserveAspectFit
+                            layer.enabled: true
+                            layer.effect: ColorOverlay { color: Theme.sapphire }
                         }
-                        font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 26
-                        color: Theme.sapphire
-                        Layout.preferredWidth: 35
-                        horizontalAlignment: Text.AlignHCenter
                     }
 
                     RowLayout {
