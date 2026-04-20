@@ -50,11 +50,11 @@ Rectangle {
             onRead: msg => {
                 try {
                     const data = JSON.parse(msg.trim());
-                    if (data.current && data.baseline) {
-                        chessRoot.rapidRating = data.current;
-                        chessRoot.startOfDayRating = data.baseline;
-                    }
-                } catch (e) { console.error("Chess.com API Error:", e); }
+                    if (data.current !== undefined) chessRoot.rapidRating = data.current;
+                    if (data.baseline !== undefined) chessRoot.startOfDayRating = data.baseline;
+                } catch (e) { 
+                    console.error("Chess.com API Error parsing message:", msg, "Error:", e); 
+                }
                 chessRoot.loading = false;
             }
         }
