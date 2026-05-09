@@ -52,7 +52,7 @@ return {
     build = ":TSUpdate",
     main = "nvim-treesitter",
     opts = {
-      ensure_installed = { "lua", "javascript", "typescript", "python", "bash", "markdown", "hyprlang", "c", "cpp", "qmljs" },
+      ensure_installed = { "lua", "javascript", "typescript", "python", "bash", "markdown", "markdown_inline", "hyprlang", "c", "cpp", "qmljs", "yaml" },
       highlight = { enable = true },
     },
   },
@@ -321,6 +321,21 @@ return {
     opts = {
       lsp = { override = { ["vim.lsp.util.convert_input_to_markdown_lines"] = true, ["vim.lsp.util.set_autocmds"] = true, ["sysext.lsp.util.stylize_markdown"] = true, ["cmp.entry.get_documentation"] = true } },
       presets = { bottom_search = true, command_palette = true, long_message_to_split = true, inc_rename = false, lsp_doc_border = true },
+    },
+  },
+
+  -- AI: Gen.nvim (The most stable and simple way to use Ollama)
+  {
+    "David-Kunz/gen.nvim",
+    opts = {
+      model = "qwen2.5-coder:3b",
+      display_mode = "split", -- Shows AI output in a side split
+      show_model = true,
+      no_auto_close = true, -- Keep the window open so you can read it
+    },
+    keys = {
+      { "<leader>]", "<cmd>Gen<cr>", mode = { "n", "v" }, desc = "AI Menu" },
+      { "<leader>.", "<cmd>Gen Chat<cr>", mode = { "n", "v" }, desc = "AI Chat" },
     },
   },
 

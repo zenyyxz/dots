@@ -36,8 +36,8 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: "#000000"
-        opacity: root.isOpen ? 0.4 : 0.0
-        Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+        opacity: root.isOpen ? 0.3 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
         
         MouseArea {
             anchors.fill: parent
@@ -47,6 +47,7 @@ PanelWindow {
 
     ListModel {
         id: chatModel
+        // Example: { role: "user" | "ai", text: "...", timestamp: "..." }
     }
 
     property string currentInput: ""
@@ -54,19 +55,22 @@ PanelWindow {
 
     Process {
         id: llmProcess
-        command: ["bash", Quickshell.shellPath("mock_llm.sh"), root.currentInput]
+        command: ["bash", Quickshell.shellPath("../llm_query.sh"), root.currentInput]
         running: false
         
         stdout: SplitParser {
             onRead: msg => {
                 const txt = msg.trim();
                 if (txt !== "") {
-                    // Check if last message is AI. If so, append to it, else create new one.
                     if (chatModel.count > 0 && chatModel.get(chatModel.count - 1).role === "ai") {
                         let currentText = chatModel.get(chatModel.count - 1).text;
                         chatModel.setProperty(chatModel.count - 1, "text", currentText + "\n" + txt);
                     } else {
-                        chatModel.append({ role: "ai", text: txt });
+                        chatModel.append({ 
+                            role: "ai", 
+                            text: txt,
+                            timestamp: new Date().toLocaleTimeString(Qt.locale(), "HH:mm")
+                        });
                     }
                 }
             }
@@ -79,196 +83,364 @@ PanelWindow {
 
     Rectangle {
         id: container
-        width: 450
+        width: 500
         anchors {
             top: parent.top
             bottom: parent.bottom
-            topMargin: 60
-            bottomMargin: 15
+            topMargin: 12
+            bottomMargin: 12
         }
         
-        x: root.isOpen ? 15 : -width - 20
-        Behavior on x { NumberAnimation { duration: Theme.animDuration; easing.type: Theme.animEasing } }
+        // Slide from left
+        x: root.isOpen ? 12 : -width - 40
+        Behavior on x { NumberAnimation { duration: 500; easing.type: Easing.OutExpo } }
 
         color: Theme.base
-        radius: 16
-        border.color: Theme.borderColor
+        radius: 20
+        border.color: Theme.surface0
         border.width: 1
         clip: true
 
         opacity: root.isOpen ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: Theme.animDuration; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+        // Subtle gradient background
+        Rectangle {
+            anchors.fill: parent
+            radius: 20
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(Theme.mauve.r, Theme.mauve.g, Theme.mauve.b, 0.03) }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 20
-            spacing: 15
+            spacing: 0
 
             // Header
-            RowLayout {
+            Rectangle {
                 Layout.fillWidth: true
-                spacing: 12
+                height: 70
+                color: "transparent"
                 
-                Rectangle {
-                    width: 40; height: 40
-                    radius: 10
-                    color: Theme.surface0
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰚩"
-                        font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 20
-                        color: Theme.mauve
-                    }
-                }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 24
+                    anchors.rightMargin: 24
+                    spacing: 16
 
-                Text {
-                    text: "Jarvis Local"
-                    color: Theme.text
-                    font.family: Theme.fontName
-                    font.pixelSize: 20
-                    font.bold: true
+                    Rectangle {
+                        width: 44; height: 44
+                        radius: 12
+                        color: Theme.surface0
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󱚝" // AI Sparkle icon
+                            font.family: "JetBrainsMono Nerd Font"
+                            font.pixelSize: 22
+                            color: Theme.mauve
+                        }
+                    }
+
+                    ColumnLayout {
+                        spacing: 0
+                        Text {
+                            text: "Zenyyxz Intelligence"
+                            color: Theme.text
+                            font.family: Theme.fontName
+                            font.pixelSize: 18
+                            font.bold: true
+                        }
+                        Text {
+                            text: root.isThinking ? "Thinking..." : "Ready to assist"
+                            color: root.isThinking ? Theme.mauve : Theme.subtext0
+                            font.family: Theme.fontName
+                            font.pixelSize: 12
+                        }
+                    }
+                    
+                    Item { Layout.fillWidth: true }
+                    
+                    // Action Buttons
+                    RowLayout {
+                        spacing: 8
+                        
+                        // Clear Button
+                        Button {
+                            id: clearBtn
+                            implicitWidth: 36; implicitHeight: 36
+                            background: Rectangle {
+                                radius: 10
+                                color: clearBtn.hovered ? Theme.surface0 : "transparent"
+                            }
+                            contentItem: Text {
+                                text: "󰃢"
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 18
+                                color: clearBtn.hovered ? Theme.red : Theme.subtext1
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            onClicked: chatModel.clear()
+                        }
+                        
+                        // Close Button
+                        Button {
+                            id: closeBtn
+                            implicitWidth: 36; implicitHeight: 36
+                            background: Rectangle {
+                                radius: 10
+                                color: closeBtn.hovered ? Theme.surface0 : "transparent"
+                            }
+                            contentItem: Text {
+                                text: "󰅖"
+                                font.family: "JetBrainsMono Nerd Font"
+                                font.pixelSize: 18
+                                color: closeBtn.hovered ? Theme.text : Theme.subtext1
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            onClicked: root.isOpen = false
+                        }
+                    }
                 }
                 
-                Item { Layout.fillWidth: true }
-                
-                // Clear chat button
                 Rectangle {
-                    width: 30; height: 30
-                    radius: 8
-                    color: "transparent"
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰃢"
-                        font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 16
-                        color: Theme.red
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: chatModel.clear()
-                    }
+                    anchors.bottom: parent.bottom
+                    width: parent.width; height: 1
+                    color: Theme.surface0
+                    opacity: 0.5
                 }
             }
-            
-            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface0 }
 
-            // Chat ListView
+            // Message List
             ListView {
                 id: chatList
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 model: chatModel
-                spacing: 12
+                spacing: 20
                 clip: true
+                topMargin: 20
+                bottomMargin: 20
+                leftMargin: 20
+                rightMargin: 20
+
+                ScrollBar.vertical: ScrollBar {
+                    policy: ScrollBar.AsNeeded
+                    contentItem: Rectangle {
+                        implicitWidth: 4
+                        radius: 2
+                        color: Theme.surface1
+                    }
+                }
 
                 onCountChanged: {
                     chatList.positionViewAtEnd();
                 }
 
-                delegate: Item {
-                    width: chatList.width
-                    implicitHeight: messageBubble.height + 10
+                delegate: ColumnLayout {
+                    width: chatList.width - 40
+                    spacing: 6
                     
+                    property bool isUser: model.role === "user"
+
                     RowLayout {
-                        width: parent.width
-                        layoutDirection: model.role === "user" ? Qt.RightToLeft : Qt.LeftToRight
-                        
+                        Layout.fillWidth: true
+                        layoutDirection: isUser ? Qt.RightToLeft : Qt.LeftToRight
+                        spacing: 10
+
+                        // Avatar/Icon
                         Rectangle {
-                            id: messageBubble
-                            color: model.role === "user" ? Theme.mauve : Theme.surface0
-                            radius: 12
-                            Layout.maximumWidth: chatList.width * 0.8
-                            Layout.minimumWidth: msgText.paintedWidth + 24
-                            implicitHeight: msgText.paintedHeight + 20
-                            
+                            width: 28; height: 28
+                            radius: 8
+                            color: isUser ? Theme.surface1 : Theme.mauve
                             Text {
-                                id: msgText
-                                anchors.fill: parent
-                                anchors.margins: 10
-                                text: model.text
-                                color: model.role === "user" ? Theme.crust : Theme.text
-                                font.family: Theme.fontName
+                                anchors.centerIn: parent
+                                text: isUser ? "󰀉" : "󱚝"
+                                font.family: "JetBrainsMono Nerd Font"
                                 font.pixelSize: 14
-                                wrapMode: Text.Wrap
+                                color: isUser ? Theme.text : Theme.crust
                             }
+                        }
+
+                        Text {
+                            text: isUser ? "You" : "Assistant"
+                            color: Theme.subtext1
+                            font.family: Theme.fontName
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Text {
+                            text: model.timestamp
+                            color: Theme.surface2
+                            font.family: Theme.fontName
+                            font.pixelSize: 10
+                        }
+                        
+                        Item { Layout.fillWidth: true }
+                    }
+
+                    Rectangle {
+                        Layout.alignment: isUser ? Qt.AlignRight : Qt.AlignLeft
+                        Layout.maximumWidth: parent.width * 0.9
+                        implicitWidth: isUser ? (msgText.paintedWidth + 32) : chatList.width - 40
+                        implicitHeight: isUser ? (msgText.paintedHeight + 24) : (aiText.paintedHeight + 24)
+                        radius: 16
+                        color: isUser ? Theme.surface0 : Qt.rgba(Theme.surface0.r, Theme.surface0.g, Theme.surface0.b, 0.5)
+                        border.color: isUser ? Theme.surface1 : "transparent"
+                        
+                        TextEdit {
+                            id: msgText
+                            visible: isUser
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            text: model.text
+                            color: Theme.text
+                            font.family: Theme.fontName
+                            font.pixelSize: 14
+                            wrapMode: Text.Wrap
+                            readOnly: true
+                            selectByMouse: true
+                            selectionColor: Theme.mauve
+                            selectedTextColor: Theme.crust
+                        }
+
+                        Text {
+                            id: aiText
+                            visible: !isUser
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            text: model.text
+                            color: Theme.text
+                            font.family: Theme.fontName
+                            font.pixelSize: 14
+                            wrapMode: Text.Wrap
+                            textFormat: Text.MarkdownText
                         }
                     }
                 }
             }
             
-            // "Thinking" indicator
-            Text {
-                text: "Thinking..."
-                color: Theme.subtext0
-                font.family: Theme.fontName
-                font.pixelSize: 12
-                visible: root.isThinking
-                Layout.alignment: Qt.AlignLeft
-            }
-
             // Input Area
             Rectangle {
                 Layout.fillWidth: true
-                height: 54
-                color: Theme.surface0
-                radius: 14
-                border.color: inputField.activeFocus ? Theme.mauve : "transparent"
-                border.width: 1
+                implicitHeight: 100
+                color: "transparent"
+                
+                Rectangle {
+                    anchors.top: parent.top
+                    width: parent.width; height: 1
+                    color: Theme.surface0
+                    opacity: 0.5
+                }
 
-                RowLayout {
+                ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 15
-                    spacing: 12
+                    anchors.margins: 16
+                    spacing: 8
 
-                    TextField {
-                        id: inputField
+                    Rectangle {
                         Layout.fillWidth: true
-                        placeholderText: "Message AI..."
-                        placeholderTextColor: Theme.surface2
-                        color: Theme.text
-                        font.family: Theme.fontName
-                        font.pixelSize: 15
-                        background: null
-                        
-                        Keys.onPressed: (event) => {
-                            if (event.key === Qt.Key_Escape) {
-                                root.isOpen = false;
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                if (text.trim() !== "" && !root.isThinking) {
-                                    chatModel.append({ role: "user", text: text.trim() });
-                                    root.currentInput = text.trim();
-                                    text = "";
-                                    root.isThinking = true;
-                                    llmProcess.running = true;
+                        Layout.fillHeight: true
+                        color: Theme.surface0
+                        radius: 12
+                        border.color: inputField.activeFocus ? Theme.mauve : Theme.surface1
+                        border.width: 1
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 8
+                            spacing: 8
+
+                            ScrollView {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+                                
+                                TextArea {
+                                    id: inputField
+                                    placeholderText: "Ask anything..."
+                                    placeholderTextColor: Theme.surface2
+                                    color: Theme.text
+                                    font.family: Theme.fontName
+                                    font.pixelSize: 14
+                                    wrapMode: Text.EditWrap
+                                    background: null
+                                    verticalAlignment: Text.AlignVCenter
+                                    
+                                    Keys.onPressed: (event) => {
+                                        if (event.key === Qt.Key_Return && !(event.modifiers & Qt.ShiftModifier)) {
+                                            if (text.trim() !== "" && !root.isThinking) {
+                                                const msg = text.trim();
+                                                chatModel.append({ 
+                                                    role: "user", 
+                                                    text: msg,
+                                                    timestamp: new Date().toLocaleTimeString(Qt.locale(), "HH:mm")
+                                                });
+                                                root.currentInput = msg;
+                                                text = "";
+                                                root.isThinking = true;
+                                                llmProcess.running = true;
+                                            }
+                                            event.accepted = true;
+                                        }
+                                    }
                                 }
-                                event.accepted = true;
+                            }
+                            
+                            Button {
+                                id: sendBtn
+                                Layout.alignment: Qt.AlignBottom
+                                Layout.bottomMargin: 6
+                                implicitWidth: 32; implicitHeight: 32
+                                
+                                background: Rectangle {
+                                    radius: 8
+                                    color: (inputField.text.trim() !== "" && !root.isThinking) ? Theme.mauve : "transparent"
+                                    opacity: sendBtn.hovered ? 1.0 : 0.8
+                                }
+                                
+                                contentItem: Text {
+                                    text: "󰒍"
+                                    font.family: "JetBrainsMono Nerd Font"
+                                    font.pixelSize: 18
+                                    color: (inputField.text.trim() !== "" && !root.isThinking) ? Theme.crust : Theme.surface2
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                
+                                onClicked: {
+                                    if (inputField.text.trim() !== "" && !root.isThinking) {
+                                        const msg = inputField.text.trim();
+                                        chatModel.append({ 
+                                            role: "user", 
+                                            text: msg,
+                                            timestamp: new Date().toLocaleTimeString(Qt.locale(), "HH:mm")
+                                        });
+                                        root.currentInput = msg;
+                                        inputField.text = "";
+                                        root.isThinking = true;
+                                        llmProcess.running = true;
+                                    }
+                                }
                             }
                         }
                     }
                     
                     Text {
-                        text: "󰒍"
-                        font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 20
-                        color: (inputField.text.trim() !== "" && !root.isThinking) ? Theme.mauve : Theme.surface2
-                        
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                if (inputField.text.trim() !== "" && !root.isThinking) {
-                                    chatModel.append({ role: "user", text: inputField.text.trim() });
-                                    root.currentInput = inputField.text.trim();
-                                    inputField.text = "";
-                                    root.isThinking = true;
-                                    llmProcess.running = true;
-                                }
-                            }
-                        }
+                        text: "Shift + Enter for new line"
+                        color: Theme.surface2
+                        font.family: Theme.fontName
+                        font.pixelSize: 9
+                        Layout.alignment: Qt.AlignRight
                     }
                 }
             }
         }
     }
 }
+
