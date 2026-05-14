@@ -151,82 +151,30 @@ ShellRoot {
     VpnConfig { id: vpnConfig; isOpen: false }
     TodoList { id: todoList; visible: false }
 
-    // --- Chess Widget (New Hobby Widget) ---
+    // --- Study Dashboard Grid ---
     PanelWindow {
-        id: chessPanel
+        id: studyDashboardGrid
         anchors {
             top: true
-            left: true
-        }
-        
-        visible: root.studyVisible
-        WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "chess-widget"
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        
-        implicitWidth: 370
-        implicitHeight: 195
-        margins {
-            top: 56 + 290 + 15 // Top + Confidence Height + Gap
-            left: 1135
-        }
-
-        ChessWidget {
-            anchors.fill: parent
-        }
-    }
-
-    // --- Study Dashboard (Static Bottom-Right Panel) ---
-    PanelWindow {
-        id: studyDashboardPanel
-        anchors {
             bottom: true
+            left: true
             right: true
         }
-        
-        visible: root.studyVisible
-        WlrLayershell.layer: WlrLayer.Bottom // Background layer
-        WlrLayershell.namespace: "study-dashboard-static"
-        WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        
-        width: 775
-        height: 500
-        margins {
-            bottom: 10
-            right: 10
-        }
-
-        StudyDashboard {
-            anchors.fill: parent
-        }
-    }
-
-    // --- Todo List Panel (Top Right) ---
-    PanelWindow {
-        id: todoPanel
-        anchors {
-            top: true
-            right: true
-        }
-        
         visible: root.studyVisible
         WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "study-tracker-todo"
+        WlrLayershell.namespace: "study-dashboard-grid"
         WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
-        
-        implicitWidth: 390
-        implicitHeight: 500 // Half-screen height
+
         margins {
-            top: 56 
+            top: 56
+            left: 10
             right: 10
+            bottom: 8
         }
 
-        TodoList {
+        StudyDashboardGrid {
             anchors.fill: parent
         }
     }
@@ -375,104 +323,4 @@ ShellRoot {
         }
     }
 
-    // --- Study Cockpit: Combined Maths ---
-    PanelWindow {
-        id: mathsTracker
-        anchors {
-            top: true
-            left: true
-            bottom: true
-        }
-        
-        visible: root.studyVisible
-        WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "study-tracker"
-        WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        
-        implicitWidth: 550
-        margins {
-            top: 56 
-            left: 10
-            bottom: 8
-        }
-
-        StudyTracker {
-            anchors.fill: parent
-            subjectName: "Combined Maths"
-            flexibleWidth: true
-        }
-    }
-
-    // --- Study Cockpit: Physics and ICT ---
-    PanelWindow {
-        id: scienceTrackers
-        anchors {
-            top: true
-            left: true
-            bottom: true
-        }
-        
-        visible: root.studyVisible
-        WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "study-tracker-science"
-        WlrLayershell.keyboardFocus: WlrLayershell.OnDemand
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        
-        implicitWidth: 550
-        margins {
-            top: 56 
-            left: 570 // mathsTracker (550) + margin (10) + gap (10)
-            bottom: 8
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: 15
-
-            StudyTracker {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                subjectName: "Physics"
-                initTopicCount: 10
-                flexibleWidth: true
-            }
-
-            StudyTracker {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                subjectName: "ICT"
-                initTopicCount: 10
-                flexibleWidth: true
-            }
-        }
-    }
-
-    // --- Confidence Tracker (Middle Gap) ---
-    PanelWindow {
-        id: confidencePanel
-        anchors {
-            top: true
-            left: true
-        }
-        
-        visible: root.studyVisible
-        WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "confidence-tracker"
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        
-        implicitWidth: 370
-        implicitHeight: 290
-        margins {
-            top: 56
-            left: 1135 // scienceTrackers (1120) + gap (15)
-        }
-
-        ConfidenceTracker {
-            anchors.fill: parent
-        }
-    }
 }

@@ -40,3 +40,4 @@ PomodoroTimer 1.0 PomodoroTimer.qml
 StudyBarChart 1.0 StudyBarChart.qml
 ConfidenceTracker 1.0 ConfidenceTracker.qml
 ChessWidget 1.0 ChessWidget.qml
+StudyDashboardGrid 1.0 StudyDashboardGrid.qml
