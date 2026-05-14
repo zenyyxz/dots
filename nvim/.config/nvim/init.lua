@@ -22,6 +22,9 @@ vim.g.maplocalleader = "\\"
 -- Load base options
 require("config.options")
 
+-- Load keymaps
+require("config.keymaps")
+
 -- Load plugins
 require("lazy").setup({
   spec = {
