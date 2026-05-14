@@ -34,6 +34,7 @@ Rectangle {
     // Geometry Constants
     readonly property int colIndexWidth: 40
     property int colLessonWidth: 240
+    readonly property int defaultColLessonWidth: 240
     readonly property int colCheckWidth: 60
     readonly property int cellHeight: 34
 
@@ -44,7 +45,7 @@ Rectangle {
         }
     }
 
-    implicitWidth: colIndexWidth + colLessonWidth + (colCheckWidth * 4) + 2 
+    implicitWidth: colIndexWidth + defaultColLessonWidth + (colCheckWidth * 4) + 2 
     color: Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.85)
     radius: Theme.radius
     border.color: Theme.surface0
@@ -188,7 +189,7 @@ Rectangle {
 
             Column {
                 id: tableGrid
-                width: trackerRoot.implicitWidth
+                width: trackerRoot.flexibleWidth ? (trackerRoot.width - 24) : trackerRoot.implicitWidth
                 spacing: -1
 
                 // Header
