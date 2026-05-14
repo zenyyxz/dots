@@ -26,7 +26,7 @@ Rectangle {
     }
 
     radius: Theme.radius
-    color: Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.85)
+    color: Theme.crust
     border.color: Theme.surface0
     border.width: 1
     
